@@ -1,5 +1,3 @@
--- https://github.com/joric/supraworld/wiki/Modding
-
 -- experimental, doesn't really stop in-game sequences, only removes them
 
 local function removeCutscenes()
@@ -40,7 +38,8 @@ local function skipCutscene()
 end
 
 -- RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
-    -- removeCutscenes() -- may be side effects, so disabled
+    -- removeCutscenes() -- disabled, breaks npc animation
 -- end)
 
-RegisterKeyBind(Key.P, skipCutscene)
+RegisterKeyBind(Key.S, {ModifierKey.CONTROL}, skipCutscene)
+

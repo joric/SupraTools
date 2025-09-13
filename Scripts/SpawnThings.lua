@@ -1,5 +1,3 @@
--- https://github.com/joric/supraworld/wiki/Modding
-
 local UEHelpers = require("UEHelpers")
 
 function getTargetLocation()
@@ -66,5 +64,5 @@ end
 
 -- you can also use "summon" in console, e.g. "summon Bush_C"
 
-RegisterKeyBind(Key.G, spawnThings)
+RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings)
 

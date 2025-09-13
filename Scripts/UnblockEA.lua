@@ -1,5 +1,3 @@
--- https://github.com/joric/supraworld/wiki/Modding
-
 local function unblockEA()
     for _, obj in ipairs(FindAllOf("SupraEABlockingVolume_C") or {}) do
         if obj:IsValid() then

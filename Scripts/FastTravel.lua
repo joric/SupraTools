@@ -1,5 +1,3 @@
--- https://github.com/joric/supraworld/wiki/Modding
-
 local UEHelpers = require("UEHelpers")
 
 local function getFloorHeight(PlayerPawn, worldX, worldY, maxHeight)

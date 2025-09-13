@@ -1,5 +1,3 @@
-local UEHelpers = require("UEHelpers")
-
 -- experimental, under construction
 
 local function createTextWidget(text)
