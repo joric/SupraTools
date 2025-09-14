@@ -59,7 +59,8 @@ local function spawnThings()
     -- spawnClass('/Supraworld/Levelobjects/Carriables/FourLeafClover.FourLeafClover_C')
     -- spawnClass('/Supraworld/Levelobjects/Carriables/Hats/JesterHat.JesterHat_C')
     -- spawnClass('/Supraworld/Levelobjects/Carriables/Die.Die_C')
-    spawnClass('/Supraworld/Levelobjects/Carriables/ButtonBattery.ButtonBattery_C')
+    -- spawnClass('/Supraworld/Levelobjects/Carriables/ButtonBattery.ButtonBattery_C')
+    spawnClass('/Supraworld/Abilities/SpongeSuit/ShopItem_SpongeSuit.ShopItem_SpongeSuit_C')
 end
 
 -- you can also use "summon" in console, e.g. "summon Bush_C"
