@@ -1,5 +1,39 @@
 local UEHelpers = require("UEHelpers")
 
+local ACTIONS = {
+    { name = "Open" },
+    { name = "_Flip" },
+    { name = "_Press" },
+    -- { name = "PressUnpress" },
+    { name = "StartPress", call = function(actor, ctx)
+        if actor.bIsOn then
+            actor:EndPress(ctx.pc.Pawn)
+        else
+            actor:StartPress(ctx.pc.Pawn)
+        end
+    end },
+    { name = "SetUnlocked", call = function(actor) actor:SetUnlocked(true, true, true, true) end },
+    { name = "SetIsOpen",  call = function(actor) actor:SetIsOpen(true, true, true, true) end },
+    { name = "ApplyPurchase" },
+    { name = "Pickup",     call = function(actor, ctx) actor:Pickup(ctx.pc.Pawn) end },
+}
+
+local function runFirstAvailableAction(actor, ctx)
+    for _, action in ipairs(ACTIONS) do
+        local method = actor[action.name]
+        if method and method:IsValid() then
+            print("--- Calling ---", action.name, actor:GetFullName())
+            if action.call then
+                action.call(actor, ctx)
+            else
+                method(actor)
+            end
+            return true
+        end
+    end
+    return false
+end
+
 local function remoteControl()
     local pc = UEHelpers.GetPlayerController()
     if not pc or not pc:IsValid() or not pc.Pawn or not pc.Pawn:IsValid() then
@@ -8,36 +42,18 @@ local function remoteControl()
 
     local cam = pc.PlayerCameraManager
     local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
+    if not hitObject or not hitObject:IsValid() then return end
 
-    if hitObject and hitObject:IsValid() then
-        print('--- hitObject ---', hitObject:GetFullName())
-        local parent = hitObject:GetOuter()
-        if parent and parent:IsValid() then
-            print('--- parent ---', parent:GetFullName())
+    print("--- hitObject ---", hitObject:GetFullName())
 
-            ExecuteWithDelay(250, function()
-                ExecuteInGameThread(function()
-                    for _, methodName in ipairs({'Open', '_Flip', '_Press', 'PressUnpress', 'SetUnlocked', 'SetIsOpen', 'ApplyPurchase'}) do
-                        local method = parent[methodName]
-                        if method and method:IsValid() then
-                            print('executing', methodName)
-                            if methodName == 'SetUnlocked' then 
-                                parent:SetUnlocked(true, true, true, true)
-                            elseif methodName == 'SetIsOpen' then 
-                                parent:SetIsOpen(true, true, true, true)
-                            elseif methodName == 'ApplyPurchase' then 
-                                parent:ApplyPurchase()
-                            else
-                                method(parent)
-                            end
+    local actor = hitObject:GetOuter()
+    if not actor or not actor:IsValid() then return end
 
-                            break
-                        end
-                    end
-                end)
-            end)
-        end
-    end
+    ExecuteWithDelay(250, function()
+        ExecuteInGameThread(function()
+            runFirstAvailableAction(actor, { pc = pc })
+        end)
+    end)
 end
 
 RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, remoteControl)
