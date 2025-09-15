@@ -1,6 +1,6 @@
 local UEHelpers = require("UEHelpers")
 
-local ACTIONS = {
+local ACTIONS = { -- ordered by priority
     { name = "PressIt" },
     { name = "StartPress", call = function(actor, ctx) if actor.bIsOn then actor:EndPress(ctx.pc.Pawn) else actor:StartPress(ctx.pc.Pawn) end end },
     { name = "UseInteraction" },
@@ -9,7 +9,7 @@ local ACTIONS = {
     { name = "ApplyPurchase" },
     { name = "ButtonPress" },
     { name = "Open", call = function(actor, ctx) if actor.bOpen then actor:Close() else actor:Open() end end },
-    { name = "Pickup",     call = function(actor, ctx) actor:Pickup(ctx.pc.Pawn) end },
+    { name = "Pickup", call = function(actor, ctx) actor:Pickup(ctx.pc.Pawn) end },
     { name = "SetUnlocked", call = function(actor) actor:SetUnlocked(true, true, true, true) end },
     { name = "SetIsOpen",  call = function(actor) actor:SetIsOpen(true, true, true, true) end },
 }
