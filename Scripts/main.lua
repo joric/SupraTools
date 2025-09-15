@@ -12,21 +12,15 @@ end
 function getImpactPoint(WorldObject, StartVector, Rotation)
     local HitResult = getHitResult(WorldObject, StartVector, Rotation)
     if HitResult then return HitResult.ImpactPoint end
-    return {X=0, Y=0, Z=0}
+    return StartVector
 end
 
 function getHitObject(WorldObject, StartVector, Rotation)
     local HitResult = getHitResult(WorldObject, StartVector, Rotation)
-    if HitResult then
-        if UnrealVersion:IsBelow(5, 0) then
-            return HitResult.Actor:Get()
-        elseif UnrealVersion:IsBelow(5, 4) then
-            return HitResult.HitObjectHandle.Actor:Get()
-        else
-            return HitResult.HitObjectHandle.ReferenceObject:Get()
-        end
-    end
-    return nil
+    if not HitResult then return end
+    if UnrealVersion:IsBelow(5,0) then return HitResult.Actor:Get() end
+    if UnrealVersion:IsBelow(5,4) then return HitResult.HitObjectHandle.Actor:Get() end
+    return HitResult.HitObjectHandle.ReferenceObject:Get()
 end
 
 require("UnblockEA")
