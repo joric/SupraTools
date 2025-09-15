@@ -2,6 +2,8 @@
 
 Ultimate UE4SS Mod Collection for Supraland & Supraworld (Fast Travel, Debug Camera & More)
 
+* Read project wiki for details: https://github.com/joric/SupraTools/wiki
+
 ## Installation
 
 * Download the latest (experimental) UE4SS-RE: https://github.com/UE4SS-RE/RE-UE4SS/releases
@@ -17,4 +19,3 @@ MinorVersion = 6
 
 * Run the game.
 * Check `ue4ss/UE4SS.log` for issues.
-* Read wiki for details: https://github.com/joric/SupraTools/wiki
