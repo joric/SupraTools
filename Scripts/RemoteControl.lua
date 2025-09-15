@@ -1,17 +1,10 @@
 local UEHelpers = require("UEHelpers")
 
 local ACTIONS = {
-    { name = "Open" },
+    { name = "Open", call = function(actor, ctx) if actor.bOpen then actor:Close() else actor:Open() end end },
     { name = "_Flip" },
     { name = "_Press" },
-    -- { name = "PressUnpress" },
-    { name = "StartPress", call = function(actor, ctx)
-        if actor.bIsOn then
-            actor:EndPress(ctx.pc.Pawn)
-        else
-            actor:StartPress(ctx.pc.Pawn)
-        end
-    end },
+    { name = "StartPress", call = function(actor, ctx) if actor.bIsOn then actor:EndPress(ctx.pc.Pawn) else actor:StartPress(ctx.pc.Pawn) end end },
     { name = "SetUnlocked", call = function(actor) actor:SetUnlocked(true, true, true, true) end },
     { name = "SetIsOpen",  call = function(actor) actor:SetIsOpen(true, true, true, true) end },
     { name = "ApplyPurchase" },
