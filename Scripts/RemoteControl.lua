@@ -48,7 +48,32 @@ local function remoteControl()
             if not runFirstAvailableAction(hitObject, { pc = pc }) then
                 local actor = hitObject:GetOuter()
                 if not actor or not actor:IsValid() then return end
-                runFirstAvailableAction(actor, { pc = pc })
+                if not runFirstAvailableAction(actor, { pc = pc }) then
+                    -- grab object from distance
+                    if actor.RootComponent.Mobility then
+
+                        local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
+                        local dv = UEHelpers.GetKismetMathLibrary():Multiply_VectorInt(UEHelpers.GetKismetMathLibrary():GetForwardVector(rot), 100.0)
+                        local loc = UEHelpers.GetKismetMathLibrary():Add_VectorVector(pos, dv)
+
+                        local comp = actor.RootComponent
+                        if comp and comp:IsValid() then
+                            if comp.bSimulatePhysics then
+                                print("Physics object, moving root component")
+                                local HitResult = {}
+                                -- comp:K2_SetWorldLocation(loc, false, HitResult, true)
+                            else
+                                print("Movable, teleporting actor")
+                                --- actor:K2_TeleportTo(loc, rot) 
+                            end
+                        else
+                            print("No valid root component")
+                        end
+
+                    else
+                        print('Object is not movable')
+                    end
+                end
             end
         end)
     end)
