@@ -12,6 +12,7 @@ local ACTIONS = { -- ordered by priority
     { name = "Pickup", call = function(actor, ctx) actor:Pickup(ctx.pc.Pawn) end },
     { name = "SetUnlocked", call = function(actor) actor:SetUnlocked(true, true, true, true) end },
     { name = "SetIsOpen",  call = function(actor) actor:SetIsOpen(true, true, true, true) end },
+    { name = "Set_Active",  call = function(actor) actor:Set_Active(true, false, false, false) end }, -- jumppads
 }
 
 local function runFirstAvailableAction(actor, ctx)
