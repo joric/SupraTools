@@ -4,7 +4,6 @@ local function tryGrabbingObject(actor, ctx)
     if actor.bMovable then
         local comp = actor.RootComponent
         if comp and comp:IsValid() then
-
             local cam = ctx.pc.PlayerCameraManager
             local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
             local dv = UEHelpers.GetKismetMathLibrary():Multiply_VectorInt(UEHelpers.GetKismetMathLibrary():GetForwardVector(rot), 100.0)
@@ -14,9 +13,11 @@ local function tryGrabbingObject(actor, ctx)
                 print("Physics object, moving root component", actor:GetFullName())
                 local HitResult = {}
                 comp:K2_SetWorldLocation(loc, false, HitResult, true)
+                return true
             else
                 print("Movable, teleporting actor", actor:GetFullName())
                 actor:K2_TeleportTo(loc, rot) 
+                return true
             end
         else
             print("No valid root component")
@@ -24,6 +25,7 @@ local function tryGrabbingObject(actor, ctx)
     else
         print('Object is not movable')
     end
+    return false
 end
 
 local function grabObject()
