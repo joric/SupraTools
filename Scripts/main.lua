@@ -10,9 +10,7 @@ local function getHitResult(WorldObject, StartVector, Rotation)
 end
 
 function getImpactPoint(WorldObject, StartVector, Rotation)
-    local HitResult = getHitResult(WorldObject, StartVector, Rotation)
-    if HitResult then return HitResult.ImpactPoint end
-    return StartVector
+    return (getHitResult(WorldObject, StartVector, Rotation) or { ImpactPoint = StartVector }).ImpactPoint
 end
 
 function getHitObject(WorldObject, StartVector, Rotation)
@@ -32,3 +30,4 @@ require("RemoteControl")
 require("SkipCutscenes")
 require("AutoCollect")
 require("GameStats")
+require("GrabObject")
