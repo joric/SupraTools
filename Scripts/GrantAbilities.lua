@@ -4,12 +4,6 @@ local function grantAbility(InvDefPath)
     ExecuteWithDelay(50, function()
         ExecuteInGameThread(function()
 
-            pc = FindFirstOf("SupraworldPlayerController_C")
-            if not pc or not pc:IsValid() then
-                print('Could not find player controller')
-                return 
-            end
-
             local InvMgr = nil
 
             for _, obj in ipairs(FindAllOf("LyraInventoryManagerComponent") or {}) do
@@ -31,6 +25,12 @@ local function grantAbility(InvDefPath)
             local InvDef = StaticFindObject(InvDefPath)
             if InvDef == nil or not InvDef:IsValid() then
                 print("Couldn't load inventory def:", InvDefPath)
+                return
+            end
+
+            -- Check if the item is already granted
+            if InvMgr:FindFirstItemStackByDefinition(InvDef) ~= nil then
+                print("Item already granted:", InvDefPath)
                 return
             end
 
