@@ -53,7 +53,6 @@ local function grantAbility(InvDefPath)
     end)
 end
 
-
 local function grantAbilities()
     grantAbility('/Supraworld/Abilities/Walk/Inventory_Walk.Inventory_Walk_C')
     grantAbility('/Supraworld/Abilities/Crouch/Inventory_Crouch.Inventory_Crouch_C')
