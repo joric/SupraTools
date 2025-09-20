@@ -85,6 +85,10 @@ RegisterConsoleCommandHandler("find", function(FullCommand, Parameters, Ar)
         Ar:Log(name)
     end
 
+    -- TODO find asset by substring
+    -- see ue4ss\Mods\BPModLoaderMod\Scripts\main.lua
+    -- see https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/AssetRegistry?application_version=4.27
+
     return true
 end)
 
