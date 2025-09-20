@@ -75,7 +75,8 @@ local function grantAbilities()
 
     -- act 2 abilities
 
-    grantAbility('/Supraworld/Abilities/Spark/Inventory_Spark.Inventory_Spark_C')
+    grantAbility('/Supraworld/Abilities/Spark/Inventory_Spark.Inventory_Spark_C')  -- not sure if works
+
     grantAbility('/Supraworld/Abilities/LaserWalk/Inventory_LaserWalk.Inventory_LaserWalk_C')
 
     -- grantAbility('/Supraworld/Abilities/MindControl/Inventory_MindControl.Inventory_MindControl_C') -- unfinished, breaks control/saves
