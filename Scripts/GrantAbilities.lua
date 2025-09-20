@@ -29,7 +29,8 @@ local function grantAbility(InvDefPath)
             end
 
             -- Check if the item is already granted
-            if InvMgr:FindFirstItemStackByDefinition(InvDef) ~= nil then
+            local it = InvMgr:FindFirstItemStackByDefinition(InvDef)
+            if it and it:IsValid() then
                 print("Item already granted:", InvDefPath)
                 return
             end
