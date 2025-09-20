@@ -87,6 +87,4 @@ local function grantAbilities()
     grantAbility('/Supraworld/Abilities/SmellImmunity/Inventory_SmellImmunity.Inventory_SmellImmunity_C') -- doesn't seem player compatible
 end
 
--- experimental, does not work yet
-
 RegisterKeyBind(Key.G, {ModifierKey.CONTROL}, grantAbilities)
