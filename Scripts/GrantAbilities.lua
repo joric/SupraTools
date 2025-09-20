@@ -86,7 +86,7 @@ local function grantAbilities()
 
     -- misc
 
-    grantAbility('/Supraworld/Abilities/SmellImmunity/Inventory_SmellImmunity.Inventory_SmellImmunity_C')
+    grantAbility('/Supraworld/Abilities/SmellImmunity/Inventory_SmellImmunity.Inventory_SmellImmunity_C') -- doesn't seem player compatible
 
 end
 
