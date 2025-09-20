@@ -69,4 +69,6 @@ local function grantAbilities()
     grantAbility('/Supraworld/Abilities/SpongeSuit/Upgrades/Inventory_SpongeSuit.Inventory_SpongeSuit_C')
 end
 
+-- experimental, does not work yet
+
 RegisterKeyBind(Key.G, {ModifierKey.CONTROL}, grantAbilities)
