@@ -38,18 +38,63 @@ local function findBestObject(keywords)
 end
 
 
-local function GetAssetsByKeywords(keywords)
-    -- Ensure Asset Registry is cached
-    local AssetRegistryHelpers = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryHelpers")
-    local AssetRegistry = AssetRegistryHelpers:GetAssetRegistry()
+local AssetRegistryHelpers = nil
+local AssetRegistry = nil
 
+local function CacheAssetRegistry()
+    if AssetRegistryHelpers and AssetRegistry then return end
+
+    AssetRegistryHelpers = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryHelpers")
+    if not AssetRegistryHelpers:IsValid() then Log("AssetRegistryHelpers is not valid\n") end
+
+    if AssetRegistryHelpers then
+        AssetRegistry = AssetRegistryHelpers:GetAssetRegistry()
+        if AssetRegistry:IsValid() then return end
+    end
+
+    AssetRegistry = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryImpl")
+    if AssetRegistry:IsValid() then return end
+
+    error("AssetRegistry is not valid\n")
+end
+
+
+local function unwrapFName(val)
+    if type(val) == "string" then
+        return val
+    end
+
+    -- RemoteUnrealParam holding FName?
+    if val.get then
+        local ok, inner = pcall(val.get, val)
+        if ok and inner and inner.ToString then
+            local ok2, s = pcall(inner.ToString, inner)
+            if ok2 and type(s) == "string" then
+                return s
+            end
+        end
+    end
+
+    -- Direct FName?
+    if val.ToString then
+        local ok, s = pcall(val.ToString, val)
+        if ok and type(s) == "string" then
+            return s
+        end
+    end
+
+    return tostring(val)
+end
+
+
+local function GetAssetPathsByKeywords(keywords)
     local results = {}
+    local outPaths = {}
 
-    -- Get all assets (true = include unloaded assets)
-    local AllAssets = AssetRegistry:GetAllAssets(true) -- that doesn't exist
+    AssetRegistry:GetAllCachedPaths(outPaths)
 
-    for _, data in ipairs(AllAssets) do
-        local path = tostring(data.ObjectPath)
+    for _, fstr in ipairs(outPaths) do
+        local path = unwrapFName(fstr)
         local loweredPath = path:lower()
         local match = true
 
@@ -68,22 +113,59 @@ local function GetAssetsByKeywords(keywords)
     return results
 end
 
+local function GetAssetsByKeywords(keywords)
+    local results = {}
+
+    CacheAssetRegistry() -- ensure AssetRegistryHelpers and AssetRegistry are valid
+    local outAssets = {}
+    AssetRegistry:GetAllAssets(outAssets, false)
+
+    for i, AssetData in ipairs(outAssets) do
+
+        local path = AssetData.ObjectPath and AssetData.ObjectPath or ""
+
+        print(AssetData, AssetData:get())
+
+        local match = true
+
+        --[[
+        local loweredPath = path:lower()
+        for _, kw in ipairs(keywords) do
+            if not loweredPath:find(kw:lower(), 1, true) then
+                match = false
+                break
+            end
+        end
+        ]]
+
+        if i>5 then break end
+
+        if match then
+            table.insert(results, path)
+        end
+    end
+
+    return results
+end
+
+
+
 RegisterConsoleCommandHandler("find", function(FullCommand, Parameters, Ar)
 
-    -- local matches = GetAssetsByKeywords(Parameters)
-    -- for i, path in ipairs(matches) do
-    --     print("Match:", path)
-    -- end
+    local matches = GetAssetsByKeywords(Parameters)
+    for i, path in ipairs(matches) do
+        print("Match:", path)
+    end
 
     -- local matches = findAssetsByKeyword({"Carriables", "ButtonBattery"})
     -- for i, path in ipairs(matches) do
     --    print("Match:", path)
     -- end
 
-    local name = findBestObject(Parameters)
-    if name then
-        Ar:Log(name)
-    end
+    -- local name = findBestObject(Parameters)
+    -- if name then
+    --     Ar:Log(name)
+    -- end
 
     -- TODO find asset by substring
     -- see ue4ss\Mods\BPModLoaderMod\Scripts\main.lua
