@@ -128,7 +128,7 @@ RegisterKeyBind(Key.G, {ModifierKey.CONTROL}, grantAbilities)
 
 local function getObjectPath(str)
     local Object = FindObject('BlueprintGeneratedClass', str)
-    if not Object then
+    if not Object or not Object:IsValid() then
         Object = FindObject('BlueprintGeneratedClass', string.format('Inventory_%s_C',str))
     end
     if Object then return Object:GetFullName():match('%s(.+)') end
@@ -136,15 +136,19 @@ local function getObjectPath(str)
 end
 
 RegisterConsoleCommandHandler("grant", function(FullCommand, Parameters, Ar)
-    local path = getObjectPath(Parameters[1])
-    if path then
-        if grantAbilityInternal(path) then
-            Ar:Log(string.format('granted %s', path))
-        else
-            Ar:Log(string.format('already have %s', path))
-        end
+    if #Parameters == 0 then
+        Ar:Log('usage: grant <inventory>, e.g. grant spongesuit')
     else
-        Ar:Log(string.format('could not find %s', Parameters[1]))
+        local path = getObjectPath(Parameters[1])
+        if path then
+            if grantAbilityInternal(path) then
+                Ar:Log(string.format('granted %s', path))
+            else
+                Ar:Log(string.format('already have %s', path))
+            end
+        else
+            Ar:Log(string.format('could not find %s', Parameters[1]))
+        end
     end
     return true
 end)
