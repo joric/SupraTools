@@ -136,13 +136,13 @@ local function getObjectPath(str)
     return nil
 end
 
-RegisterConsoleCommandHandler("add", function(FullCommand, Parameters, Ar)
+RegisterConsoleCommandHandler("grant", function(FullCommand, Parameters, Ar)
     local path = getObjectPath(Parameters[1])
     if path then
         if grantAbilityInternal(path) then
             Ar:Log(string.format('granted %s', path))
         else
-            Ar:Log(string.format('could not grant (already granted) %s', path))
+            Ar:Log(string.format('already have %s', path))
         end
     else
         Ar:Log(string.format('could not find %s', Parameters[1]))
@@ -150,13 +150,13 @@ RegisterConsoleCommandHandler("add", function(FullCommand, Parameters, Ar)
     return true
 end)
 
-RegisterConsoleCommandHandler("drop", function(FullCommand, Parameters, Ar)
+RegisterConsoleCommandHandler("revoke", function(FullCommand, Parameters, Ar)
     local path = getObjectPath(Parameters[1])
     if path then
         if revokeAbilityInternal(path) then
             Ar:Log(string.format('revoked %s', path))
         else
-            Ar:Log(string.format('could not revoke (not granted) %s', path))
+            Ar:Log(string.format('not carrying %s', path))
         end
     end
     return true
