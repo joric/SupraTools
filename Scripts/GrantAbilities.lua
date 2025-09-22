@@ -1,56 +1,44 @@
 local UEHelpers = require("UEHelpers")
 
-local function grantAbilityInternal(InvDefPath)
-    local InvMgr = nil
-
-    for _, obj in ipairs(FindAllOf("LyraInventoryManagerComponent") or {}) do
-        if obj:IsValid() then
-            if string.find(obj:GetFullName(), 'SupraworldPlayerController_C') then
-                InvMgr = obj
-                break
-            end
-        end
-    end
-
-    if not InvMgr then 
-        print("Could not find inventory manager")
-        return
-    end
-
-    -- Load the inventory definition
-    LoadAsset(InvDefPath)
-    local InvDef = StaticFindObject(InvDefPath)
-    if InvDef == nil or not InvDef:IsValid() then
-        print("Couldn't load inventory def:", InvDefPath)
-        return
-    end
-
-    -- Check if the item is already granted
-    local it = InvMgr:FindFirstItemStackByDefinition(InvDef)
-    if it and it:IsValid() then
-        print("Already granted:", InvDefPath)
-        return
+function addInventory(InvMgr, InvDef)
+    local ItemInstance = InvMgr:FindFirstItemStackByDefinition(InvDef)
+    if ItemInstance and ItemInstance:IsValid() then
+        print("Already granted")
+        return false
     end
 
     if not InvMgr:CanAddItemDefinition(InvDef, 1) then
         print("Cannot add item: CanAddItemDefinition returned false")
-        return
+        return false
     end
 
-    -- Add the inventory item
     local ItemInstance = InvMgr:AddItemDefinition(InvDef, 1)
-    if ItemInstance ~= nil then
-        print("Granted:", InvDefPath)
-        return true
-    else
+    if not ItemInstance then
         print("AddItemDefinition failed")
         return false
     end
+
+    return true
 end
 
-local function revokeAbilityInternal(InvDefPath)
-    local InvMgr = nil
+function removeInventory(InvMgr, InvDef)
+    local ItemInstance = InvMgr:FindFirstItemStackByDefinition(InvDef)
+    if not ItemInstance or not ItemInstance:IsValid() then
+        print("Not found")
+        return false
+    end
 
+    InvMgr:RemoveItemInstance(ItemInstance)
+    return true
+end
+
+function updateInventoryInternal(InvMgr, InvDef, doAdd)
+    if doAdd then return addInventory(InvMgr, InvDef) else return removeInventory(InvMgr, InvDef) end
+end
+
+local function updateInventory(InvDefPath, doAdd)
+
+    local InvMgr = nil
     for _, obj in ipairs(FindAllOf("LyraInventoryManagerComponent") or {}) do
         if obj:IsValid() then
             if string.find(obj:GetFullName(), 'SupraworldPlayerController_C') then
@@ -62,26 +50,54 @@ local function revokeAbilityInternal(InvDefPath)
 
     if not InvMgr then 
         print("Could not find inventory manager")
-        return
+        return nil
     end
 
     -- Load the inventory definition
     LoadAsset(InvDefPath)
+
     local InvDef = StaticFindObject(InvDefPath)
     if InvDef == nil or not InvDef:IsValid() then
-        print("Couldn't load inventory def:", InvDefPath)
+        print("Could not load inventory definition", InvDefPath)
         return
     end
 
-    -- Check if the item is already granted
-    local it = InvMgr:FindFirstItemStackByDefinition(InvDef)
-    if it and it:IsValid() then
-        print("Removing:", InvDefPath)
-        InvMgr:RemoveItemInstance(it)
+    return updateInventoryInternal(InvMgr, InvDef, doAdd)
+end
+
+local function grantAbilityInternal(InvDefPath)
+    return updateInventory(InvDefPath, true)
+end
+
+local function revokeAbilityInternal(InvDefPath)
+    return updateInventory(InvDefPath, false)
+end
+
+local function getInventoryPath(str)
+    local Object = FindObject('BlueprintGeneratedClass', str)
+    if not Object or not Object:IsValid() then
+        Object = FindObject('BlueprintGeneratedClass', string.format('Inventory_%s_C',str))
+    end
+    if not Object or not Object:IsValid() then return nil end
+    return Object:GetFullName():match('%s(.+)')
+end
+
+local function inventoryHandler(fn, actionVerb, usageMsg, failMsg)
+    return function(_, params, Ar)
+        local arg = params[1]
+        if not arg then
+            Ar:Log(usageMsg)
+            return true
+        end
+        local path = getInventoryPath(arg)
+        if not path then
+            Ar:Log(string.format("could not find %s", arg))
+        elseif fn(path) then
+            Ar:Log(string.format("%s %s", actionVerb, path))
+        else
+            Ar:Log(string.format("%s %s", failMsg, path))
+        end
         return true
-    else
-        print("Not granted")
-        return false
     end
 end
 
@@ -125,34 +141,6 @@ local function grantAbilities()
 end
 
 RegisterKeyBind(Key.G, {ModifierKey.CONTROL}, grantAbilities)
-
-local function getInventoryPath(str)
-    local Object = FindObject('BlueprintGeneratedClass', str)
-    if not Object or not Object:IsValid() then
-        Object = FindObject('BlueprintGeneratedClass', string.format('Inventory_%s_C',str))
-    end
-    if not Object or not Object:IsValid() then return nil end
-    return Object:GetFullName():match('%s(.+)')
-end
-
-local function inventoryHandler(fn, actionVerb, usageMsg, failMsg)
-  return function(_, params, Ar)
-    local arg = params[1]
-    if not arg then
-      Ar:Log(usageMsg)
-      return true
-    end
-    local path = getInventoryPath(arg)
-    if not path then
-      Ar:Log(string.format("could not find %s", arg))
-    elseif fn(path) then
-      Ar:Log(string.format("%s %s", actionVerb, path))
-    else
-      Ar:Log(string.format("%s %s", failMsg, path))
-    end
-    return true
-  end
-end
 
 RegisterConsoleCommandHandler("grant", inventoryHandler(grantAbilityInternal, "granted", "usage: grant <inventory>, e.g. grant spongesuit", "already have"))
 RegisterConsoleCommandHandler("revoke", inventoryHandler(revokeAbilityInternal, "revoked", "usage: revoke <inventory>", "not carrying"))
