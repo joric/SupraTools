@@ -127,7 +127,7 @@ end
 RegisterKeyBind(Key.G, {ModifierKey.CONTROL}, grantAbilities)
 
 local function getObjectPath(str)
-    local Object = FindObject('BlueprintGeneratedClass', str)
+    local Object = FindObject('BlueprintGeneratedClass', string.format('Inventory_%s_C',str))
     if Object then
         local name = Object:GetFullName()
         local path = name:match('%s(.+)')
@@ -136,14 +136,13 @@ local function getObjectPath(str)
     return nil
 end
 
--- usage `grant inventory_shield_c`
-RegisterConsoleCommandHandler("grant", function(FullCommand, Parameters, Ar)
+RegisterConsoleCommandHandler("add", function(FullCommand, Parameters, Ar)
     local path = getObjectPath(Parameters[1])
     if path then
         if grantAbilityInternal(path) then
             Ar:Log(string.format('granted %s', path))
         else
-            Ar:Log(string.format('could not grant %s', path))
+            Ar:Log(string.format('could not grant (already granted) %s', path))
         end
     else
         Ar:Log(string.format('could not find %s', Parameters[1]))
@@ -151,14 +150,13 @@ RegisterConsoleCommandHandler("grant", function(FullCommand, Parameters, Ar)
     return true
 end)
 
--- usage `revoke inventory_shield_c`
-RegisterConsoleCommandHandler("revoke", function(FullCommand, Parameters, Ar)
+RegisterConsoleCommandHandler("drop", function(FullCommand, Parameters, Ar)
     local path = getObjectPath(Parameters[1])
     if path then
         if revokeAbilityInternal(path) then
             Ar:Log(string.format('revoked %s', path))
         else
-            Ar:Log(string.format('could not revoke %s', path))
+            Ar:Log(string.format('could not revoke (not granted) %s', path))
         end
     end
     return true
