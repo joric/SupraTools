@@ -127,12 +127,11 @@ end
 RegisterKeyBind(Key.G, {ModifierKey.CONTROL}, grantAbilities)
 
 local function getObjectPath(str)
-    local Object = FindObject('BlueprintGeneratedClass', string.format('Inventory_%s_C',str))
-    if Object then
-        local name = Object:GetFullName()
-        local path = name:match('%s(.+)')
-        return path
+    local Object = FindObject('BlueprintGeneratedClass', str)
+    if not Object then
+        Object = FindObject('BlueprintGeneratedClass', string.format('Inventory_%s_C',str))
     end
+    if Object then return Object:GetFullName():match('%s(.+)') end
     return nil
 end
 
