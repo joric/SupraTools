@@ -148,13 +148,20 @@ local function GetAssetsByKeywords(keywords)
     return results
 end
 
-
+local function FindAssetsByKeywords(keywords) -- see findobject.md
+    results = {}
+    local Object = FindObject(keywords[2] or 'BlueprintGeneratedClass', keywords[1])
+    if Object then
+        table.insert(results, Object:GetFullName())
+    end
+    return results
+end
 
 RegisterConsoleCommandHandler("find", function(FullCommand, Parameters, Ar)
 
-    local matches = GetAssetsByKeywords(Parameters)
+    local matches = FindAssetsByKeywords(Parameters)
     for i, path in ipairs(matches) do
-        print("Match:", path)
+        Ar:Log(path)
     end
 
     -- local matches = findAssetsByKeyword({"Carriables", "ButtonBattery"})

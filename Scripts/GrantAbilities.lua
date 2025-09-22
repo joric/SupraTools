@@ -41,9 +41,47 @@ local function grantAbilityInternal(InvDefPath)
     local ItemInstance = InvMgr:AddItemDefinition(InvDef, 1)
     if ItemInstance ~= nil then
         print("Granted:", InvDefPath)
+        return true
     else
         print("AddItemDefinition failed")
+        return false
+    end
+end
+
+local function revokeAbilityInternal(InvDefPath)
+    local InvMgr = nil
+
+    for _, obj in ipairs(FindAllOf("LyraInventoryManagerComponent") or {}) do
+        if obj:IsValid() then
+            if string.find(obj:GetFullName(), 'SupraworldPlayerController_C') then
+                InvMgr = obj
+                break
+            end
+        end
+    end
+
+    if not InvMgr then 
+        print("Could not find inventory manager")
         return
+    end
+
+    -- Load the inventory definition
+    LoadAsset(InvDefPath)
+    local InvDef = StaticFindObject(InvDefPath)
+    if InvDef == nil or not InvDef:IsValid() then
+        print("Couldn't load inventory def:", InvDefPath)
+        return
+    end
+
+    -- Check if the item is already granted
+    local it = InvMgr:FindFirstItemStackByDefinition(InvDef)
+    if it and it:IsValid() then
+        print("Removing:", InvDefPath)
+        InvMgr:RemoveItemInstance(it)
+        return true
+    else
+        print("Not granted")
+        return false
     end
 end
 
@@ -87,3 +125,44 @@ local function grantAbilities()
 end
 
 RegisterKeyBind(Key.G, {ModifierKey.CONTROL}, grantAbilities)
+
+local function getObjectPath(str)
+    local Object = FindObject('BlueprintGeneratedClass', str)
+    if Object then
+        local name = Object:GetFullName()
+        local path = name:match('%s(.+)')
+        return path
+    end
+    return nil
+end
+
+-- usage `grant inventory_shield_c`
+RegisterConsoleCommandHandler("grant", function(FullCommand, Parameters, Ar)
+    local path = getObjectPath(Parameters[1])
+    if path then
+        if grantAbilityInternal(path) then
+            Ar:Log(string.format('granted %s', path))
+        else
+            Ar:Log(string.format('could not grant %s', path))
+        end
+    else
+        Ar:Log(string.format('could not find %s', Parameters[1]))
+    end
+    return true
+end)
+
+-- usage `revoke inventory_shield_c`
+RegisterConsoleCommandHandler("revoke", function(FullCommand, Parameters, Ar)
+    local path = getObjectPath(Parameters[1])
+    if path then
+        if revokeAbilityInternal(path) then
+            Ar:Log(string.format('revoked %s', path))
+        else
+            Ar:Log(string.format('could not revoke %s', path))
+        end
+    end
+    return true
+end)
+
+
+
