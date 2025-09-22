@@ -60,9 +60,12 @@ local function spawnThings()
     -- spawnClass('/Supraworld/Levelobjects/Carriables/Die.Die_C')
     -- spawnClass('/Supraworld/Levelobjects/Carriables/ButtonBattery.ButtonBattery_C')
     spawnClass('/Supraworld/Abilities/SpongeSuit/ShopItem_SpongeSuit.ShopItem_SpongeSuit_C')
+
+    -- you can also totally use cheats, e.g. "summon Bush_C" in game console
+    -- UEHelpers.GetPlayerController().CheatManager['summon']('Bush_C')
+    -- UEHelpers.GetPlayerController().CheatManager.Summon('Bush_C')
 end
 
--- you can also use "summon" in console, e.g. "summon Bush_C"
 
 RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings)
 
