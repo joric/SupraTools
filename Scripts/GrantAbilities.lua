@@ -126,23 +126,23 @@ end
 
 RegisterKeyBind(Key.G, {ModifierKey.CONTROL}, grantAbilities)
 
-local function getObjectPath(str)
+local function getInventoryPath(str)
     local Object = FindObject('BlueprintGeneratedClass', str)
     if not Object or not Object:IsValid() then
         Object = FindObject('BlueprintGeneratedClass', string.format('Inventory_%s_C',str))
     end
-    if Object then return Object:GetFullName():match('%s(.+)') end
-    return nil
+    if not Object or not Object:IsValid() then return nil end
+    return Object:GetFullName():match('%s(.+)')
 end
 
-local function makeHandler(fn, actionName, usage, haveMsg, notHaveMsg)
+local function inventoryHandler(fn, actionName, usage, haveMsg, notHaveMsg)
   return function(_, params, Ar)
     local arg = params[1]
     if not arg then
       Ar:Log(usage)
       return true
     end
-    local path = getObjectPath(arg)
+    local path = getInventoryPath(arg)
     if not path then
       Ar:Log(string.format("could not find %s", arg))
     elseif fn(path) then
@@ -154,5 +154,5 @@ local function makeHandler(fn, actionName, usage, haveMsg, notHaveMsg)
   end
 end
 
-RegisterConsoleCommandHandler("grant", makeHandler(grantAbilityInternal, "granted", "usage: grant <inventory>, e.g. grant spongesuit", nil, "already have"))
-RegisterConsoleCommandHandler("revoke", makeHandler(revokeAbilityInternal, "revoked", "usage: revoke <inventory>", nil, "not carrying"))
+RegisterConsoleCommandHandler("grant", inventoryHandler(grantAbilityInternal, "granted", "usage: grant <inventory>, e.g. grant spongesuit", nil, "already have"))
+RegisterConsoleCommandHandler("revoke", inventoryHandler(revokeAbilityInternal, "revoked", "usage: revoke <inventory>", nil, "not carrying"))
