@@ -135,7 +135,7 @@ local function getInventoryPath(str)
     return Object:GetFullName():match('%s(.+)')
 end
 
-local function inventoryHandler(fn, actionName, usageMsg, failMsg)
+local function inventoryHandler(fn, actionVerb, usageMsg, failMsg)
   return function(_, params, Ar)
     local arg = params[1]
     if not arg then
@@ -146,7 +146,7 @@ local function inventoryHandler(fn, actionName, usageMsg, failMsg)
     if not path then
       Ar:Log(string.format("could not find %s", arg))
     elseif fn(path) then
-      Ar:Log(string.format("%s %s", actionName, path))
+      Ar:Log(string.format("%s %s", actionVerb, path))
     else
       Ar:Log(string.format("%s %s", failMsg, path))
     end
