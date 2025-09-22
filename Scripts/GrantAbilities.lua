@@ -1,8 +1,8 @@
 local UEHelpers = require("UEHelpers")
 
-function addInventory(InvMgr, InvDef)
-    local ItemInstance = InvMgr:FindFirstItemStackByDefinition(InvDef)
-    if ItemInstance and ItemInstance:IsValid() then
+local function addInventory(InvMgr, InvDef)
+    local item = InvMgr:FindFirstItemStackByDefinition(InvDef)
+    if item and item:IsValid() then
         print("Already granted")
         return false
     end
@@ -12,8 +12,8 @@ function addInventory(InvMgr, InvDef)
         return false
     end
 
-    local ItemInstance = InvMgr:AddItemDefinition(InvDef, 1)
-    if not ItemInstance then
+    local newItem = InvMgr:AddItemDefinition(InvDef, 1)
+    if not newItem then
         print("AddItemDefinition failed")
         return false
     end
@@ -21,45 +21,45 @@ function addInventory(InvMgr, InvDef)
     return true
 end
 
-function removeInventory(InvMgr, InvDef)
-    local ItemInstance = InvMgr:FindFirstItemStackByDefinition(InvDef)
-    if not ItemInstance or not ItemInstance:IsValid() then
+local function removeInventory(InvMgr, InvDef)
+    local item = InvMgr:FindFirstItemStackByDefinition(InvDef)
+    if not item or not item:IsValid() then
         print("Not found")
         return false
     end
 
-    InvMgr:RemoveItemInstance(ItemInstance)
+    InvMgr:RemoveItemInstance(item)
     return true
 end
 
-function updateInventoryInternal(InvMgr, InvDef, doAdd)
-    if doAdd then return addInventory(InvMgr, InvDef) else return removeInventory(InvMgr, InvDef) end
+local function updateInventoryInternal(InvMgr, InvDef, doAdd)
+    if doAdd then
+        return addInventory(InvMgr, InvDef)
+    else
+        return removeInventory(InvMgr, InvDef)
+    end
 end
 
 local function updateInventory(InvDefPath, doAdd)
-
-    local InvMgr = nil
+    local InvMgr
     for _, obj in ipairs(FindAllOf("LyraInventoryManagerComponent") or {}) do
-        if obj:IsValid() then
-            if string.find(obj:GetFullName(), 'SupraworldPlayerController_C') then
-                InvMgr = obj
-                break
-            end
+        if obj:IsValid() and string.find(obj:GetFullName(), "SupraworldPlayerController_C") then
+            InvMgr = obj
+            break
         end
     end
 
-    if not InvMgr then 
+    if not InvMgr then
         print("Could not find inventory manager")
         return nil
     end
 
-    -- Load the inventory definition
     LoadAsset(InvDefPath)
-
     local InvDef = StaticFindObject(InvDefPath)
-    if InvDef == nil or not InvDef:IsValid() then
+
+    if not InvDef or not InvDef:IsValid() then
         print("Could not load inventory definition", InvDefPath)
-        return
+        return nil
     end
 
     return updateInventoryInternal(InvMgr, InvDef, doAdd)
@@ -73,13 +73,19 @@ local function revokeAbilityInternal(InvDefPath)
     return updateInventory(InvDefPath, false)
 end
 
+local function grantAbility(InvDefPath)
+    ExecuteInGameThread(function()
+        grantAbilityInternal(InvDefPath)
+    end)
+end
+
 local function getInventoryPath(str)
-    local Object = FindObject('BlueprintGeneratedClass', str)
-    if not Object or not Object:IsValid() then
-        Object = FindObject('BlueprintGeneratedClass', string.format('Inventory_%s_C',str))
+    local obj = FindObject("BlueprintGeneratedClass", str)
+    if not obj or not obj:IsValid() then
+        obj = FindObject("BlueprintGeneratedClass", string.format("Inventory_%s_C", str))
     end
-    if not Object or not Object:IsValid() then return nil end
-    return Object:GetFullName():match('%s(.+)')
+    if not obj or not obj:IsValid() then return nil end
+    return obj:GetFullName():match("%s(.+)")
 end
 
 local function inventoryHandler(fn, actionVerb, usageMsg, failMsg)
@@ -89,6 +95,7 @@ local function inventoryHandler(fn, actionVerb, usageMsg, failMsg)
             Ar:Log(usageMsg)
             return true
         end
+
         local path = getInventoryPath(arg)
         if not path then
             Ar:Log(string.format("could not find %s", arg))
@@ -97,50 +104,40 @@ local function inventoryHandler(fn, actionVerb, usageMsg, failMsg)
         else
             Ar:Log(string.format("%s %s", failMsg, path))
         end
+
         return true
     end
 end
 
-local function grantAbility(InvDefPath)
-    ExecuteInGameThread(function()
-        grantAbilityInternal(InvDefPath)
-    end)
-end
-
 local function grantAbilities()
-    grantAbility('/Supraworld/Abilities/Walk/Inventory_Walk.Inventory_Walk_C')
-    grantAbility('/Supraworld/Abilities/Crouch/Inventory_Crouch.Inventory_Crouch_C')
-    grantAbility('/Supraworld/Abilities/Run/Inventory_Run.Inventory_Run_C')
-    grantAbility('/Supraworld/Abilities/Jump/Jumps/Inventory_Jump.Inventory_Jump_C')
-    grantAbility('/Supraworld/Abilities/Jump/JumpHeight/Inventory_JumpHeightDouble.Inventory_JumpHeightDouble_C')
-    grantAbility('/Supraworld/Abilities/Strength/Inventory_Strength.Inventory_Strength_C')
+    grantAbility("/Supraworld/Abilities/Walk/Inventory_Walk.Inventory_Walk_C")
+    grantAbility("/Supraworld/Abilities/Crouch/Inventory_Crouch.Inventory_Crouch_C")
+    grantAbility("/Supraworld/Abilities/Run/Inventory_Run.Inventory_Run_C")
+    grantAbility("/Supraworld/Abilities/Jump/Jumps/Inventory_Jump.Inventory_Jump_C")
+    grantAbility("/Supraworld/Abilities/Jump/JumpHeight/Inventory_JumpHeightDouble.Inventory_JumpHeightDouble_C")
+    grantAbility("/Supraworld/Abilities/Strength/Inventory_Strength.Inventory_Strength_C")
 
-    grantAbility('/Supraworld/Abilities/BlowGun/Core/Inventory_BlowGun.Inventory_BlowGun_C')
+    grantAbility("/Supraworld/Abilities/BlowGun/Core/Inventory_BlowGun.Inventory_BlowGun_C")
+    grantAbility("/Supraworld/Abilities/Toothpick/Lyra/Inventory_Toothpick.Inventory_Toothpick_C")
+    grantAbility("/Supraworld/Abilities/Toothpick/Upgrades/ToothpickDart/Inventory_Toothpin_Dart.Inventory_Toothpin_Dart_C")
 
-    grantAbility('/Supraworld/Abilities/Toothpick/Lyra/Inventory_Toothpick.Inventory_Toothpick_C')
-    grantAbility('/Supraworld/Abilities/Toothpick/Upgrades/ToothpickDart/Inventory_Toothpin_Dart.Inventory_Toothpin_Dart_C')
+    grantAbility("/Supraworld/Abilities/ThoughtReading/Inventory_ThoughtReading.Inventory_ThoughtReading_C")
+    grantAbility("/Supraworld/Abilities/Ghost/Inventory_ThirdEye.Inventory_ThirdEye_C")
+    grantAbility("/Supraworld/Abilities/Dash/Inventory_Dash.Inventory_Dash_C")
+    grantAbility("/Supraworld/Abilities/PlayerMap/Inventory_PlayerMap.Inventory_PlayerMap_C")
+    grantAbility("/Supraworld/Abilities/SpongeSuit/Upgrades/Inventory_SpongeSuit.Inventory_SpongeSuit_C")
 
-    grantAbility('/Supraworld/Abilities/ThoughtReading/Inventory_ThoughtReading.Inventory_ThoughtReading_C')
-    grantAbility('/Supraworld/Abilities/Ghost/Inventory_ThirdEye.Inventory_ThirdEye_C')
-    grantAbility('/Supraworld/Abilities/Dash/Inventory_Dash.Inventory_Dash_C')
+    grantAbility("/Supraworld/Abilities/Spark/Inventory_Spark.Inventory_Spark_C")  -- doesn't seem to work
+    grantAbility("/Supraworld/Abilities/LaserWalk/Inventory_LaserWalk.Inventory_LaserWalk_C")
+    -- grantAbility("/Supraworld/Abilities/MindControl/Inventory_MindControl.Inventory_MindControl_C") -- unfinished, breaks saves
+    grantAbility("/Supraworld/Abilities/MindVision/Inventory_MindVision.Inventory_MindVision_C")
+    grantAbility("/Supraworld/Abilities/Shield/Inventory_Shield.Inventory_Shield_C")
 
-    grantAbility('/Supraworld/Abilities/PlayerMap/Inventory_PlayerMap.Inventory_PlayerMap_C')
-
-    grantAbility('/Supraworld/Abilities/SpongeSuit/Upgrades/Inventory_SpongeSuit.Inventory_SpongeSuit_C')
-
-    -- act 2 abilities
-    grantAbility('/Supraworld/Abilities/Spark/Inventory_Spark.Inventory_Spark_C')  -- doesn't seem to work
-    grantAbility('/Supraworld/Abilities/LaserWalk/Inventory_LaserWalk.Inventory_LaserWalk_C')
-
-    -- grantAbility('/Supraworld/Abilities/MindControl/Inventory_MindControl.Inventory_MindControl_C') -- unfinished, breaks control/saves
-    grantAbility('/Supraworld/Abilities/MindVision/Inventory_MindVision.Inventory_MindVision_C')
-    grantAbility('/Supraworld/Abilities/Shield/Inventory_Shield.Inventory_Shield_C')
-
-    -- misc
-    grantAbility('/Supraworld/Abilities/SmellImmunity/Inventory_SmellImmunity.Inventory_SmellImmunity_C') -- doesn't seem player compatible
+    grantAbility("/Supraworld/Abilities/SmellImmunity/Inventory_SmellImmunity.Inventory_SmellImmunity_C") -- not player compatible
 end
 
 RegisterKeyBind(Key.G, {ModifierKey.CONTROL}, grantAbilities)
 
 RegisterConsoleCommandHandler("grant", inventoryHandler(grantAbilityInternal, "granted", "usage: grant <inventory>, e.g. grant spongesuit", "already have"))
 RegisterConsoleCommandHandler("revoke", inventoryHandler(revokeAbilityInternal, "revoked", "usage: revoke <inventory>", "not carrying"))
+
