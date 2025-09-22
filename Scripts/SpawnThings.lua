@@ -51,7 +51,7 @@ local function spawnThings()
     -- spawnClass('/Supraworld/Levelobjects/Carriables/ButtonBattery.ButtonBattery_C')
     spawnClass('/Supraworld/Abilities/SpongeSuit/ShopItem_SpongeSuit.ShopItem_SpongeSuit_C')
 
-    -- you can also totally use cheats, e.g. "summon Bush_C" in game console (uses LoadAsset internally)
+    -- you can also use cheats, e.g. "summon Bush_C" in game console (uses LoadAsset internally)
     -- UEHelpers.GetPlayerController().CheatManager['summon']('Bush_C')
     -- UEHelpers.GetPlayerController().CheatManager.Summon('Bush_C')
 end
