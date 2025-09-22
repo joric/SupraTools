@@ -43,17 +43,7 @@ local function spawnClass(className)
     end)
 end
 
-local function dumpObjects()
-    for _,obj in pairs(FindAllOf("Object")) do
-        local name = obj:GetFullName()
-        if name:find("Carriables") and name:find("Battery_C") then
-            print(name)
-        end
-    end
-end
-
 local function spawnThings()
-    -- dumpObjects()
     -- spawnClass('/Supraworld/Levelobjects/Carriables/AluminumBall.AluminumBall_C')
     -- spawnClass('/Supraworld/Levelobjects/Carriables/FourLeafClover.FourLeafClover_C')
     -- spawnClass('/Supraworld/Levelobjects/Carriables/Hats/JesterHat.JesterHat_C')
