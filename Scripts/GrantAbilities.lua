@@ -135,35 +135,24 @@ local function getObjectPath(str)
     return nil
 end
 
-RegisterConsoleCommandHandler("grant", function(FullCommand, Parameters, Ar)
-    if #Parameters == 0 then
-        Ar:Log('usage: grant <inventory>, e.g. grant spongesuit')
+local function makeHandler(fn, actionName, usage, haveMsg, notHaveMsg)
+  return function(_, params, Ar)
+    local arg = params[1]
+    if not arg then
+      Ar:Log(usage)
+      return true
+    end
+    local path = getObjectPath(arg)
+    if not path then
+      Ar:Log(string.format("could not find %s", arg))
+    elseif fn(path) then
+      Ar:Log(string.format("%s %s", actionName, path))
     else
-        local path = getObjectPath(Parameters[1])
-        if path then
-            if grantAbilityInternal(path) then
-                Ar:Log(string.format('granted %s', path))
-            else
-                Ar:Log(string.format('already have %s', path))
-            end
-        else
-            Ar:Log(string.format('could not find %s', Parameters[1]))
-        end
+      Ar:Log(string.format("%s %s", (haveMsg or notHaveMsg), path))
     end
     return true
-end)
+  end
+end
 
-RegisterConsoleCommandHandler("revoke", function(FullCommand, Parameters, Ar)
-    local path = getObjectPath(Parameters[1])
-    if path then
-        if revokeAbilityInternal(path) then
-            Ar:Log(string.format('revoked %s', path))
-        else
-            Ar:Log(string.format('not carrying %s', path))
-        end
-    end
-    return true
-end)
-
-
-
+RegisterConsoleCommandHandler("grant", makeHandler(grantAbilityInternal, "granted", "usage: grant <inventory>, e.g. grant spongesuit", nil, "already have"))
+RegisterConsoleCommandHandler("revoke", makeHandler(revokeAbilityInternal, "revoked", "usage: revoke <inventory>", nil, "not carrying"))
