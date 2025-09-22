@@ -135,24 +135,24 @@ local function getInventoryPath(str)
     return Object:GetFullName():match('%s(.+)')
 end
 
-local function inventoryHandler(fn, actionName, usage, haveMsg, notHaveMsg)
+local function inventoryHandler(fn, actionMsg, usageMsg, failMsg)
   return function(_, params, Ar)
     local arg = params[1]
     if not arg then
-      Ar:Log(usage)
+      Ar:Log(usageMsg)
       return true
     end
     local path = getInventoryPath(arg)
     if not path then
       Ar:Log(string.format("could not find %s", arg))
     elseif fn(path) then
-      Ar:Log(string.format("%s %s", actionName, path))
+      Ar:Log(string.format("%s %s", actionMsg, path))
     else
-      Ar:Log(string.format("%s %s", (haveMsg or notHaveMsg), path))
+      Ar:Log(string.format("%s %s", failMsg, path))
     end
     return true
   end
 end
 
-RegisterConsoleCommandHandler("grant", inventoryHandler(grantAbilityInternal, "granted", "usage: grant <inventory>, e.g. grant spongesuit", nil, "already have"))
-RegisterConsoleCommandHandler("revoke", inventoryHandler(revokeAbilityInternal, "revoked", "usage: revoke <inventory>", nil, "not carrying"))
+RegisterConsoleCommandHandler("grant", inventoryHandler(grantAbilityInternal, "granted", "usage: grant <inventory>, e.g. grant spongesuit", "already have"))
+RegisterConsoleCommandHandler("revoke", inventoryHandler(revokeAbilityInternal, "revoked", "usage: revoke <inventory>", "not carrying"))
