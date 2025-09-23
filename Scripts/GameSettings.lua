@@ -9,7 +9,7 @@ RegisterConsoleCommandHandler("gravity", function(FullCommand, Parameters, Ar)
 end)
 
 
--- doesn't work for default controller, probably uses Lyta/GAS abilities
+-- doesn't work for default controller, probably uses Lyra/GAS abilities
 RegisterConsoleCommandHandler("jumpheight", function(FullCommand, Parameters, Ar)
     local pc = UEHelpers.GetPlayerController()
     local cm = pc.Pawn.CharacterMovement
@@ -28,8 +28,16 @@ end)
 
 
 RegisterConsoleCommandHandler("speed", function(FullCommand, Parameters, Ar)
-    local value = tonumber(Parameters[1]) or 1.0
-    UEHelpers.GetGameplayStatics():SetGlobalTimeDilation(UEHelpers.GetWorld(), value)
+    local world = UEHelpers.GetWorld()
+    local gs = UEHelpers.GetGameplayStatics()
+    local value = tonumber(Parameters[1])
+
+    if not value then
+        Ar:Log(string.format("Current global time dilation: %.1f", gs:GetGlobalTimeDilation(world)))
+        return true
+    end
+
+    gs:SetGlobalTimeDilation(world, value)
     Ar:Log(string.format("Speed set to %.1f", value))
     return true
 end)
