@@ -27,7 +27,7 @@ local function suitRefill(color)
     return true
 end
 
--- RegisterKeyBind(Key.R, suitRefill) -- remove in version 1.0.1 (affects console commands)
+RegisterKeyBind(Key.R, suitRefill) -- remove in version 1.0.1 (affects console commands)
 
 RegisterKeyBind(Key.F, {ModifierKey.CONTROL}, function()
     suitRefill(1)
