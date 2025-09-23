@@ -88,11 +88,28 @@ local function getInventoryPath(str)
     return obj:GetFullName():match("%s(.+)")
 end
 
+local function getAllAbilities()
+    local out = {}
+    for _, obj in pairs(FindObjects(10000, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
+        if obj and obj:IsValid() then
+            local path = tostring(obj:GetFullName())
+            if path:find("/Abilities") then
+                local name = path:match("Inventory_([^%.]+)")
+                if name then
+                    table.insert(out, name:lower())
+                end
+            end
+        end
+    end
+    return table.concat(out, "\n")
+end
+
 local function inventoryHandler(fn, actionVerb, usageMsg, failMsg)
     return function(_, params, Ar)
         local arg = params[1]
         if not arg then
             Ar:Log(usageMsg)
+            Ar:Log(getAllAbilities())
             return true
         end
 
