@@ -10,26 +10,21 @@ local function suitRefill(color)
             ---@param Color ESupraColors
             ---@param VolumeChange double
             ---function AEquippable_SpongeSuit_C:Liquid(Instigator, Type, Color, VolumeChange) end
-
             print("Exposing to liquid with color", color, "current color", obj.CurrentColor)
-
-
             -- see enums: 1 is water, 2 is paint, 3 is oil
             -- ESupraColors:Whilte is 16
-
             local pc = UEHelpers.GetPlayerController()
-
-            obj:Liquid(pc, 2, 16, 0.0) -- paint, white. does not work. maybe use real paint volume as instigator
-        else
-            obj:SetCurrentFill(1.0)
+            obj:Liquid(pc, 2, 16, 0.0) -- paint, white. does not work. maybe use real paint volume as instigator?
         end
+
+        obj:SetCurrentFill(1.0)
     end
     return true
 end
 
-RegisterKeyBind(Key.R, suitRefill) -- remove in version 1.0.1 (affects console commands)
+-- RegisterKeyBind(Key.R, suitRefill) -- remove in version 1.0.1 (affects console commands)
 
-RegisterKeyBind(Key.F, {ModifierKey.CONTROL}, function()
+RegisterKeyBind(Key.F, {ModifierKey.ALT}, function()
     suitRefill(1)
 end)
 
