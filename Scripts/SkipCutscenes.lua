@@ -41,5 +41,5 @@ end
     -- removeCutscenes() -- disabled, breaks npc animation
 -- end)
 
-RegisterKeyBind(Key.S, {ModifierKey.ALT}, skipCutscene)
+RegisterKeyBind(Key.X, {ModifierKey.ALT}, skipCutscene)
 
