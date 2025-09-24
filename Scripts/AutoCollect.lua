@@ -39,4 +39,4 @@ local function autoCollect()
     end)
 end
 
-RegisterKeyBind(Key.X, {ModifierKey.CONTROL}, autoCollect)
+RegisterKeyBind(Key.C, {ModifierKey.ALT}, autoCollect)
