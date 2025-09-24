@@ -57,5 +57,5 @@ local function spawnThings()
 end
 
 
-RegisterKeyBind(Key.S, {ModifierKey.ALT}, spawnThings)
+RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings)
 
