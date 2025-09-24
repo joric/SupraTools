@@ -51,4 +51,4 @@ local function grabObject()
     end)
 end
 
-RegisterKeyBind(Key.G, grabObject)
+RegisterKeyBind(Key.G, {ModifierKey.ALT}, grabObject)
