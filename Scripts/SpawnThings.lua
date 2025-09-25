@@ -92,6 +92,7 @@ local function spawnFromObjectClass(obj)
 end
 
 local selectedObject = nil
+local hiddenObject = nil
 
 local function copyObject()
     local pc = UEHelpers.GetPlayerController()
@@ -119,15 +120,15 @@ local function pasteObject()
 end
 
 local function cutObject()
-    copyObject()
-    if selectedObject and selectedObject:IsValid() then
-        selectedObject:SetActorHiddenInGame(true)
+    hiddenObject = copyObject()
+    if hiddenObject and hiddenObject:IsValid() then
+        hiddenObject:SetActorHiddenInGame(true)
     end
 end
 
 local function undo()
-    if selectedObject and selectedObject:IsValid() then
-        selectedObject:SetActorHiddenInGame(false)
+    if hiddenObject and hiddenObject:IsValid() then
+        hiddenObject:SetActorHiddenInGame(false)
     end
 end
 
