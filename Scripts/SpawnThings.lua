@@ -119,9 +119,15 @@ local function pasteObject()
 end
 
 local function cutObject()
-    local obj = copyObject()
-    if obj and obj:IsValid() then
-        obj:K2_DestroyActor()
+    copyObject()
+    if selectedObject and selectedObject:IsValid() then
+        selectedObject:SetActorHiddenInGame(true)
+    end
+end
+
+local function undo()
+    if selectedObject and selectedObject:IsValid() then
+        selectedObject:SetActorHiddenInGame(false)
     end
 end
 
@@ -129,3 +135,4 @@ RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings)
 RegisterKeyBind(Key.C, {ModifierKey.CONTROL}, copyObject)
 RegisterKeyBind(Key.V, {ModifierKey.CONTROL}, pasteObject)
 RegisterKeyBind(Key.X, {ModifierKey.CONTROL}, cutObject)
+RegisterKeyBind(Key.Z, {ModifierKey.CONTROL}, undo)
