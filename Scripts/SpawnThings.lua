@@ -122,6 +122,7 @@ end
 local function cutObject()
     hiddenObject = copyObject()
     if hiddenObject and hiddenObject:IsValid() then
+        hiddenObject::SetActorEnableCollision(false)
         hiddenObject:SetActorHiddenInGame(true)
     end
 end
@@ -129,6 +130,7 @@ end
 local function undo()
     if hiddenObject and hiddenObject:IsValid() then
         hiddenObject:SetActorHiddenInGame(false)
+        hiddenObject::SetActorEnableCollision(true)
     end
 end
 
