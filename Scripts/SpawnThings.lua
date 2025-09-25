@@ -105,6 +105,7 @@ local function copyObject()
 
     selectedObject = hitObject:GetOuter()
     print("Copied object: " .. selectedObject:GetFullName() .. " of class: " .. selectedObject:GetClass():GetFullName())
+    return selectedObject
 end
 
 local function pasteObject()
@@ -117,6 +118,14 @@ local function pasteObject()
     spawnFromObjectClass(selectedObject)
 end
 
+local function cutObject()
+    local obj = copyObject()
+    if obj and obj:IsValid() then
+        obj:K2_DestroyActor()
+    end
+end
+
 RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings)
 RegisterKeyBind(Key.C, {ModifierKey.CONTROL}, copyObject)
 RegisterKeyBind(Key.V, {ModifierKey.CONTROL}, pasteObject)
+RegisterKeyBind(Key.X, {ModifierKey.CONTROL}, cutObject)
