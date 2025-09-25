@@ -59,6 +59,16 @@ function SpawnActorFromObjectClass(Object, Location, Rotation)
     return invalidActor
 end
 
+local function spawnClass(className)
+    ExecuteWithDelay(250, function()
+        ExecuteInGameThread(function()
+            local loc = getTargetLocation()
+            local rot = {Pitch=0, Yaw=0, Roll=0}
+            SpawnActorFromClass(className, loc, rot)
+        end)
+    end)
+end
+
 local function spawnThings()
     -- spawnClass('/Supraworld/Levelobjects/Carriables/AluminumBall.AluminumBall_C')
     -- spawnClass('/Supraworld/Levelobjects/Carriables/FourLeafClover.FourLeafClover_C')
@@ -69,16 +79,6 @@ local function spawnThings()
     -- you can also use cheats, e.g. "summon Bush_C" in game console (uses LoadAsset internally)
     -- UEHelpers.GetPlayerController().CheatManager['summon']('Bush_C')
     -- UEHelpers.GetPlayerController().CheatManager.Summon('Bush_C')
-end
-
-local function spawnClass(className)
-    ExecuteWithDelay(250, function()
-        ExecuteInGameThread(function()
-            local loc = getTargetLocation()
-            local rot = {Pitch=0, Yaw=0, Roll=0}
-            SpawnActorFromClass(className, loc, rot)
-        end)
-    end)
 end
 
 local function spawnFromObjectClass(obj)
