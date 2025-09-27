@@ -23,6 +23,8 @@ local function suitRefill(color)
 end
 
 -- RegisterKeyBind(Key.R, suitRefill) -- remove in version 1.0.1 (affects console commands)
+-- cannot use Ctrl+R either (system bind on reload scripts)
+-- cannot use Alt+R (bind on rotation)
 
 RegisterKeyBind(Key.F, {ModifierKey.ALT}, function()
     suitRefill(1)
