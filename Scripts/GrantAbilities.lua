@@ -153,7 +153,7 @@ local function grantAbilities()
     grantAbility("/Supraworld/Abilities/SmellImmunity/Inventory_SmellImmunity.Inventory_SmellImmunity_C") -- not player compatible
 end
 
-RegisterKeyBind(Key.V, {ModifierKey.ALT}, grantAbilities)
+RegisterKeyBind(Key.I, {ModifierKey.ALT}, grantAbilities)
 
 RegisterConsoleCommandHandler("grant", inventoryHandler(grantAbilityInternal, "granted", "usage: grant <inventory>, e.g. grant spongesuit", "already have"))
 RegisterConsoleCommandHandler("revoke", inventoryHandler(revokeAbilityInternal, "revoked", "usage: revoke <inventory>", "not carrying"))

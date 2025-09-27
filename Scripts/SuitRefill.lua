@@ -24,7 +24,7 @@ end
 
 -- RegisterKeyBind(Key.R, suitRefill) -- remove in version 1.0.1 (affects console commands)
 
-RegisterKeyBind(Key.R, {ModifierKey.ALT}, function()
+RegisterKeyBind(Key.F, {ModifierKey.ALT}, function()
     suitRefill(1)
 end)
 

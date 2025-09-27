@@ -42,4 +42,4 @@ local function showText()
     end)
 end
 
-RegisterKeyBind(Key.Z, {ModifierKey.ALT}, showText)
+RegisterKeyBind(Key.U, {ModifierKey.ALT}, showText)

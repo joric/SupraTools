@@ -39,4 +39,9 @@ local function autoCollect()
     end)
 end
 
-RegisterKeyBind(Key.C, {ModifierKey.ALT}, autoCollect)
+RegisterConsoleCommandHandler("autocollect", function(FullCommand, Parameters, Ar)
+    autoCollect()
+    return true
+end)
+
+RegisterKeyBind(Key.O, {ModifierKey.ALT}, autoCollect)

@@ -1,12 +1,43 @@
 local UEHelpers = require("UEHelpers")
 
+local SAVE_FILE = "ue4ss/Mods/SupraTools/Scripts/SpawnThings.txt"
+
+-- Unified log of all actions
+local actions = {}
+
+-- ==============================================================
+-- Utility
+-- ==============================================================
+
+local function serializeTransform(loc, rot, scale)
+    return string.format("%f,%f,%f;%f,%f,%f;%f,%f,%f",
+        loc.X, loc.Y, loc.Z,
+        rot.Pitch, rot.Yaw, rot.Roll,
+        scale.X, scale.Y, scale.Z)
+end
+
+local function deserializeTransform(str)
+    local lx,ly,lz, p,y,r, sx,sy,sz =
+        str:match("([^,;]+),([^,;]+),([^,;]+);([^,;]+),([^,;]+),([^,;]+);([^,;]+),([^,;]+),([^,;]+)")
+    return {
+        loc   = {X=tonumber(lx), Y=tonumber(ly), Z=tonumber(lz)},
+        rot   = {Pitch=tonumber(p), Yaw=tonumber(y), Roll=tonumber(r)},
+        scale = {X=tonumber(sx), Y=tonumber(sy), Z=tonumber(sz)}
+    }
+end
+
+local function getBaseName(fullName)
+    local name = fullName:match("^%S+%s+(.+)")
+    return name or fullName
+end
+
 function getTargetLocation()
     local pc = UEHelpers.GetPlayerController()
     local cam = pc.PlayerCameraManager
     return getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
 end
 
-function SpawnActorFromClass(ActorClassName, Location, Rotation)
+function SpawnActorFromClassName(ActorClassName, Location, Rotation)
     local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
     if type(ActorClassName) ~= "string" or not Location then return invalidActor end
 
@@ -17,7 +48,7 @@ function SpawnActorFromClass(ActorClassName, Location, Rotation)
 
     local actorClass = StaticFindObject(ActorClassName)
     if not actorClass:IsValid() then
-        print("SpawnActorFromClass: Couldn't find static object:", ActorClassName)
+        print("SpawnActorFromClassName: Couldn't find static object:", ActorClassName)
         return invalidActor
     end
 
@@ -33,7 +64,6 @@ function SpawnActorFromClass(ActorClassName, Location, Rotation)
     return invalidActor
 end
 
--- Alternative function to spawn from an existing object's class
 function SpawnActorFromObjectClass(Object, Location, Rotation)
     local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
     if not Object or not Object:IsValid() then return invalidActor end
@@ -64,21 +94,257 @@ local function spawnClass(className)
         ExecuteInGameThread(function()
             local loc = getTargetLocation()
             local rot = {Pitch=0, Yaw=0, Roll=0}
-            SpawnActorFromClass(className, loc, rot)
+            SpawnActorFromClassName(className, loc, rot)
         end)
     end)
 end
 
+-- ==============================================================
+-- Unified File I/O (actions)
+-- ==============================================================
+
+local function serializeAction(action)
+    if action.type == "spawn" then
+        -- spawn|className|loc,rot,scale
+        return string.format("spawn|%s|%s", action.className, serializeTransform(action.loc, action.rot, action.scale))
+    elseif action.type == "hide" then
+        return string.format("hide|%s|", action.name)
+    elseif action.type == "unhide" then
+        return string.format("unhide|%s|", action.name)
+    elseif action.type == "rotate" then
+        return string.format("rotate|%s|%f", action.name, action.yaw)
+    elseif action.type == "cut" then
+        return string.format("cut|%s|", action.name)
+    end
+    return ""
+end
+
+local function parseAction(line)
+    local action, obj, params = line:match("^(%w+)%|([^|]+)%|?(.*)$")
+    if not action or not obj then return nil end
+    if action == "spawn" then
+        local tf = deserializeTransform(params)
+        return {type="spawn", className=obj, loc=tf.loc, rot=tf.rot, scale=tf.scale}
+    elseif action == "hide" then
+        return {type="hide", name=obj}
+    elseif action == "unhide" then
+        return {type="unhide", name=obj}
+    elseif action == "rotate" then
+        return {type="rotate", name=obj, yaw=tonumber(params)}
+    elseif action == "cut" then
+        return {type="cut", name=obj}
+    end
+    return nil
+end
+
+local function saveActions()
+    local f = io.open(SAVE_FILE, "w")
+    if not f then return end
+    for _, action in ipairs(actions) do
+        local line = serializeAction(action)
+        if line and line ~= "" then
+            f:write(line .. "\n")
+        end
+    end
+    f:close()
+end
+
+local function loadActions()
+    actions = {}
+    local f = io.open(SAVE_FILE, "r")
+    if not f then return end
+    for line in f:lines() do
+        local act = parseAction(line)
+        if act then table.insert(actions, act) end
+    end
+    f:close()
+end
+
+-- ==============================================================
+-- Action Application (Replay)
+-- ==============================================================
+
+local function applyActions()
+    -- Keep track of hidden/spawned/rotated state as we go
+    local hiddenSet = {}
+    local rotatedMap = {}
+    for _, act in ipairs(actions) do
+        if act.type == "spawn" then
+            print("spawning", act.className)
+            SpawnActorFromClassName(act.className, act.loc, act.rot)
+        elseif act.type == "hide" then
+            print("hiding", act.name)
+            local Object = StaticFindObject(act.name)
+            if Object and Object:IsValid() and Object.SetActorHiddenInGame then
+                Object:SetActorHiddenInGame(true)
+                Object:SetActorEnableCollision(false)
+                hiddenSet[act.name] = true
+            end
+        elseif act.type == "unhide" then
+            print("unhiding", act.name)
+            local Object = StaticFindObject(act.name)
+            if Object and Object:IsValid() and Object.SetActorHiddenInGame then
+                Object:SetActorHiddenInGame(false)
+                Object:SetActorEnableCollision(true)
+                hiddenSet[act.name] = nil
+            end
+        elseif act.type == "rotate" then
+            print("rotating", act.name, act.yaw)
+            local Object = StaticFindObject(act.name)
+            if Object and Object:IsValid() and Object.K2_SetActorRotation then
+                local rot = Object:K2_GetActorRotation()
+                rot.Yaw = act.yaw
+                Object:K2_SetActorRotation(rot, false)
+                rotatedMap[act.name] = act.yaw
+            end
+        end
+    end
+end
+
+-- ==============================================================
+-- Undo Last Action
+-- ==============================================================
+
+local function undoLastAction()
+    if #actions == 0 then return end
+    local last = table.remove(actions)
+    saveActions()
+    -- Reload and replay actions (simply re-applies all except the last)
+    ExecuteInGameThread(function()
+        applyActions()
+    end)
+    print("Undid last action: " .. (last.type or "?"))
+end
+
+-- ==============================================================
+-- Editor Operations
+-- ==============================================================
+
+local selectedObject = nil
+
+local function copyObject()
+    local pc = UEHelpers.GetPlayerController()
+    if not pc or not pc:IsValid() or not pc.Pawn then return end
+
+    local cam = pc.PlayerCameraManager
+    local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
+    if not hitObject or not hitObject:IsValid() then return end
+
+    selectedObject = hitObject:GetOuter()
+    if not selectedObject:IsValid() then return end
+
+    print("Copied: " .. selectedObject:GetFullName())
+    return selectedObject
+end
+
+local function pasteObject()
+    print("pasteObject", selectedObject and selectedObject:IsValid() and selectedObject:GetFullName())
+
+    if not selectedObject or not selectedObject:IsValid() then return end
+
+    local pc = UEHelpers.GetPlayerController()
+    local cam = pc.PlayerCameraManager
+    local loc = getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
+    local rot = selectedObject:K2_GetActorRotation()
+    local scale = selectedObject:GetActorScale3D()
+    local className = getBaseName(selectedObject:GetClass():GetFullName())
+
+    -- Add to actions
+    table.insert(actions, {type="spawn", className=className, loc=loc, rot=rot, scale=scale})
+    saveActions()
+
+    print("spawning object", className)
+
+    ExecuteInGameThread(function()
+        SpawnActorFromClassName(className, loc, rot)
+    end)
+end
+
+local function cutObject()
+    local pc = UEHelpers.GetPlayerController()
+    if not pc or not pc:IsValid() or not pc.Pawn then return end
+
+    local cam = pc.PlayerCameraManager
+    local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
+    if not hitObject or not hitObject:IsValid() then return end
+
+    local obj = hitObject:GetOuter()
+    if obj and obj:IsValid() then
+        obj:SetActorHiddenInGame(true)
+        obj:SetActorEnableCollision(false)
+
+        local name = getBaseName(obj:GetFullName())
+        print("Hid object: " .. name)
+        table.insert(actions, {type="hide", name=name})
+        saveActions()
+    end
+end
+
+local function rotateObject()
+    local pc = UEHelpers.GetPlayerController()
+    if not pc or not pc:IsValid() then return end
+
+    local cam = pc.PlayerCameraManager
+
+    local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
+    if not hitObject or not hitObject:IsValid() then return end
+
+    local actor = hitObject:GetOuter()
+    if not actor or not actor:IsValid() then return end
+
+    print('rotating', actor:GetFullName())
+
+    local rot = actor:K2_GetActorRotation()
+    rot.Yaw = rot.Yaw + 90
+    if rot.Yaw >= 360 then rot.Yaw = rot.Yaw - 360 end
+
+    if actor.SetMobility and actor.SetMobility:IsValid() then
+        actor:SetMobility(2) -- movable
+    end
+
+    actor:K2_SetActorRotation(rot, false)
+
+    -- Save rotation action
+    local name = getBaseName(actor:GetFullName())
+    table.insert(actions, {type="rotate", name=name, yaw=rot.Yaw})
+    saveActions()
+
+    print("Rotated object: " .. actor:GetFullName() .. " to Yaw=" .. rot.Yaw)
+end
+
+local function undoHide()
+    local pc = UEHelpers.GetPlayerController()
+    if not pc or not pc:IsValid() or not pc.Pawn then return end
+
+    local cam = pc.PlayerCameraManager
+    local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
+    if not hitObject or not hitObject:IsValid() then return end
+
+    local obj = hitObject:GetOuter()
+    if obj and obj:IsValid() then
+        obj:SetActorHiddenInGame(false)
+        obj:SetActorEnableCollision(true)
+
+        local name = getBaseName(obj:GetFullName())
+        print("Unhid object: " .. name)
+        table.insert(actions, {type="unhide", name=name})
+        saveActions()
+    end
+end
+
+-- ==============================================================
+-- Load and Replay
+-- ==============================================================
+
+local function loadSaves()
+    ExecuteInGameThread(function()
+        loadActions()
+        applyActions()
+    end)
+end
+
 local function spawnThings()
-    -- spawnClass('/Supraworld/Levelobjects/Carriables/AluminumBall.AluminumBall_C')
-    -- spawnClass('/Supraworld/Levelobjects/Carriables/FourLeafClover.FourLeafClover_C')
-    -- spawnClass('/Supraworld/Levelobjects/Carriables/Hats/JesterHat.JesterHat_C')
-    -- spawnClass('/Supraworld/Levelobjects/Carriables/Die.Die_C')
-    -- spawnClass('/Supraworld/Levelobjects/Carriables/ButtonBattery.ButtonBattery_C')
     spawnClass('/Supraworld/Abilities/SpongeSuit/ShopItem_SpongeSuit.ShopItem_SpongeSuit_C')
-    -- you can also use cheats, e.g. "summon Bush_C" in game console (uses LoadAsset internally)
-    -- UEHelpers.GetPlayerController().CheatManager['summon']('Bush_C')
-    -- UEHelpers.GetPlayerController().CheatManager.Summon('Bush_C')
 end
 
 local function spawnFromObjectClass(obj)
@@ -91,51 +357,19 @@ local function spawnFromObjectClass(obj)
     end)
 end
 
-local selectedObject = nil
-local hiddenObject = nil
+-- ==============================================================
+-- Hooks & Keybinds
+-- ==============================================================
 
-local function copyObject()
-    local pc = UEHelpers.GetPlayerController()
-    if not pc or not pc:IsValid() or not pc.Pawn or not pc.Pawn:IsValid() then
-        return
-    end
-
-    local cam = pc.PlayerCameraManager
-    local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
-    if not hitObject or not hitObject:IsValid() then return end
-
-    selectedObject = hitObject:GetOuter()
-    print("Copied object: " .. selectedObject:GetFullName() .. " of class: " .. selectedObject:GetClass():GetFullName())
-    return selectedObject
-end
-
-local function pasteObject()
-    if not selectedObject then 
-        print("No object copied to paste")
-        return 
-    end
-    
-    print("Pasting object of class: " .. selectedObject:GetClass():GetFullName())
-    spawnFromObjectClass(selectedObject)
-end
-
-local function cutObject()
-    hiddenObject = copyObject()
-    if hiddenObject and hiddenObject:IsValid() then
-        hiddenObject:SetActorEnableCollision(false)
-        hiddenObject:SetActorHiddenInGame(true)
-    end
-end
-
-local function undo()
-    if hiddenObject and hiddenObject:IsValid() then
-        hiddenObject:SetActorHiddenInGame(false)
-        hiddenObject:SetActorEnableCollision(true)
-    end
-end
+RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
+    loadSaves()
+end)
 
 RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings)
-RegisterKeyBind(Key.C, {ModifierKey.CONTROL}, copyObject)
-RegisterKeyBind(Key.V, {ModifierKey.CONTROL}, pasteObject)
-RegisterKeyBind(Key.X, {ModifierKey.CONTROL}, cutObject)
-RegisterKeyBind(Key.Z, {ModifierKey.CONTROL}, undo)
+RegisterKeyBind(Key.C, {ModifierKey.ALT}, copyObject)
+RegisterKeyBind(Key.V, {ModifierKey.ALT}, pasteObject)
+RegisterKeyBind(Key.X, {ModifierKey.ALT}, cutObject)
+-- RegisterKeyBind(Key.Z, {ModifierKey.ALT}, undoHide)
+RegisterKeyBind(Key.R, {ModifierKey.ALT}, rotateObject)
+RegisterKeyBind(Key.Z, {ModifierKey.ALT}, undoLastAction)
+RegisterKeyBind(Key.Z, loadSaves)
