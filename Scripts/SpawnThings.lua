@@ -279,6 +279,12 @@ local function copyObject()
     if not pc or not pc:IsValid() or not pc.Pawn then return end
 
     local cam = pc.PlayerCameraManager
+
+    if inDebugCamera then
+        cam = FindFirstOf("DebugCameraController").PlayerCameraManager
+        print("capturing from debug camera")
+    end
+
     local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
     if not hitObject or not hitObject:IsValid() then return end
 
@@ -298,9 +304,16 @@ local function pasteObject()
     local actor = selectedObject:GetOuter()
 
     local pc = UEHelpers.GetPlayerController()
+
     local cam = pc.PlayerCameraManager
 
+    if inDebugCamera then
+        cam = FindFirstOf("DebugCameraController").PlayerCameraManager
+        print("capturing from debug camera")
+    end
+
     local loc = getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
+
     local rot = actor:K2_GetActorRotation()
     local scale = actor:GetActorScale3D()
     local className = getBaseName(actor:GetClass():GetFullName())
@@ -410,3 +423,7 @@ RegisterKeyBind(Key.V, {ModifierKey.CONTROL}, pasteObject)
 RegisterKeyBind(Key.X, {ModifierKey.CONTROL}, cutObject)
 RegisterKeyBind(Key.R, {ModifierKey.ALT}, rotateObject)
 RegisterKeyBind(Key.Z, {ModifierKey.CONTROL}, undoLastAction)
+
+RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.ALT}, copyObject)
+RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, {ModifierKey.ALT}, pasteObject)
+

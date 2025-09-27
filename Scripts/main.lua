@@ -17,6 +17,8 @@ function getHitObject(WorldObject, StartVector, Rotation)
     return UEHelpers.GetActorFromHitResult(getHitResult(WorldObject, StartVector, Rotation))
 end
 
+inDebugCamera = false -- global variable, may be used in scrpts
+
 require("UnblockEA")
 require("DebugCamera")
 require("SuitRefill")
