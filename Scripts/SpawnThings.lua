@@ -49,7 +49,7 @@ local function CloneStaticMeshActor(fullName, location, rotation, scale)
 
     local loadedAsset = StaticFindObject(fullName)
     if not loadedAsset:IsValid() then
-        error("Invalid asset loaded: " .. assetPath)
+        error("Could not find asset", fullName)
         return actor
     end
 
@@ -80,7 +80,7 @@ local function CloneStaticMeshActor(fullName, location, rotation, scale)
         end
     end
 
-  return actor
+    return actor
 
 end
 
