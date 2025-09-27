@@ -41,85 +41,47 @@ function getTargetLocation()
     return getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
 end
 
-function CloneStaticMeshActor(fullName, newLoc, newRot, newScale)
-    local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
+local function CloneStaticMeshActor(fullName, location, rotation, scale)
+    local world = UEHelpers.GetWorld()
+    local staticMeshActorClass = StaticFindObject("/Script/Engine.StaticMeshActor")
+    local staticMeshClass = StaticFindObject("/Script/Engine.StaticMesh")
+    local actor = CreateInvalidObject() ---@cast actor AActor
 
-    print("--- Trying to clone static mesh actor ---")
-
-    -- find the source actor instance
-    local src = StaticFindObject(fullName)
-    if not src or not src:IsValid() then
-        print("CloneStaticMeshActor: source not found " .. fullName)
-        return invalidActor
+    local loadedAsset = StaticFindObject(fullName)
+    if not loadedAsset:IsValid() then
+        error("Invalid asset loaded: " .. assetPath)
+        return actor
     end
 
-    local smcSrc = src.StaticMeshComponent
-    if not smcSrc then
-        print("CloneStaticMeshActor: no StaticMeshComponent")
-        return invalidActor
+    actor = world:SpawnActor(staticMeshActorClass, location, rotation)
+
+    if not actor:IsValid() then
+        print("world:SpawnActor actor is not valid");
     end
 
-    -- load StaticMeshActor class
-    local clsPath = "/Script/Engine.StaticMeshActor"
-    LoadAsset(clsPath)
+    loadedAsset = loadedAsset.StaticMesh
 
-    local actorClass = StaticFindObject(clsPath)
-    if not actorClass or not actorClass:IsValid() then
-        print("CloneStaticMeshActor: can't load StaticMeshActor class")
-        return invalidActor
-    end
+    if actor:IsValid() then
 
-    -- make transform for the new actor
-    local transform = UEHelpers.GetKismetMathLibrary():MakeTransform(
-        newLoc or src:K2_GetActorLocation(),
-        newRot or src:K2_GetActorRotation(),
-        newScale or src:K2_GetActorScale3D()
-    )
+        actor:SetActorScale3D(scale)
+        actor:SetReplicates(true)
 
-    local world = src:GetWorld()
-    local deferred = UEHelpers.GetGameplayStatics():BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
-    if not deferred or not deferred:IsValid() then
-        print("CloneStaticMeshActor: spawn failed")
-        return invalidActor
-    end
+        if loadedAsset:IsA(staticMeshClass) then
+            local gameInstance = UEHelpers.GetGameInstance()
+            gameInstance.ReferencedObjects[#gameInstance.ReferencedObjects + 1] = loadedAsset
+            actor:SetMobility(2)
 
-    -- finalize spawn first
-    local clone = UEHelpers.GetGameplayStatics():FinishSpawningActor(deferred, transform, 0)
-    if not clone or not clone:IsValid() then return invalidActor end
+            if not actor.StaticMeshComponent:SetStaticMesh(loadedAsset) then
+                error("Failed to set " .. loadedAsset:GetFullName() .. " as static mesh")
+                return actor
+            end
 
-    -- now safely get the StaticMeshComponent
-    -- local smc = clone:FindComponentByClass(UE.StaticMeshComponent)
-    local smc = clone.StaticMeshComponent
-
-    print("comp", smc, smcSrc, smc:IsValid(), smcSrc:IsValid()) -- says true, true
-
-    print("smcSrc.StaticMesh", smcSrc.StaticMesh, smcSrc.StaticMesh and smcSrc.StaticMesh:IsValid())
-
-    if smc and smcSrc then
-
-        smc:SetStaticMesh(smcSrc.StaticMesh)
-
-        for i = 0, smcSrc:GetNumMaterials()-1 do
-            smc:SetMaterial(i, smcSrc:GetMaterial(i))
+            actor.StaticMeshComponent:SetIsReplicated(true)
         end
-
-        smc:SetMobility(smcSrc.Mobility)
-        smc:SetCollisionEnabled(smcSrc:GetCollisionEnabled())
-
-
-        clone:SetActorHiddenInGame(false)
-
-
-        print("SMC valid:", smc:IsValid())
-        print("SMC mesh valid:", smc.StaticMesh and smc.StaticMesh:IsValid())
-        print("SMC visible:", smc:IsVisible())
-        print("SMC materials:", smc:GetNumMaterials())
-
     end
 
+  return actor
 
-
-    return clone
 end
 
 function SpawnActorFromClassName(ActorClassName, Location, Rotation, Scale)
@@ -308,7 +270,8 @@ local function copyObject()
     local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
     if not hitObject or not hitObject:IsValid() then return end
 
-    selectedObject = hitObject:GetOuter()
+    selectedObject = hitObject--:GetOuter()
+
     if not selectedObject:IsValid() then return end
 
     print("Copied: " .. selectedObject:GetFullName())
@@ -320,16 +283,18 @@ local function pasteObject()
 
     if not selectedObject or not selectedObject:IsValid() then return end
 
+    local actor = selectedObject:GetOuter()
+
     local pc = UEHelpers.GetPlayerController()
     local cam = pc.PlayerCameraManager
+
     local loc = getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
-    local rot = selectedObject:K2_GetActorRotation()
-    local scale = selectedObject:GetActorScale3D()
-    local className = getBaseName(selectedObject:GetClass():GetFullName())
-    local name = getBaseName(selectedObject:GetFullName())
+    local rot = actor:K2_GetActorRotation()
+    local scale = actor:GetActorScale3D()
+    local className = getBaseName(actor:GetClass():GetFullName())
 
     if className == '/Script/Engine.StaticMeshActor' then
-        className = name
+        className = getBaseName(selectedObject:GetFullName())
     end
 
     -- Add to actions
