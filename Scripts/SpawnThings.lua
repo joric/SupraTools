@@ -275,45 +275,19 @@ end
 local selectedObject = nil
 
 local function copyObject()
-    local pc = UEHelpers.GetPlayerController()
-    if not pc or not pc:IsValid() or not pc.Pawn then return end
-
-    local cam = pc.PlayerCameraManager
-
-    if inDebugCamera then
-        cam = FindFirstOf("DebugCameraController").PlayerCameraManager
-        print("capturing from debug camera")
-    end
-
-    local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
+    local hitObject = getCameraHitObject()
     if not hitObject or not hitObject:IsValid() then return end
-
-    selectedObject = hitObject--:GetOuter()
-
+    selectedObject = hitObject
     if not selectedObject:IsValid() then return end
-
     print("Copied: " .. selectedObject:GetFullName())
     return selectedObject
 end
 
 local function pasteObject()
-    print("pasteObject", selectedObject and selectedObject:IsValid() and selectedObject:GetFullName())
-
     if not selectedObject or not selectedObject:IsValid() then return end
 
     local actor = selectedObject:GetOuter()
-
-    local pc = UEHelpers.GetPlayerController()
-
-    local cam = pc.PlayerCameraManager
-
-    if inDebugCamera then
-        cam = FindFirstOf("DebugCameraController").PlayerCameraManager
-        print("capturing from debug camera")
-    end
-
-    local loc = getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
-
+    local loc = getCameraImpactPoint()
     local rot = actor:K2_GetActorRotation()
     local scale = actor:GetActorScale3D()
     local className = getBaseName(actor:GetClass():GetFullName())
@@ -322,7 +296,6 @@ local function pasteObject()
         className = getBaseName(selectedObject.StaticMesh:GetFullName())
     end
 
-    -- Add to actions
     local act = {type="spawn", className=className, loc=loc, rot=rot, scale=scale}
     applyAction(act)
 
@@ -418,11 +391,18 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
 end)
 
 RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings)
+
 RegisterKeyBind(Key.C, {ModifierKey.CONTROL}, copyObject)
 RegisterKeyBind(Key.V, {ModifierKey.CONTROL}, pasteObject)
 RegisterKeyBind(Key.X, {ModifierKey.CONTROL}, cutObject)
-RegisterKeyBind(Key.R, {ModifierKey.ALT}, rotateObject)
 RegisterKeyBind(Key.Z, {ModifierKey.CONTROL}, undoLastAction)
+
+RegisterKeyBind(Key.C, {ModifierKey.ALT}, copyObject)
+RegisterKeyBind(Key.V, {ModifierKey.ALT}, pasteObject)
+RegisterKeyBind(Key.X, {ModifierKey.ALT}, cutObject)
+RegisterKeyBind(Key.Z, {ModifierKey.ALT}, undoLastAction)
+
+RegisterKeyBind(Key.R, {ModifierKey.ALT}, rotateObject)
 
 RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.ALT}, copyObject)
 RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, {ModifierKey.ALT}, pasteObject)

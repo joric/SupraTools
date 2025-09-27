@@ -17,7 +17,19 @@ function getHitObject(WorldObject, StartVector, Rotation)
     return UEHelpers.GetActorFromHitResult(getHitResult(WorldObject, StartVector, Rotation))
 end
 
-inDebugCamera = false -- global variable, may be used in scrpts
+inDebugCamera = false -- global variable
+
+function getCameraHitObject()
+    local pc = UEHelpers.GetPlayerController()
+    local cam = (inDebugCamera and FindFirstOf("DebugCameraController") or pc).PlayerCameraManager
+    return getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
+end
+
+function getCameraImpactPoint()
+    local pc = UEHelpers.GetPlayerController()
+    local cam = (inDebugCamera and FindFirstOf("DebugCameraController") or pc).PlayerCameraManager
+    return getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
+end
 
 require("UnblockEA")
 require("DebugCamera")
