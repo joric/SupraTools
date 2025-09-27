@@ -167,7 +167,7 @@ local function applyAction(act)
     if act.type == "spawn" then
         print("spawning", act.className)
         ExecuteInGameThread(function()
-            SpawnActorFromClassName(act.className, act.loc, act.rot, act.scale)
+            act.result = SpawnActorFromClassName(act.className, act.loc, act.rot, act.scale)
         end)
     elseif act.type == "hide" then
         local Object = StaticFindObject(act.name)
@@ -187,9 +187,11 @@ local function applyAction(act)
         local Object = StaticFindObject(act.name)
         if Object and Object:IsValid() and Object.K2_SetActorRotation then
             print("rotating", act.name, act.yaw)
+
             if Object.SetMobility and Object.SetMobility:IsValid() then
                 Object:SetMobility(2) -- movable
             end
+
             local rot = Object:K2_GetActorRotation()
             rot.Yaw = (rot.Yaw + act.yaw) % 360
             Object:K2_SetActorRotation(rot, false)
@@ -221,6 +223,13 @@ local function undoLastAction()
     if act.type == "rotate" then
         act.yaw = -act.yaw
         applyAction(act)
+    end
+
+    if act.type == "spawn" then
+        local actor = act.result
+        if actor and actor:IsValid() then
+            actor:K2_DestroyActor()
+        end
     end
 
     saveActions()
