@@ -164,40 +164,38 @@ end
 -- Action Application (Replay)
 -- ==============================================================
 
-local function applyActions()
-    -- Keep track of hidden/spawned/rotated state as we go
-    local hiddenSet = {}
-    local rotatedMap = {}
-    for _, act in ipairs(actions) do
-        if act.type == "spawn" then
-            print("spawning", act.className)
-            SpawnActorFromClassName(act.className, act.loc, act.rot)
-        elseif act.type == "hide" then
+local function applyAction(act)
+    if act.type == "spawn" then
+        print("spawning", act.className)
+        SpawnActorFromClassName(act.className, act.loc, act.rot)
+    elseif act.type == "hide" then
+        local Object = StaticFindObject(act.name)
+        if Object and Object:IsValid() and Object.SetActorHiddenInGame then
             print("hiding", act.name)
-            local Object = StaticFindObject(act.name)
-            if Object and Object:IsValid() and Object.SetActorHiddenInGame then
-                Object:SetActorHiddenInGame(true)
-                Object:SetActorEnableCollision(false)
-                hiddenSet[act.name] = true
-            end
-        elseif act.type == "unhide" then
-            print("unhiding", act.name)
-            local Object = StaticFindObject(act.name)
-            if Object and Object:IsValid() and Object.SetActorHiddenInGame then
-                Object:SetActorHiddenInGame(false)
-                Object:SetActorEnableCollision(true)
-                hiddenSet[act.name] = nil
-            end
-        elseif act.type == "rotate" then
-            print("rotating", act.name, act.yaw)
-            local Object = StaticFindObject(act.name)
-            if Object and Object:IsValid() and Object.K2_SetActorRotation then
-                local rot = Object:K2_GetActorRotation()
-                rot.Yaw = act.yaw
-                Object:K2_SetActorRotation(rot, false)
-                rotatedMap[act.name] = act.yaw
-            end
+            Object:SetActorHiddenInGame(true)
+            Object:SetActorEnableCollision(false)
         end
+    elseif act.type == "unhide" then
+        local Object = StaticFindObject(act.name)
+        if Object and Object:IsValid() and Object.SetActorHiddenInGame then
+            print("unhiding", act.name)
+            Object:SetActorHiddenInGame(false)
+            Object:SetActorEnableCollision(true)
+        end
+    elseif act.type == "rotate" then
+        local Object = StaticFindObject(act.name)
+        if Object and Object:IsValid() and Object.K2_SetActorRotation then
+            print("rotating", act.name, act.yaw)
+            local rot = Object:K2_GetActorRotation()
+            rot.Yaw = act.yaw
+            Object:K2_SetActorRotation(rot, false)
+        end
+    end
+end
+
+local function applyActions()
+    for _, act in ipairs(actions) do
+        applyAction(act)
     end
 end
 
@@ -207,13 +205,20 @@ end
 
 local function undoLastAction()
     if #actions == 0 then return end
-    local last = table.remove(actions)
+    local act = table.remove(actions)
+
+    print("Undoing last action: " .. (act.type or "?"))
+
+    if act.type == "hide" then
+        act.type = "unhide"
+        applyAction(act)
+    end
+
     saveActions()
     -- Reload and replay actions (simply re-applies all except the last)
     ExecuteInGameThread(function()
-        applyActions()
+        -- applyActions()
     end)
-    print("Undid last action: " .. (last.type or "?"))
 end
 
 -- ==============================================================
@@ -312,26 +317,6 @@ local function rotateObject()
     print("Rotated object: " .. actor:GetFullName() .. " to Yaw=" .. rot.Yaw)
 end
 
-local function undoHide()
-    local pc = UEHelpers.GetPlayerController()
-    if not pc or not pc:IsValid() or not pc.Pawn then return end
-
-    local cam = pc.PlayerCameraManager
-    local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
-    if not hitObject or not hitObject:IsValid() then return end
-
-    local obj = hitObject:GetOuter()
-    if obj and obj:IsValid() then
-        obj:SetActorHiddenInGame(false)
-        obj:SetActorEnableCollision(true)
-
-        local name = getBaseName(obj:GetFullName())
-        print("Unhid object: " .. name)
-        table.insert(actions, {type="unhide", name=name})
-        saveActions()
-    end
-end
-
 -- ==============================================================
 -- Load and Replay
 -- ==============================================================
@@ -366,10 +351,8 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
 end)
 
 RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings)
-RegisterKeyBind(Key.C, {ModifierKey.ALT}, copyObject)
-RegisterKeyBind(Key.V, {ModifierKey.ALT}, pasteObject)
-RegisterKeyBind(Key.X, {ModifierKey.ALT}, cutObject)
--- RegisterKeyBind(Key.Z, {ModifierKey.ALT}, undoHide)
+RegisterKeyBind(Key.C, {ModifierKey.CONTROL}, copyObject)
+RegisterKeyBind(Key.V, {ModifierKey.CONTROL}, pasteObject)
+RegisterKeyBind(Key.X, {ModifierKey.CONTROL}, cutObject)
 RegisterKeyBind(Key.R, {ModifierKey.ALT}, rotateObject)
-RegisterKeyBind(Key.Z, {ModifierKey.ALT}, undoLastAction)
-RegisterKeyBind(Key.Z, loadSaves)
+RegisterKeyBind(Key.Z, {ModifierKey.CONTROL}, undoLastAction)
