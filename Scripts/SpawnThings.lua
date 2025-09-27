@@ -53,13 +53,15 @@ function ExecuteInGameThreadSync(exec)
   end
 end
 
-local function CloneStaticMeshActor(fullName, location, rotation, scale)
+local function CloneStaticMeshActor(meshPath, location, rotation, scale)
     local world = UEHelpers.GetWorld()
+
     local staticMeshActorClass = StaticFindObject("/Script/Engine.StaticMeshActor")
     local staticMeshClass = StaticFindObject("/Script/Engine.StaticMesh")
+
     local actor = CreateInvalidObject() ---@cast actor AActor
 
-    local loadedAsset = StaticFindObject(fullName)
+    local loadedAsset = StaticFindObject(meshPath)
     if not loadedAsset:IsValid() then
         return actor
     end
@@ -69,8 +71,6 @@ local function CloneStaticMeshActor(fullName, location, rotation, scale)
     if not actor:IsValid() then
         print("world:SpawnActor actor is not valid");
     end
-
-    loadedAsset = loadedAsset.StaticMesh
 
     if actor:IsValid() then
 
@@ -101,10 +101,6 @@ function SpawnActorFromClassName(ActorClassName, Location, Rotation, Scale)
     local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
     if type(ActorClassName) ~= "string" or not Location then return invalidActor end
 
-    if ActorClassName:find('StaticMeshActor') then
-        return CloneStaticMeshActor(ActorClassName, Location, Rotation, Scale)
-    end
-
     LoadAsset(ActorClassName)
 
     local world = UEHelpers.GetWorld()
@@ -116,14 +112,13 @@ function SpawnActorFromClassName(ActorClassName, Location, Rotation, Scale)
         return invalidActor
     end
 
-
     local transform = UEHelpers.GetKismetMathLibrary():MakeTransform(Location, Rotation, Scale)
 
     local deferredActor = UEHelpers.GetGameplayStatics():BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
     if deferredActor:IsValid() then
         return UEHelpers.GetGameplayStatics():FinishSpawningActor(deferredActor, transform, 0)
     else
-        print("Deferred Actor failed", ActorClassName)
+        return CloneStaticMeshActor(ActorClassName, Location, Rotation, Scale)
     end
     return invalidActor
 end
@@ -311,7 +306,7 @@ local function pasteObject()
     local className = getBaseName(actor:GetClass():GetFullName())
 
     if className == '/Script/Engine.StaticMeshActor' then
-        className = getBaseName(selectedObject:GetFullName())
+        className = getBaseName(selectedObject.StaticMesh:GetFullName())
     end
 
     -- Add to actions
