@@ -61,7 +61,6 @@ local function CloneStaticMeshActor(fullName, location, rotation, scale)
 
     local loadedAsset = StaticFindObject(fullName)
     if not loadedAsset:IsValid() then
-        error("Could not find asset", fullName)
         return actor
     end
 
@@ -79,8 +78,10 @@ local function CloneStaticMeshActor(fullName, location, rotation, scale)
         actor:SetReplicates(true)
 
         if loadedAsset:IsA(staticMeshClass) then
-            local gameInstance = UEHelpers.GetGameInstance()
-            gameInstance.ReferencedObjects[#gameInstance.ReferencedObjects + 1] = loadedAsset
+
+            -- local gameInstance = UEHelpers.GetGameInstance()
+            -- gameInstance.ReferencedObjects[#gameInstance.ReferencedObjects + 1] = loadedAsset
+
             actor:SetMobility(2)
 
             if not actor.StaticMeshComponent:SetStaticMesh(loadedAsset) then
@@ -195,9 +196,13 @@ end
 local function applyAction(act)
     if act.type == "spawn" then
         print("spawning", act.className)
-        ExecuteInGameThread(function()
-            act.result = SpawnActorFromClassName(act.className, act.loc, act.rot, act.scale)
+
+        ExecuteWithDelay(50, function()
+            ExecuteInGameThread(function()
+                act.result = SpawnActorFromClassName(act.className, act.loc, act.rot, act.scale)
+            end)
         end)
+
     elseif act.type == "hide" then
         local Object = StaticFindObject(act.name)
         if Object and Object:IsValid() and Object.SetActorHiddenInGame then
