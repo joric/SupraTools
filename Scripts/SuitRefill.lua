@@ -28,6 +28,10 @@ RegisterKeyBind(Key.F, {ModifierKey.ALT}, function()
     suitRefill(1)
 end)
 
+RegisterKeyBind(Key.F, {ModifierKey.CONTROL}, function()
+    suitRefill(1)
+end)
+
 RegisterConsoleCommandHandler("refill", function(FullCommand, Parameters, Ar)
     if suitRefill(Parameters[1]) then
         Ar:Log('suit refilled')
