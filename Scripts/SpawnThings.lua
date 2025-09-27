@@ -41,6 +41,18 @@ function getTargetLocation()
     return getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
 end
 
+function ExecuteInGameThreadSync(exec)
+  local isProcessing = true
+  ExecuteInGameThread(function()
+    exec()
+    isProcessing = false
+  end)
+
+  while isProcessing do
+    Sleep(1)
+  end
+end
+
 local function CloneStaticMeshActor(fullName, location, rotation, scale)
     local world = UEHelpers.GetWorld()
     local staticMeshActorClass = StaticFindObject("/Script/Engine.StaticMeshActor")
@@ -362,8 +374,26 @@ local function loadSaves()
     end)
 end
 
+local function spawnClass(className)
+    ExecuteWithDelay(250, function()
+        ExecuteInGameThread(function()
+            local loc = getTargetLocation()
+            local rot = {Pitch=0, Yaw=0, Roll=0}
+            SpawnActorFromClass(className, loc, rot)
+        end)
+    end)
+end
+
 local function spawnThings()
+    -- spawnClass('/Supraworld/Levelobjects/Carriables/AluminumBall.AluminumBall_C')
+    -- spawnClass('/Supraworld/Levelobjects/Carriables/FourLeafClover.FourLeafClover_C')
+    -- spawnClass('/Supraworld/Levelobjects/Carriables/Hats/JesterHat.JesterHat_C')
+    -- spawnClass('/Supraworld/Levelobjects/Carriables/Die.Die_C')
+    -- spawnClass('/Supraworld/Levelobjects/Carriables/ButtonBattery.ButtonBattery_C')
     spawnClass('/Supraworld/Abilities/SpongeSuit/ShopItem_SpongeSuit.ShopItem_SpongeSuit_C')
+    -- you can also use cheats, e.g. "summon Bush_C" in game console (uses LoadAsset internally)
+    -- UEHelpers.GetPlayerController().CheatManager['summon']('Bush_C')
+    -- UEHelpers.GetPlayerController().CheatManager.Summon('Bush_C')
 end
 
 -- ==============================================================
