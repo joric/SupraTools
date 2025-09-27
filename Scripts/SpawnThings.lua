@@ -5,6 +5,12 @@ local SAVE_FILE = "ue4ss/Mods/SupraTools/Scripts/SpawnThings.txt"
 -- Unified log of all actions
 local actions = {}
 
+local nameIndex = 0
+local function getNextName()
+    nameIndex = nameIndex + 1
+    return string.format('SpawnedThings_%04d', nameIndex)
+end
+
 -- ==============================================================
 -- Utility
 -- ==============================================================
@@ -41,16 +47,30 @@ function getTargetLocation()
     return getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
 end
 
-function ExecuteInGameThreadSync(exec)
-  local isProcessing = true
-  ExecuteInGameThread(function()
-    exec()
-    isProcessing = false
-  end)
+local function getActorByTag(tag)
+    local world = UEHelpers.GetWorld()
+    if not world:IsValid() then return nil end
+    local actors = {}
+    UEHelpers.GetGameplayStatics():GetAllActorsWithTag(world, FName(tag), actors)
+    if actors and #actors>0 then
+        return actors[1]:Get()
+    end
+    return nil
+end
 
-  while isProcessing do
-    Sleep(1)
-  end
+local function getActorByVirtualName(name)
+    local actor = getActorByTag(name)
+    if actor then
+        return actor
+    end
+    return StaticFindObject(name)
+end
+
+local function getVirtualName(actor)
+    if #actor.Tags>0 then
+        return actor.Tags[#actor.Tags]:ToString()
+    end
+    return nil
 end
 
 local function CloneStaticMeshActor(meshPath, location, rotation, scale)
@@ -72,25 +92,22 @@ local function CloneStaticMeshActor(meshPath, location, rotation, scale)
         print("world:SpawnActor actor is not valid");
     end
 
-    if actor:IsValid() then
+    actor:SetActorScale3D(scale)
+    actor:SetReplicates(true)
 
-        actor:SetActorScale3D(scale)
-        actor:SetReplicates(true)
+    if loadedAsset:IsA(staticMeshClass) then
 
-        if loadedAsset:IsA(staticMeshClass) then
+        -- local gameInstance = UEHelpers.GetGameInstance()
+        -- gameInstance.ReferencedObjects[#gameInstance.ReferencedObjects + 1] = loadedAsset
 
-            -- local gameInstance = UEHelpers.GetGameInstance()
-            -- gameInstance.ReferencedObjects[#gameInstance.ReferencedObjects + 1] = loadedAsset
+        actor:SetMobility(2)
 
-            actor:SetMobility(2)
-
-            if not actor.StaticMeshComponent:SetStaticMesh(loadedAsset) then
-                error("Failed to set " .. loadedAsset:GetFullName() .. " as static mesh")
-                return actor
-            end
-
-            actor.StaticMeshComponent:SetIsReplicated(true)
+        if not actor.StaticMeshComponent:SetStaticMesh(loadedAsset) then
+            error("Failed to set " .. loadedAsset:GetFullName() .. " as static mesh")
+            return actor
         end
+
+        actor.StaticMeshComponent:SetIsReplicated(true)
     end
 
     return actor
@@ -114,9 +131,9 @@ function SpawnActorFromClassName(ActorClassName, Location, Rotation, Scale)
 
     local transform = UEHelpers.GetKismetMathLibrary():MakeTransform(Location, Rotation, Scale)
 
-    local deferredActor = UEHelpers.GetGameplayStatics():BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
-    if deferredActor:IsValid() then
-        return UEHelpers.GetGameplayStatics():FinishSpawningActor(deferredActor, transform, 0)
+    local actor = UEHelpers.GetGameplayStatics():BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
+    if actor:IsValid() then
+        return UEHelpers.GetGameplayStatics():FinishSpawningActor(actor, transform, 0)
     else
         return CloneStaticMeshActor(ActorClassName, Location, Rotation, Scale)
     end
@@ -194,26 +211,60 @@ local function applyAction(act)
 
         ExecuteWithDelay(50, function()
             ExecuteInGameThread(function()
-                act.result = SpawnActorFromClassName(act.className, act.loc, act.rot, act.scale)
+                local name = act.className
+
+                -- className is either virtual or mesh actor or class
+
+                local actor = getActorByVirtualName(name)
+                local className = getBaseName(actor:GetClass():GetFullName())
+
+                print("spawning", name, "classname", className)
+
+                if className == '/Script/Engine.StaticMesh' then
+                    print("this is mesh")
+                    className = name
+                end
+
+                if className == '/Script/Engine.StaticMeshActor' then
+                    print("this is mesh actor")
+                    className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
+                end
+
+                if className == '/Script/Engine.BlueprintGeneratedClass' then
+                    print("this is blueprint")
+                    className = name
+                end
+
+                print("trying to spawn object from className", className)
+
+                actor = SpawnActorFromClassName(className, act.loc, act.rot, act.scale)
+
+                local tag = getNextName()
+                actor.Tags[#actor.Tags + 1] = FName(tag)
+                print("actor tagged", tag)
+                act.result = actor
             end)
         end)
 
     elseif act.type == "hide" then
-        local Object = StaticFindObject(act.name)
+        local Object = getActorByVirtualName(act.name)
         if Object and Object:IsValid() and Object.SetActorHiddenInGame then
             print("hiding", act.name)
             Object:SetActorHiddenInGame(true)
             Object:SetActorEnableCollision(false)
         end
     elseif act.type == "unhide" then
-        local Object = StaticFindObject(act.name)
+        local Object = getActorByVirtualName(act.name)
         if Object and Object:IsValid() and Object.SetActorHiddenInGame then
             print("unhiding", act.name)
             Object:SetActorHiddenInGame(false)
             Object:SetActorEnableCollision(true)
         end
     elseif act.type == "rotate" then
-        local Object = StaticFindObject(act.name)
+        local Object = getActorByVirtualName(act.name)
+
+        print("rotating class", Object:GetClass():GetFullName())
+
         if Object and Object:IsValid() and Object.K2_SetActorRotation then
             print("rotating", act.name, act.yaw)
 
@@ -239,7 +290,11 @@ end
 -- ==============================================================
 
 local function undoLastAction()
-    if #actions == 0 then return end
+    if #actions == 0 then
+        print("No more actions to undo.")
+        return
+    end
+
     local act = table.remove(actions)
 
     print("Undoing last action: " .. (act.type or "?"))
@@ -293,7 +348,12 @@ local function pasteObject()
     local className = getBaseName(actor:GetClass():GetFullName())
 
     if className == '/Script/Engine.StaticMeshActor' then
-        className = getBaseName(selectedObject.StaticMesh:GetFullName())
+        className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
+    end
+
+    local name = getVirtualName(actor)
+    if name then
+        className = name
     end
 
     local act = {type="spawn", className=className, loc=loc, rot=rot, scale=scale}
@@ -311,10 +371,10 @@ local function cutObject()
     local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
     if not hitObject or not hitObject:IsValid() then return end
 
-    local obj = hitObject:GetOuter()
-    if not obj or not obj:IsValid() then return end
+    local actor = hitObject:GetOuter()
+    if not actor or not actor:IsValid() then return end
 
-    local name = getBaseName(obj:GetFullName())
+    local name = getVirtualName(actor) or getBaseName(actor:GetFullName())
 
     local act = {type="hide", name=name}
     applyAction(act)
@@ -330,7 +390,7 @@ local function rotateObject()
     local actor = hitObject:GetOuter()
     if not actor or not actor:IsValid() then return end
 
-    local name = getBaseName(actor:GetFullName())
+    local name = getVirtualName(actor) or getBaseName(actor:GetFullName())
     local rot = actor:K2_GetActorRotation()
 
     local yaw = 90
