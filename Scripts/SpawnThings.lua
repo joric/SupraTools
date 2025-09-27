@@ -191,7 +191,7 @@ local function applyAction(act)
                 Object:SetMobility(2) -- movable
             end
             local rot = Object:K2_GetActorRotation()
-            rot.Yaw = act.yaw
+            rot.Yaw = (rot.Yaw + act.yaw) % 360
             Object:K2_SetActorRotation(rot, false)
         end
     end
@@ -215,6 +215,11 @@ local function undoLastAction()
 
     if act.type == "hide" then
         act.type = "unhide"
+        applyAction(act)
+    end
+
+    if act.type == "rotate" then
+        act.yaw = -act.yaw
         applyAction(act)
     end
 
@@ -299,12 +304,12 @@ local function rotateObject()
     if not actor or not actor:IsValid() then return end
 
     local name = getBaseName(actor:GetFullName())
-
     local rot = actor:K2_GetActorRotation()
-    rot.Yaw = rot.Yaw + 90
-    if rot.Yaw >= 360 then rot.Yaw = rot.Yaw - 360 end
 
-    local act = {type="rotate", name=name, yaw=rot.Yaw}
+    local yaw = 90
+    rot.Yaw = (rot.Yaw + yaw) % 360
+
+    local act = {type="rotate", name=name, yaw=yaw}
 
     applyAction(act)
 
