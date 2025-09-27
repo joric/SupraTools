@@ -324,12 +324,7 @@ local function cutObject()
 end
 
 local function rotateObject()
-    local pc = UEHelpers.GetPlayerController()
-    if not pc or not pc:IsValid() then return end
-
-    local cam = pc.PlayerCameraManager
-
-    local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
+    local hitObject = getCameraHitObject()
     if not hitObject or not hitObject:IsValid() then return end
 
     local actor = hitObject:GetOuter()
