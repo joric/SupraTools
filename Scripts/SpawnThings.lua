@@ -37,7 +37,7 @@ function getTargetLocation()
     return getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
 end
 
-function SpawnActorFromClassName(ActorClassName, Location, Rotation)
+function SpawnActorFromClassName(ActorClassName, Location, Rotation, Scale)
     local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
     if type(ActorClassName) ~= "string" or not Location then return invalidActor end
 
@@ -52,7 +52,6 @@ function SpawnActorFromClassName(ActorClassName, Location, Rotation)
         return invalidActor
     end
 
-    local Scale = {X=1, Y=1, Z=1}
     local transform = UEHelpers.GetKismetMathLibrary():MakeTransform(Location, Rotation, Scale)
 
     local deferredActor = UEHelpers.GetGameplayStatics():BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
@@ -64,7 +63,7 @@ function SpawnActorFromClassName(ActorClassName, Location, Rotation)
     return invalidActor
 end
 
-function SpawnActorFromObjectClass(Object, Location, Rotation)
+function SpawnActorFromObjectClass(Object, Location, Rotation, Scale)
     local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
     if not Object or not Object:IsValid() then return invalidActor end
     
@@ -77,7 +76,6 @@ function SpawnActorFromObjectClass(Object, Location, Rotation)
     local world = UEHelpers.GetWorld()
     if not world:IsValid() then return invalidActor end
 
-    local Scale = {X=1, Y=1, Z=1}
     local transform = UEHelpers.GetKismetMathLibrary():MakeTransform(Location, Rotation, Scale)
 
     local deferredActor = UEHelpers.GetGameplayStatics():BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
@@ -94,7 +92,8 @@ local function spawnClass(className)
         ExecuteInGameThread(function()
             local loc = getTargetLocation()
             local rot = {Pitch=0, Yaw=0, Roll=0}
-            SpawnActorFromClassName(className, loc, rot)
+            local scale = {X=1, Y=1, Z=1}
+            SpawnActorFromClassName(className, loc, rot, scale)
         end)
     end)
 end
@@ -167,7 +166,9 @@ end
 local function applyAction(act)
     if act.type == "spawn" then
         print("spawning", act.className)
-        SpawnActorFromClassName(act.className, act.loc, act.rot)
+        ExecuteInGameThread(function()
+            SpawnActorFromClassName(act.className, act.loc, act.rot, act.scale)
+        end)
     elseif act.type == "hide" then
         local Object = StaticFindObject(act.name)
         if Object and Object:IsValid() and Object.SetActorHiddenInGame then
@@ -186,6 +187,9 @@ local function applyAction(act)
         local Object = StaticFindObject(act.name)
         if Object and Object:IsValid() and Object.K2_SetActorRotation then
             print("rotating", act.name, act.yaw)
+            if Object.SetMobility and Object.SetMobility:IsValid() then
+                Object:SetMobility(2) -- movable
+            end
             local rot = Object:K2_GetActorRotation()
             rot.Yaw = act.yaw
             Object:K2_SetActorRotation(rot, false)
@@ -255,14 +259,11 @@ local function pasteObject()
     local className = getBaseName(selectedObject:GetClass():GetFullName())
 
     -- Add to actions
-    table.insert(actions, {type="spawn", className=className, loc=loc, rot=rot, scale=scale})
+    local act = {type="spawn", className=className, loc=loc, rot=rot, scale=scale}
+    applyAction(act)
+
+    table.insert(actions, act)
     saveActions()
-
-    print("spawning object", className)
-
-    ExecuteInGameThread(function()
-        SpawnActorFromClassName(className, loc, rot)
-    end)
 end
 
 local function cutObject()
@@ -274,15 +275,15 @@ local function cutObject()
     if not hitObject or not hitObject:IsValid() then return end
 
     local obj = hitObject:GetOuter()
-    if obj and obj:IsValid() then
-        obj:SetActorHiddenInGame(true)
-        obj:SetActorEnableCollision(false)
+    if not obj or not obj:IsValid() then return end
 
-        local name = getBaseName(obj:GetFullName())
-        print("Hid object: " .. name)
-        table.insert(actions, {type="hide", name=name})
-        saveActions()
-    end
+    local name = getBaseName(obj:GetFullName())
+
+    local act = {type="hide", name=name}
+    applyAction(act)
+
+    table.insert(actions, act)
+    saveActions()
 end
 
 local function rotateObject()
@@ -297,24 +298,18 @@ local function rotateObject()
     local actor = hitObject:GetOuter()
     if not actor or not actor:IsValid() then return end
 
-    print('rotating', actor:GetFullName())
+    local name = getBaseName(actor:GetFullName())
 
     local rot = actor:K2_GetActorRotation()
     rot.Yaw = rot.Yaw + 90
     if rot.Yaw >= 360 then rot.Yaw = rot.Yaw - 360 end
 
-    if actor.SetMobility and actor.SetMobility:IsValid() then
-        actor:SetMobility(2) -- movable
-    end
+    local act = {type="rotate", name=name, yaw=rot.Yaw}
 
-    actor:K2_SetActorRotation(rot, false)
+    applyAction(act)
 
-    -- Save rotation action
-    local name = getBaseName(actor:GetFullName())
-    table.insert(actions, {type="rotate", name=name, yaw=rot.Yaw})
+    table.insert(actions, act)
     saveActions()
-
-    print("Rotated object: " .. actor:GetFullName() .. " to Yaw=" .. rot.Yaw)
 end
 
 -- ==============================================================
@@ -337,7 +332,8 @@ local function spawnFromObjectClass(obj)
         ExecuteInGameThread(function()
             local loc = getTargetLocation()
             local rot = {Pitch=0, Yaw=0, Roll=0}
-            SpawnActorFromObjectClass(obj, loc, rot)
+            local scale = {X=1, Y=1, Z=1}
+            SpawnActorFromObjectClass(obj, loc, rot, scale)
         end)
     end)
 end
