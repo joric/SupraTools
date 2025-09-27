@@ -207,8 +207,6 @@ end
 
 local function applyAction(act)
     if act.type == "spawn" then
-        print("spawning", act.className)
-
         ExecuteWithDelay(50, function()
             ExecuteInGameThread(function()
                 local name = act.className
@@ -216,6 +214,8 @@ local function applyAction(act)
                 -- className is either virtual or mesh actor or class
 
                 local actor = getActorByVirtualName(name)
+                if not actor or not actor:IsValid() then return end
+
                 local className = getBaseName(actor:GetClass():GetFullName())
 
                 print("spawning", name, "classname", className)
