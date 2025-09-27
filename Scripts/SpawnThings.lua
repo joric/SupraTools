@@ -31,15 +31,104 @@ local function getBaseName(fullName)
     return name or fullName
 end
 
+local function getClassName(fullName)
+    return fullName:match("^(%S+)")
+end
+
 function getTargetLocation()
     local pc = UEHelpers.GetPlayerController()
     local cam = pc.PlayerCameraManager
     return getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
 end
 
+function CloneStaticMeshActor(fullName, newLoc, newRot, newScale)
+    local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
+
+    print("--- Trying to clone static mesh actor ---")
+
+    -- find the source actor instance
+    local src = StaticFindObject(fullName)
+    if not src or not src:IsValid() then
+        print("CloneStaticMeshActor: source not found " .. fullName)
+        return invalidActor
+    end
+
+    local smcSrc = src.StaticMeshComponent
+    if not smcSrc then
+        print("CloneStaticMeshActor: no StaticMeshComponent")
+        return invalidActor
+    end
+
+    -- load StaticMeshActor class
+    local clsPath = "/Script/Engine.StaticMeshActor"
+    LoadAsset(clsPath)
+
+    local actorClass = StaticFindObject(clsPath)
+    if not actorClass or not actorClass:IsValid() then
+        print("CloneStaticMeshActor: can't load StaticMeshActor class")
+        return invalidActor
+    end
+
+    -- make transform for the new actor
+    local transform = UEHelpers.GetKismetMathLibrary():MakeTransform(
+        newLoc or src:K2_GetActorLocation(),
+        newRot or src:K2_GetActorRotation(),
+        newScale or src:K2_GetActorScale3D()
+    )
+
+    local world = src:GetWorld()
+    local deferred = UEHelpers.GetGameplayStatics():BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
+    if not deferred or not deferred:IsValid() then
+        print("CloneStaticMeshActor: spawn failed")
+        return invalidActor
+    end
+
+    -- finalize spawn first
+    local clone = UEHelpers.GetGameplayStatics():FinishSpawningActor(deferred, transform, 0)
+    if not clone or not clone:IsValid() then return invalidActor end
+
+    -- now safely get the StaticMeshComponent
+    -- local smc = clone:FindComponentByClass(UE.StaticMeshComponent)
+    local smc = clone.StaticMeshComponent
+
+    print("comp", smc, smcSrc, smc:IsValid(), smcSrc:IsValid()) -- says true, true
+
+    print("smcSrc.StaticMesh", smcSrc.StaticMesh, smcSrc.StaticMesh and smcSrc.StaticMesh:IsValid())
+
+    if smc and smcSrc then
+
+        smc:SetStaticMesh(smcSrc.StaticMesh)
+
+        for i = 0, smcSrc:GetNumMaterials()-1 do
+            smc:SetMaterial(i, smcSrc:GetMaterial(i))
+        end
+
+        smc:SetMobility(smcSrc.Mobility)
+        smc:SetCollisionEnabled(smcSrc:GetCollisionEnabled())
+
+
+        clone:SetActorHiddenInGame(false)
+
+
+        print("SMC valid:", smc:IsValid())
+        print("SMC mesh valid:", smc.StaticMesh and smc.StaticMesh:IsValid())
+        print("SMC visible:", smc:IsVisible())
+        print("SMC materials:", smc:GetNumMaterials())
+
+    end
+
+
+
+    return clone
+end
+
 function SpawnActorFromClassName(ActorClassName, Location, Rotation, Scale)
     local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
     if type(ActorClassName) ~= "string" or not Location then return invalidActor end
+
+    if ActorClassName:find('StaticMeshActor') then
+        return CloneStaticMeshActor(ActorClassName, Location, Rotation, Scale)
+    end
 
     LoadAsset(ActorClassName)
 
@@ -52,6 +141,7 @@ function SpawnActorFromClassName(ActorClassName, Location, Rotation, Scale)
         return invalidActor
     end
 
+
     local transform = UEHelpers.GetKismetMathLibrary():MakeTransform(Location, Rotation, Scale)
 
     local deferredActor = UEHelpers.GetGameplayStatics():BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
@@ -61,41 +151,6 @@ function SpawnActorFromClassName(ActorClassName, Location, Rotation, Scale)
         print("Deferred Actor failed", ActorClassName)
     end
     return invalidActor
-end
-
-function SpawnActorFromObjectClass(Object, Location, Rotation, Scale)
-    local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
-    if not Object or not Object:IsValid() then return invalidActor end
-    
-    local actorClass = Object:GetClass()
-    if not actorClass:IsValid() then
-        print("SpawnActorFromObjectClass: Object has invalid class")
-        return invalidActor
-    end
-    
-    local world = UEHelpers.GetWorld()
-    if not world:IsValid() then return invalidActor end
-
-    local transform = UEHelpers.GetKismetMathLibrary():MakeTransform(Location, Rotation, Scale)
-
-    local deferredActor = UEHelpers.GetGameplayStatics():BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
-    if deferredActor:IsValid() then
-        return UEHelpers.GetGameplayStatics():FinishSpawningActor(deferredActor, transform, 0)
-    else
-        print("Deferred Actor failed for object class")
-    end
-    return invalidActor
-end
-
-local function spawnClass(className)
-    ExecuteWithDelay(250, function()
-        ExecuteInGameThread(function()
-            local loc = getTargetLocation()
-            local rot = {Pitch=0, Yaw=0, Roll=0}
-            local scale = {X=1, Y=1, Z=1}
-            SpawnActorFromClassName(className, loc, rot, scale)
-        end)
-    end)
 end
 
 -- ==============================================================
@@ -271,6 +326,11 @@ local function pasteObject()
     local rot = selectedObject:K2_GetActorRotation()
     local scale = selectedObject:GetActorScale3D()
     local className = getBaseName(selectedObject:GetClass():GetFullName())
+    local name = getBaseName(selectedObject:GetFullName())
+
+    if className == '/Script/Engine.StaticMeshActor' then
+        className = name
+    end
 
     -- Add to actions
     local act = {type="spawn", className=className, loc=loc, rot=rot, scale=scale}
@@ -339,17 +399,6 @@ end
 
 local function spawnThings()
     spawnClass('/Supraworld/Abilities/SpongeSuit/ShopItem_SpongeSuit.ShopItem_SpongeSuit_C')
-end
-
-local function spawnFromObjectClass(obj)
-    ExecuteWithDelay(250, function()
-        ExecuteInGameThread(function()
-            local loc = getTargetLocation()
-            local rot = {Pitch=0, Yaw=0, Roll=0}
-            local scale = {X=1, Y=1, Z=1}
-            SpawnActorFromObjectClass(obj, loc, rot, scale)
-        end)
-    end)
 end
 
 -- ==============================================================
