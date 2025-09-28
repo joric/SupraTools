@@ -270,80 +270,76 @@ local function rotateActor(Object, yaw)
             root:SetMobility(2) -- set as movable (mandatory, some blueprints don't have movable mesh)
         end
 
-        ExecuteWithDelay(50, function()
-            ExecuteInGameThread(function()
-                if Object.K2_SetActorRotation and Object.K2_SetActorRotation:IsValid() then
-                    local rot = Object:K2_GetActorRotation()
-                    rot.Yaw = (rot.Yaw + yaw) % 360
-                    Object:K2_SetActorRotation(rot, true)
-                end
-            end)
-        end)
+        if Object.K2_SetActorRotation and Object.K2_SetActorRotation:IsValid() then
+            local rot = Object:K2_GetActorRotation()
+            rot.Yaw = (rot.Yaw + yaw) % 360
+            Object:K2_SetActorRotation(rot, true)
+        end
     end
 end
 
 local function applyAction(act)
-    if act.type == "spawn" then
-        ExecuteWithDelay(50, function()
-            ExecuteInGameThread(function()
-                local name = act.className
+    ExecuteInGameThread(function()
+        if act.type == "spawn" then
 
-                -- className is either virtual or mesh actor or class
+            local name = act.className
 
-                local actor = getActorByVirtualName(name)
-                if not actor or not actor:IsValid() then return end
+            -- className is either virtual or mesh actor or class
 
-                local className = getBaseName(actor:GetClass():GetFullName())
+            local actor = getActorByVirtualName(name)
+            if not actor or not actor:IsValid() then return end
 
-                print("spawning", name, "classname", className)
+            local className = getBaseName(actor:GetClass():GetFullName())
 
-                if className == '/Script/Engine.StaticMesh' then
-                    print("this is mesh")
-                    className = name
-                end
+            print("spawning", name, "classname", className)
 
-                if className == '/Script/Engine.StaticMeshActor' then
-                    print("this is mesh actor")
-                    className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
-                end
+            if className == '/Script/Engine.StaticMesh' then
+                print("this is mesh")
+                className = name
+            end
 
-                if className == '/Script/Engine.BlueprintGeneratedClass' then
-                    print("this is blueprint")
-                    className = name
-                end
+            if className == '/Script/Engine.StaticMeshActor' then
+                print("this is mesh actor")
+                className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
+            end
 
-                print("trying to spawn object from className", className)
+            if className == '/Script/Engine.BlueprintGeneratedClass' then
+                print("this is blueprint")
+                className = name
+            end
 
-                actor = SpawnActorFromClassName(className, act.loc, act.rot, act.scale)
+            print("trying to spawn object from className", className)
 
-                local tag = getNextName()
-                actor.Tags[#actor.Tags + 1] = FName(tag)
-                print("actor tagged", tag)
-                act.result = actor
-            end)
-        end)
+            actor = SpawnActorFromClassName(className, act.loc, act.rot, act.scale)
 
-    elseif act.type == "hide" then
-        local Object = getActorByVirtualName(act.name)
-        if Object and Object:IsValid() and Object.SetActorHiddenInGame then
-            print("hiding", act.name)
-            Object:SetActorHiddenInGame(true)
-            Object:SetActorEnableCollision(false)
+            local tag = getNextName()
+            actor.Tags[#actor.Tags + 1] = FName(tag)
+            print("actor tagged", tag)
+            act.result = actor
+
+        elseif act.type == "hide" then
+            local Object = getActorByVirtualName(act.name)
+            if Object and Object:IsValid() and Object.SetActorHiddenInGame then
+                print("hiding", act.name)
+                Object:SetActorHiddenInGame(true)
+                Object:SetActorEnableCollision(false)
+            end
+        elseif act.type == "unhide" then
+            local Object = getActorByVirtualName(act.name)
+            if Object and Object:IsValid() and Object.SetActorHiddenInGame then
+                print("unhiding", act.name)
+                Object:SetActorHiddenInGame(false)
+                Object:SetActorEnableCollision(true)
+            end
+        elseif act.type == "rotate" then
+            local Object = getActorByVirtualName(act.name)
+            print("---------- trying to rotate", act.name, Object and Object:IsValid())
+            if Object and Object:IsValid() then
+                print("rotating class", act.name, Object:GetClass():GetFullName())
+                rotateActor(Object, act.yaw)
+            end
         end
-    elseif act.type == "unhide" then
-        local Object = getActorByVirtualName(act.name)
-        if Object and Object:IsValid() and Object.SetActorHiddenInGame then
-            print("unhiding", act.name)
-            Object:SetActorHiddenInGame(false)
-            Object:SetActorEnableCollision(true)
-        end
-    elseif act.type == "rotate" then
-        local Object = getActorByVirtualName(act.name)
-        if Object and Object:IsValid() then
-            print("rotating class", act.name, Object:GetClass():GetFullName())
-            rotateActor(Object, act.yaw)
-        end
-    end
+    end)
 end
 
 local function applyActions()
@@ -384,10 +380,6 @@ local function undoLastAction()
     end
 
     saveActions()
-    -- Reload and replay actions (simply re-applies all except the last)
-    ExecuteInGameThread(function()
-        -- applyActions()
-    end)
 end
 
 -- ==============================================================
@@ -484,8 +476,11 @@ end
 
 local function loadSaves()
     ExecuteInGameThread(function()
+        nameIndex = 0
         loadActions()
-        applyActions()
+        ExecuteWithDelay(250, function()
+            applyActions()
+        end)
     end)
 end
 
