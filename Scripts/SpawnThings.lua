@@ -208,8 +208,9 @@ end
 local function rotateActor(Object, yaw)
     if Object and Object:IsValid() then
 
-        if Object.K2_GetRootComponent and Object.K2_GetRootComponent:IsValid() then
-            Object:K2_GetRootComponent():SetMobility(2) -- movable
+        local root = Object.K2_GetRootComponent()
+        if root and root:IsValid() and root.SetMobility and root.SetMobility:IsValid() then
+            root:SetMobility(2) -- set as movable (mandatory, some blueprints don't have movable mesh)
         end
 
         ExecuteWithDelay(50, function()
