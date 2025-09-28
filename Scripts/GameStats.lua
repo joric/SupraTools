@@ -42,4 +42,4 @@ local function showText()
     end)
 end
 
-RegisterKeyBind(Key.U, {ModifierKey.ALT}, showText)
+RegisterKeyBind(Key.O, {ModifierKey.ALT}, showText) -- shOw me Onscreen stats, thus "O"

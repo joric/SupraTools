@@ -44,4 +44,4 @@ RegisterConsoleCommandHandler("autocollect", function(FullCommand, Parameters, A
     return true
 end)
 
-RegisterKeyBind(Key.O, {ModifierKey.ALT}, autoCollect)
+RegisterKeyBind(Key.P, {ModifierKey.ALT}, autoCollect) -- Pickup, thus "P"
