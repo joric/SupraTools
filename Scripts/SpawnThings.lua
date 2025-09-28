@@ -205,6 +205,19 @@ end
 -- Action Application (Replay)
 -- ==============================================================
 
+local function rotateActor(Object, yaw)
+    if Object and Object:IsValid() and Object.K2_SetActorRotation then
+        if Object.SetMobility and Object.SetMobility:IsValid() then
+            Object:SetMobility(2) -- movable
+        end
+        local rot = Object:K2_GetActorRotation()
+        rot.Yaw = (rot.Yaw + yaw) % 360
+        Object:K2_SetActorRotation(rot, false)
+        -- maybe rotate the mesh as well
+        --rotateActor(Object:K2_GetRootComponent())
+    end
+end
+
 local function applyAction(act)
     if act.type == "spawn" then
         ExecuteWithDelay(50, function()
@@ -262,20 +275,8 @@ local function applyAction(act)
         end
     elseif act.type == "rotate" then
         local Object = getActorByVirtualName(act.name)
-
         print("rotating class", Object:GetClass():GetFullName())
-
-        if Object and Object:IsValid() and Object.K2_SetActorRotation then
-            print("rotating", act.name, act.yaw)
-
-            if Object.SetMobility and Object.SetMobility:IsValid() then
-                Object:SetMobility(2) -- movable
-            end
-
-            local rot = Object:K2_GetActorRotation()
-            rot.Yaw = (rot.Yaw + act.yaw) % 360
-            Object:K2_SetActorRotation(rot, false)
-        end
+        rotateActor(Object, act.yaw)
     end
 end
 
