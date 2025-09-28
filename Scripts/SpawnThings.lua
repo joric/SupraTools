@@ -206,15 +206,21 @@ end
 -- ==============================================================
 
 local function rotateActor(Object, yaw)
-    if Object and Object:IsValid() and Object.K2_SetActorRotation then
-        if Object.SetMobility and Object.SetMobility:IsValid() then
-            Object:SetMobility(2) -- movable
+    if Object and Object:IsValid() then
+
+        if Object.K2_GetRootComponent and Object.K2_GetRootComponent:IsValid() then
+            Object:K2_GetRootComponent():SetMobility(2) -- movable
         end
-        local rot = Object:K2_GetActorRotation()
-        rot.Yaw = (rot.Yaw + yaw) % 360
-        Object:K2_SetActorRotation(rot, true)
-        -- maybe rotate the mesh as well
-        -- rotateActor(Object:K2_GetRootComponent())
+
+        ExecuteWithDelay(50, function()
+            ExecuteInGameThread(function()
+                if Object.K2_SetActorRotation and Object.K2_SetActorRotation:IsValid() then
+                    local rot = Object:K2_GetActorRotation()
+                    rot.Yaw = (rot.Yaw + yaw) % 360
+                    Object:K2_SetActorRotation(rot, true)
+                end
+            end)
+        end)
     end
 end
 
