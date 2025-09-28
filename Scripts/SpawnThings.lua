@@ -79,7 +79,10 @@ end
 
 local function getVirtualName(actor)
     if actor.Tags:IsValid() and #actor.Tags>0 then
-        return actor.Tags[#actor.Tags]:ToString()
+        local tag = actor.Tags[#actor.Tags]:ToString()
+        if tag:find('SpawnedThings_') then
+            return tag
+        end
     end
     return nil
 end
@@ -401,11 +404,15 @@ end
 local function pasteObject()
     if not selectedObject or not selectedObject:IsValid() then return end
 
+    print("Pasting: " .. selectedObject:GetFullName())
+
     local actor = selectedObject:GetOuter()
 
     if getClassName(actor:GetFullName())=='Level' then
         actor = selectedObject
     end
+
+    print("Outer: " .. actor:GetFullName())
 
     local loc = getCameraImpactPoint()
     local rot = getActorRotation(actor)
@@ -413,6 +420,7 @@ local function pasteObject()
 
     local className = getBaseName(actor:GetClass():GetFullName())
 
+    print("Class: " .. className)
 
     if className == '/Script/Engine.StaticMeshActor' then
         className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
@@ -420,6 +428,7 @@ local function pasteObject()
 
     local name = getVirtualName(actor)
     if name then
+        print("VirtualName", name)
         className = name
     end
 
