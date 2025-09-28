@@ -50,6 +50,7 @@ local function remoteControl()
             if not runFirstAvailableAction(hitObject, { pc = pc }) then
                 local actor = hitObject:GetOuter()
                 if not actor or not actor:IsValid() then return end
+                print("hitObject outer", actor:GetFullName())
                 if not runFirstAvailableAction(actor, { pc = pc }) then
                     -- out of actions
                 end
