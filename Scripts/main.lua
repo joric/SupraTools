@@ -15,24 +15,6 @@ end
 
 function getHitObject(WorldObject, StartVector, Rotation)
     return UEHelpers.GetActorFromHitResult(getHitResult(WorldObject, StartVector, Rotation))
-
-    --[[
-    local HitResult = getHitResult(WorldObject, StartVector, Rotation)
-
-    -- latest ue4ss crashes with HitResult:IsValid() on UE4 so I can't use UEHelpers.GetActorFromHitResult
-
-    if not HitResult then
-        return nil
-    end
-
-    if UnrealVersion:IsBelow(5, 0) then
-        return HitResult.Actor:Get()
-    elseif UnrealVersion:IsBelow(5, 4) then
-        return HitResult.HitObjectHandle.Actor:Get()
-    end
-    return HitResult.HitObjectHandle.ReferenceObject:Get()
-    ]]
-
 end
 
 inDebugCamera = false -- global variable
