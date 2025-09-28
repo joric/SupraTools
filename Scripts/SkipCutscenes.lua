@@ -41,5 +41,5 @@ end
     -- removeCutscenes() -- disabled, breaks npc animation
 -- end)
 
-RegisterKeyBind(Key.U, {ModifierKey.ALT}, skipCutscene) -- Fuck U, cUtscenes, thus "U"
+RegisterKeyBind(Key.U, {ModifierKey.ALT}, skipCutscene) -- Fuck Unskippable cUtscenes, thus "U"
 
