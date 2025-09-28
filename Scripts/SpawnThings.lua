@@ -293,7 +293,7 @@ local function applyAction(act)
     elseif act.type == "rotate" then
         local Object = getActorByVirtualName(act.name)
         if Object and Object:IsValid() then
-            print("rotating class", Object:GetClass():GetFullName())
+            print("rotating class", act.name, Object:GetClass():GetFullName())
             rotateActor(Object, act.yaw)
         end
     end
