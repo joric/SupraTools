@@ -377,6 +377,7 @@ local function undoLastAction()
         if actor and actor:IsValid() then
             actor:K2_DestroyActor()
         end
+        nameIndex -= 1
     end
 
     saveActions()
