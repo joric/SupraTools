@@ -41,6 +41,16 @@ local function getClassName(fullName)
     return fullName:match("^(%S+)")
 end
 
+function getActorRotation(actor) -- UE4 doesn't seem to have it
+    local rot = {Pitch=0, Yaw=0, Roll=0}
+    return actor.K2_GetActorRotation:IsValid() and actor:K2_GetActorRotation() or rot
+end
+
+function getActorScale(actor)
+    local scale = {X=1, Y=1, Z=1}
+    return actor.GetActorScale3D:IsValid() and actor:GetActorScale3D() or scale
+end
+
 function getTargetLocation()
     local pc = UEHelpers.GetPlayerController()
     local cam = pc.PlayerCameraManager
@@ -67,7 +77,7 @@ local function getActorByVirtualName(name)
 end
 
 local function getVirtualName(actor)
-    if #actor.Tags>0 then
+    if actor.Tags:IsValid() and #actor.Tags>0 then
         return actor.Tags[#actor.Tags]:ToString()
     end
     return nil
@@ -353,8 +363,9 @@ local function pasteObject()
 
     local actor = selectedObject:GetOuter()
     local loc = getCameraImpactPoint()
-    local rot = actor:K2_GetActorRotation()
-    local scale = actor:GetActorScale3D()
+    local rot = getActorRotation(actor)
+    local scale = getActorScale(actor)
+
     local className = getBaseName(actor:GetClass():GetFullName())
 
     if className == '/Script/Engine.StaticMeshActor' then

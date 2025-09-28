@@ -14,7 +14,7 @@ local ACTIONS = { -- ordered by priority
     { name = "Heat", call = function(actor, ctx) actor:Heat(ctx.pc.Pawn, true) end }, -- melts chocolate eggs
     { name = "Pickup", call = function(actor, ctx) actor:Pickup(ctx.pc.Pawn) end },
     { name = "SetUnlocked", call = function(actor) actor:SetUnlocked(true, true, true, true) end },
-    { name = "SetIsOpen",  call = function(actor) actor:SetIsOpen(true, true, true) end },
+    { name = "SetIsOpen",  call = function(actor) actor:SetIsOpen(true, true, true, true, true) end },
 }
 
 local function runFirstAvailableAction(actor, ctx)
