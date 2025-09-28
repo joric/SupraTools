@@ -212,9 +212,9 @@ local function rotateActor(Object, yaw)
         end
         local rot = Object:K2_GetActorRotation()
         rot.Yaw = (rot.Yaw + yaw) % 360
-        Object:K2_SetActorRotation(rot, false)
+        Object:K2_SetActorRotation(rot, true)
         -- maybe rotate the mesh as well
-        --rotateActor(Object:K2_GetRootComponent())
+        -- rotateActor(Object:K2_GetRootComponent())
     end
 end
 
@@ -275,8 +275,10 @@ local function applyAction(act)
         end
     elseif act.type == "rotate" then
         local Object = getActorByVirtualName(act.name)
-        print("rotating class", Object:GetClass():GetFullName())
-        rotateActor(Object, act.yaw)
+        if Object and Object:IsValid() then
+            print("rotating class", Object:GetClass():GetFullName())
+            rotateActor(Object, act.yaw)
+        end
     end
 end
 
