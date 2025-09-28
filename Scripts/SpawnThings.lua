@@ -43,6 +43,7 @@ end
 
 function getActorRotation(actor) -- UE4 doesn't seem to have it
     local rot = {Pitch=0, Yaw=0, Roll=0}
+    -- local rot = actor.RootComponent.RelativeRotation
     return actor.K2_GetActorRotation:IsValid() and actor:K2_GetActorRotation() or rot
 end
 
@@ -124,6 +125,52 @@ local function CloneStaticMeshActor(meshPath, location, rotation, scale)
 
 end
 
+function spawnActor(world, actorClass, loc, rot, scale)
+
+    --[[
+    -- ue4 doesn't seem to have SpawnActor
+    actor = world:SpawnActor(actorClass, location, rotation)
+    if actor and actor:IsValid() then
+        -- actor:SetActorScale3D(scale)
+        return actor
+    else
+        return CloneStaticMeshActor(ActorClassName, Location, Rotation, Scale)
+    end
+
+--- UE4 signature
+
+---@param WorldContextObject UObject
+---@param ActorClass TSubclassOf<AActor>
+---@param SpawnTransform FTransform
+---@param CollisionHandlingOverride ESpawnActorCollisionHandlingMethod
+---@param Owner AActor
+---@return AActor
+function UGameplayStatics:BeginDeferredActorSpawnFromClass(WorldContextObject, ActorClass, SpawnTransform, CollisionHandlingOverride, Owner) end
+
+--- UE5 signature
+
+---@param WorldContextObject UObject
+---@param ActorClass TSubclassOf<AActor>
+---@param SpawnTransform FTransform
+---@param CollisionHandlingOverride ESpawnActorCollisionHandlingMethod
+---@param Owner AActor
+---@param TransformScaleMethod ESpawnActorScaleMethod
+---@return AActor
+function UGameplayStatics:BeginDeferredActorSpawnFromClass(WorldContextObject, ActorClass, SpawnTransform, CollisionHandlingOverride, Owner, TransformScaleMethod) end
+
+    ]]
+
+    local transform = UEHelpers.GetKismetMathLibrary():MakeTransform(loc, rot, scale)
+
+    if UnrealVersion:IsBelow(5, 0) then
+        local actor = UEHelpers.GetGameplayStatics():BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil)
+        return UEHelpers.GetGameplayStatics():FinishSpawningActor(actor, transform)
+    else
+        local actor = UEHelpers.GetGameplayStatics():BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
+        return UEHelpers.GetGameplayStatics():FinishSpawningActor(actor, transform, 0)
+    end
+end
+
 function SpawnActorFromClassName(ActorClassName, Location, Rotation, Scale)
     local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
     if type(ActorClassName) ~= "string" or not Location then return invalidActor end
@@ -139,14 +186,14 @@ function SpawnActorFromClassName(ActorClassName, Location, Rotation, Scale)
         return invalidActor
     end
 
-    local transform = UEHelpers.GetKismetMathLibrary():MakeTransform(Location, Rotation, Scale)
+    local actor = spawnActor(world, actorClass, Location, Rotation, Scale)
 
-    local actor = UEHelpers.GetGameplayStatics():BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
     if actor:IsValid() then
-        return UEHelpers.GetGameplayStatics():FinishSpawningActor(actor, transform, 0)
+        return actor
     else
         return CloneStaticMeshActor(ActorClassName, Location, Rotation, Scale)
     end
+
     return invalidActor
 end
 
@@ -362,11 +409,17 @@ local function pasteObject()
     if not selectedObject or not selectedObject:IsValid() then return end
 
     local actor = selectedObject:GetOuter()
+
+    if getClassName(actor:GetFullName())=='Level' then
+        actor = selectedObject
+    end
+
     local loc = getCameraImpactPoint()
     local rot = getActorRotation(actor)
     local scale = getActorScale(actor)
 
     local className = getBaseName(actor:GetClass():GetFullName())
+
 
     if className == '/Script/Engine.StaticMeshActor' then
         className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
