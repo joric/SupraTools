@@ -1,8 +1,7 @@
 local UEHelpers = require("UEHelpers")
 
 local ACTIONS = {
-    { name = "RealCoinPickup_C", call = function(actor, ctx) actor:Pickup(ctx.pc.Pawn) end },
-    { name = "Pickup_Hay_C", call = function(actor, ctx) actor:Pickup(ctx.pc.Pawn) end },
+    { name = "PickupBase_C", call = function(actor, ctx) actor:Pickup(ctx.pc.Pawn) end }, -- coins, hay, guides, etc...
     { name = "SecretVolume_C", call = function(actor, ctx) actor:SetSecretFound(true, false, true, true) end },
     { name = "ShopItemSpawner_C", call = function(actor, ctx)
         if not actor.bItemIsTaken and actor.ShopItem and actor.ShopItem.ItemName then
