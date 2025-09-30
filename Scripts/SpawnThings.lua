@@ -447,6 +447,8 @@ local function cutObject()
     local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
     if not hitObject or not hitObject:IsValid() then return end
 
+    selectedObject = hitObject
+
     local actor = hitObject:GetOuter()
     if not actor or not actor:IsValid() then return end
 
