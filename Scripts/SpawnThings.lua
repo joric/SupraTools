@@ -1,6 +1,6 @@
 local UEHelpers = require("UEHelpers")
 
-local SAVE_FILE = "ue4ss/Mods/SupraTools/Scripts/SpawnThings.txt"
+local SAVE_FILE = os.getenv("LOCALAPPDATA") .. "/Supraworld/SpawnThings.txt"
 
 -- Unified log of all actions
 local actions = {}
