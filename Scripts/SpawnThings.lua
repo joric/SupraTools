@@ -1,6 +1,9 @@
 local UEHelpers = require("UEHelpers")
 
-local SAVE_FILE = os.getenv("USERPROFILE") .. "/SpawnThings.txt"
+local function getSavePath()
+    local gameName = UEHelpers.GetKismetSystemLibrary():GetGameName():ToString()
+    return os.getenv("LOCALAPPDATA") .. "\\" .. gameName .. "\\SpawnThings.txt"
+end
 
 -- Unified log of all actions
 local actions = {}
@@ -239,7 +242,9 @@ local function parseAction(line)
 end
 
 local function saveActions()
-    local f = io.open(SAVE_FILE, "w")
+    local savePath = getSavePath()
+    print("Saving to " .. savePath)
+    local f = io.open(savePath, "w")
     if not f then return end
     for _, action in ipairs(actions) do
         local line = serializeAction(action)
@@ -251,8 +256,10 @@ local function saveActions()
 end
 
 local function loadActions()
+    local savePath = getSavePath()
+    print("Loading from " .. savePath)
     actions = {}
-    local f = io.open(SAVE_FILE, "r")
+    local f = io.open(savePath, "r")
     if not f then return end
     for line in f:lines() do
         local act = parseAction(line)
