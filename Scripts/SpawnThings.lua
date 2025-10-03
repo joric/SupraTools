@@ -489,7 +489,7 @@ local function cutObject()
     local actor = hitObject:GetOuter()
     if not actor or not actor:IsValid() then return end
 
-    local name = getAlias(actor) or getBaseName(actor:GetFullName())
+    local name = getAlias(actor, true) or getBaseName(actor:GetFullName())
 
     local act = {type="hide", name=name}
     applyAction(act)
