@@ -104,7 +104,6 @@ local function getActorByAlias(name)
 end
 
 local function getAlias(actor, instancesOnly)
-
     if actor.Tags:IsValid() and #actor.Tags>0 then
         local tag = actor.Tags[#actor.Tags]:ToString()
         if tag:find('SpawnedThings_') then
