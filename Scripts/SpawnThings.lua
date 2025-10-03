@@ -1,6 +1,6 @@
 local UEHelpers = require("UEHelpers")
 
-local SAVE_FILE = os.getenv("USERPROFILE") .. "/Documents/SpawnThings.txt"
+local SAVE_FILE = os.getenv("USERPROFILE") .. "/SpawnThings.txt"
 
 -- Unified log of all actions
 local actions = {}
