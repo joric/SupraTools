@@ -1,8 +1,6 @@
 local UEHelpers = require("UEHelpers")
 
-local game_name = UEHelpers.GetWorld():GetFullName():match("World /([^/]+)/")
-local SAVE_FILE = os.getenv("LOCALAPPDATA") .. "\\" .. game_name .. "\\SpawnThings.txt"
-print("--- SAVE_FILE ---", SAVE_FILE)
+local SAVE_FILE = os.getenv("USERPROFILE") .. "/SpawnThings.txt"
 
 -- Unified log of all actions
 local actions = {}
