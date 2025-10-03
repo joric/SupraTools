@@ -254,13 +254,13 @@ local function serializeAction(action)
         -- spawn|className|loc,rot,scale
         return string.format("spawn|%s|%s", action.className, serializeTransform(action.loc, action.rot, action.scale))
     elseif action.type == "hide" then
-        return string.format("hide|%s|", action.name)
+        return string.format("hide|%s", action.name)
     elseif action.type == "unhide" then
-        return string.format("unhide|%s|", action.name)
+        return string.format("unhide|%s", action.name)
     elseif action.type == "rotate" then
         return string.format("rotate|%s|%f", action.name, action.yaw)
     elseif action.type == "cut" then
-        return string.format("cut|%s|", action.name)
+        return string.format("cut|%s", action.name)
     end
     return ""
 end
