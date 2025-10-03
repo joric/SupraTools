@@ -2,7 +2,8 @@ local UEHelpers = require("UEHelpers")
 
 local function getSavePath()
     local gameName = UEHelpers.GetKismetSystemLibrary():GetGameName():ToString()
-    return os.getenv("LOCALAPPDATA") .. "\\" .. gameName .. "\\SpawnThings.txt"
+    local basePath = os.getenv("LOCALAPPDATA") or (os.getenv("HOME") .. "/.local/share")
+    return os.getenv("LOCALAPPDATA") .. "/" .. gameName .. "/SpawnThings.txt"
 end
 
 -- Unified log of all actions
