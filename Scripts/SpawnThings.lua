@@ -155,10 +155,6 @@ local function CloneStaticMeshActor(meshPath, location, rotation, scale)
     actor:SetReplicates(true)
 
     if loadedAsset:IsA(staticMeshClass) then
-
-        -- local gameInstance = UEHelpers.GetGameInstance()
-        -- gameInstance.ReferencedObjects[#gameInstance.ReferencedObjects + 1] = loadedAsset
-
         actor:SetMobility(2)
 
         if not actor.StaticMeshComponent:SetStaticMesh(loadedAsset) then
@@ -174,40 +170,6 @@ local function CloneStaticMeshActor(meshPath, location, rotation, scale)
 end
 
 function spawnActor(world, actorClass, loc, rot, scale)
-
-    --[[
-    -- ue4 doesn't seem to have SpawnActor
-    actor = world:SpawnActor(actorClass, location, rotation)
-    if actor and actor:IsValid() then
-        -- actor:SetActorScale3D(scale)
-        return actor
-    else
-        return CloneStaticMeshActor(ActorClassName, Location, Rotation, Scale)
-    end
-
---- UE4 signature
-
----@param WorldContextObject UObject
----@param ActorClass TSubclassOf<AActor>
----@param SpawnTransform FTransform
----@param CollisionHandlingOverride ESpawnActorCollisionHandlingMethod
----@param Owner AActor
----@return AActor
-function UGameplayStatics:BeginDeferredActorSpawnFromClass(WorldContextObject, ActorClass, SpawnTransform, CollisionHandlingOverride, Owner) end
-
---- UE5 signature
-
----@param WorldContextObject UObject
----@param ActorClass TSubclassOf<AActor>
----@param SpawnTransform FTransform
----@param CollisionHandlingOverride ESpawnActorCollisionHandlingMethod
----@param Owner AActor
----@param TransformScaleMethod ESpawnActorScaleMethod
----@return AActor
-function UGameplayStatics:BeginDeferredActorSpawnFromClass(WorldContextObject, ActorClass, SpawnTransform, CollisionHandlingOverride, Owner, TransformScaleMethod) end
-
-    ]]
-
     local transform = UEHelpers.GetKismetMathLibrary():MakeTransform(loc, rot, scale)
 
     if UnrealVersion:IsBelow(5, 0) then
