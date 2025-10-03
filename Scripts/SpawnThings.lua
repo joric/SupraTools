@@ -1,6 +1,10 @@
 local UEHelpers = require("UEHelpers")
 
-local SAVE_FILE = os.getenv("USERPROFILE") .. "/SpawnThings.txt"
+local script_path = debug.getinfo(1).source:sub(2):gsub("\\","/")
+local game_name = (function() local t={} for p in script_path:gmatch("[^/]+") do t[#t+1]=p end return t[#t-7] end)()
+local SAVE_FILE = os.getenv("LOCALAPPDATA") .. "\\" .. game_name .. "\\SpawnThings.txt"
+
+print("--- SAVE_FILE ---", SAVE_FILE)
 
 -- Unified log of all actions
 local actions = {}
