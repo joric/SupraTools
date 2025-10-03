@@ -73,22 +73,64 @@ local function getActorByTag(tag)
     return nil
 end
 
-local function getActorByVirtualName(name)
-    local actor = getActorByTag(name)
-    if actor then
+local function getActorByAlias(name)
+    local actor = StaticFindObject(name)
+    if actor and actor:IsValid() then
+        -- print("Found by full name", name, actor:GetFullName())
         return actor
     end
-    return StaticFindObject(name)
+
+    actor = getActorByTag(name)
+    if actor and actor:IsValid() then
+        -- print("Found by tag", name, actor:GetFullName())
+        return actor
+    end
+
+    actor = FindObject('BlueprintGeneratedClass', name)
+    if actor and actor:IsValid() then
+        -- print("Found by class", name, actor:GetFullName())
+        return actor
+    end
+
+    actor = FindObject('StaticMesh', name)
+    if actor and actor:IsValid() then
+        -- print("Found by static mesh", name, actor:GetFullName())
+        return actor
+    end
+
+    -- print("--- could not find object, returning nil ---")
+
+    return nil
 end
 
-local function getVirtualName(actor)
+local function getAlias(actor, instancesOnly)
+
     if actor.Tags:IsValid() and #actor.Tags>0 then
         local tag = actor.Tags[#actor.Tags]:ToString()
         if tag:find('SpawnedThings_') then
             return tag
         end
     end
-    return nil
+
+    if instancesOnly then
+        return getBaseName(actor:GetFullName())
+    end
+
+    local className = getBaseName(actor:GetClass():GetFullName())
+
+    if className == '/Script/Engine.StaticMeshActor' then
+        className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
+    end
+
+    if existingObject then
+        return className
+    end
+
+    local alias = className:match(".*%.(.+)") or className
+
+    -- print("--- returning alias ---", alias, actor:GetFullName())
+
+    return alias
 end
 
 local function CloneStaticMeshActor(meshPath, location, rotation, scale)
@@ -297,7 +339,7 @@ local function applyAction(act)
 
             -- className is either virtual or mesh actor or class
 
-            local actor = getActorByVirtualName(name)
+            local actor = getActorByAlias(name)
             if not actor or not actor:IsValid() then return end
 
             local className = getBaseName(actor:GetClass():GetFullName())
@@ -306,7 +348,7 @@ local function applyAction(act)
 
             if className == '/Script/Engine.StaticMesh' then
                 print("this is mesh")
-                className = name
+                className = getBaseName(actor:GetFullName())
             end
 
             if className == '/Script/Engine.StaticMeshActor' then
@@ -316,7 +358,7 @@ local function applyAction(act)
 
             if className == '/Script/Engine.BlueprintGeneratedClass' then
                 print("this is blueprint")
-                className = name
+                className = getBaseName(actor:GetFullName())
             end
 
             print("trying to spawn object from className", className)
@@ -329,21 +371,21 @@ local function applyAction(act)
             act.result = actor
 
         elseif act.type == "hide" then
-            local Object = getActorByVirtualName(act.name)
+            local Object = getActorByAlias(act.name)
             if Object and Object:IsValid() and Object.SetActorHiddenInGame then
                 print("hiding", act.name)
                 Object:SetActorHiddenInGame(true)
                 Object:SetActorEnableCollision(false)
             end
         elseif act.type == "unhide" then
-            local Object = getActorByVirtualName(act.name)
+            local Object = getActorByAlias(act.name)
             if Object and Object:IsValid() and Object.SetActorHiddenInGame then
                 print("unhiding", act.name)
                 Object:SetActorHiddenInGame(false)
                 Object:SetActorEnableCollision(true)
             end
         elseif act.type == "rotate" then
-            local Object = getActorByVirtualName(act.name)
+            local Object = getActorByAlias(act.name)
             -- print("---------- trying to rotate", act.name, Object and Object:IsValid())
             if Object and Object:IsValid() then
                 print("rotating class", act.name, Object:GetClass():GetFullName())
@@ -426,21 +468,9 @@ local function pasteObject()
     local rot = getActorRotation(actor)
     local scale = getActorScale(actor)
 
-    local className = getBaseName(actor:GetClass():GetFullName())
+    local alias = getAlias(actor)
 
-    print("Class: " .. className)
-
-    if className == '/Script/Engine.StaticMeshActor' then
-        className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
-    end
-
-    local name = getVirtualName(actor)
-    if name then
-        print("VirtualName", name)
-        className = name
-    end
-
-    local act = {type="spawn", className=className, loc=loc, rot=rot, scale=scale}
+    local act = {type="spawn", className=alias, loc=loc, rot=rot, scale=scale}
     applyAction(act)
 
     table.insert(actions, act)
@@ -460,7 +490,7 @@ local function cutObject()
     local actor = hitObject:GetOuter()
     if not actor or not actor:IsValid() then return end
 
-    local name = getVirtualName(actor) or getBaseName(actor:GetFullName())
+    local name = getAlias(actor) or getBaseName(actor:GetFullName())
 
     local act = {type="hide", name=name}
     applyAction(act)
@@ -476,7 +506,8 @@ local function rotateObject()
     local actor = hitObject:GetOuter()
     if not actor or not actor:IsValid() then return end
 
-    local name = getVirtualName(actor) or getBaseName(actor:GetFullName())
+    local name = getAlias(actor, true)
+
     local rot = actor:K2_GetActorRotation()
 
     local yaw = 90
