@@ -53,6 +53,11 @@ local function getShortName(className)
     return className:match(".*%.(.+)") or className
 end
 
+local function addTag(actor, tag)
+    actor.Tags[#actor.Tags + 1] = FName(tag)
+    print("actor tagged", tag)
+end
+
 function getActorRotation(actor) -- UE4 doesn't seem to have it
     local rot = {Pitch=0, Yaw=0, Roll=0}
     -- local rot = actor.RootComponent.RelativeRotation
@@ -113,11 +118,13 @@ local function getAlias(actor, instancesOnly)
 
     if instancesOnly then return getName(actor) end
 
-    if getName(actor:GetClass()) == 'StaticMeshActor' then
+    local className = getName(actor:GetClass())
+
+    if className == 'StaticMeshActor' then
         return getName(actor:K2_GetRootComponent().StaticMesh)
     end
 
-    return "null"
+    return className
 end
 
 local function CloneStaticMeshActor(meshPath, location, rotation, scale)
@@ -291,21 +298,21 @@ local function applyAction(act)
             local actor = getActorByAlias(name)
             if not actor or not actor:IsValid() then return end
 
-            local className = getName(actor:GetClass())
+            local className = getBaseName(actor:GetClass():GetFullName())
 
             print("spawning", name, "classname", className)
 
-            if className == 'StaticMesh' then
+            if className == '/Script/Engine.StaticMesh' then
                 print("this is mesh")
                 className = getBaseName(actor:GetFullName())
             end
 
-            if className == 'StaticMeshActor' then
+            if className == '/Script/Engine.StaticMeshActor' then
                 print("this is mesh actor")
                 className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
             end
 
-            if className == 'BlueprintGeneratedClass' then
+            if className == '/Script/Engine.BlueprintGeneratedClass' then
                 print("this is blueprint")
                 className = getBaseName(actor:GetFullName())
             end
@@ -418,6 +425,8 @@ local function pasteObject()
     local scale = getActorScale(actor)
 
     local alias = getAlias(actor)
+
+    print("got Alias", alias)
 
     local act = {type="spawn", className=alias, loc=loc, rot=rot, scale=scale}
     applyAction(act)
