@@ -298,23 +298,18 @@ local function applyAction(act)
             local actor = getActorByAlias(name)
             if not actor or not actor:IsValid() then return end
 
-            local className = getBaseName(actor:GetClass():GetFullName())
+            local className = getName(actor:GetClass())
 
             print("spawning", name, "classname", className)
 
-            if className == '/Script/Engine.StaticMesh' then
-                print("this is mesh")
+            if className == 'StaticMesh' then
                 className = getBaseName(actor:GetFullName())
-            end
-
-            if className == '/Script/Engine.StaticMeshActor' then
-                print("this is mesh actor")
+            elseif className == 'StaticMeshActor' then
                 className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
-            end
-
-            if className == '/Script/Engine.BlueprintGeneratedClass' then
-                print("this is blueprint")
+            elseif className == 'BlueprintGeneratedClass' then
                 className = getBaseName(actor:GetFullName())
+            else
+                className = getBaseName(actor:GetClass():GetFullName())
             end
 
             print("trying to spawn object from className", className)
