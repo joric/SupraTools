@@ -36,6 +36,10 @@ local function deserializeTransform(str)
     }
 end
 
+local function getName(actor)
+    return actor and actor:IsValid() and actor:GetFName():ToString() or "";
+end
+
 local function getBaseName(fullName)
     local name = fullName:match("^%S+%s+(.+)")
     return name or fullName
@@ -43,6 +47,10 @@ end
 
 local function getClassName(fullName)
     return fullName:match("^(%S+)")
+end
+
+local function getShortName(className)
+    return className:match(".*%.(.+)") or className
 end
 
 function getActorRotation(actor) -- UE4 doesn't seem to have it
@@ -75,30 +83,22 @@ end
 
 local function getActorByAlias(name)
     local actor = StaticFindObject(name)
-    if actor and actor:IsValid() then
-        -- print("Found by full name", name, actor:GetFullName())
-        return actor
-    end
+    if actor and actor:IsValid() then return actor end
 
     actor = getActorByTag(name)
-    if actor and actor:IsValid() then
-        -- print("Found by tag", name, actor:GetFullName())
-        return actor
-    end
+    if actor and actor:IsValid() then return actor end
 
     actor = FindObject('BlueprintGeneratedClass', name)
-    if actor and actor:IsValid() then
-        -- print("Found by class", name, actor:GetFullName())
-        return actor
-    end
+    if actor and actor:IsValid() then return actor end
 
     actor = FindObject('StaticMesh', name)
-    if actor and actor:IsValid() then
-        -- print("Found by static mesh", name, actor:GetFullName())
-        return actor
-    end
+    if actor and actor:IsValid() then return actor end
 
-    -- print("--- could not find object, returning nil ---")
+    actor = FindObject(nil, name)
+    if actor and actor:IsValid() then return actor end
+
+    actor = FindObject(name, nil)
+    if actor and actor:IsValid() then return actor end
 
     return nil
 end
@@ -111,25 +111,13 @@ local function getAlias(actor, instancesOnly)
         end
     end
 
-    if instancesOnly then
-        return getBaseName(actor:GetFullName())
+    if instancesOnly then return getName(actor) end
+
+    if getName(actor:GetClass()) == 'StaticMeshActor' then
+        return getName(actor:K2_GetRootComponent().StaticMesh)
     end
 
-    local className = getBaseName(actor:GetClass():GetFullName())
-
-    if className == '/Script/Engine.StaticMeshActor' then
-        className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
-    end
-
-    if existingObject then
-        return className
-    end
-
-    local alias = className:match(".*%.(.+)") or className
-
-    -- print("--- returning alias ---", alias, actor:GetFullName())
-
-    return alias
+    return "null"
 end
 
 local function CloneStaticMeshActor(meshPath, location, rotation, scale)
@@ -303,21 +291,21 @@ local function applyAction(act)
             local actor = getActorByAlias(name)
             if not actor or not actor:IsValid() then return end
 
-            local className = getBaseName(actor:GetClass():GetFullName())
+            local className = getName(actor:GetClass())
 
             print("spawning", name, "classname", className)
 
-            if className == '/Script/Engine.StaticMesh' then
+            if className == 'StaticMesh' then
                 print("this is mesh")
                 className = getBaseName(actor:GetFullName())
             end
 
-            if className == '/Script/Engine.StaticMeshActor' then
+            if className == 'StaticMeshActor' then
                 print("this is mesh actor")
                 className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
             end
 
-            if className == '/Script/Engine.BlueprintGeneratedClass' then
+            if className == 'BlueprintGeneratedClass' then
                 print("this is blueprint")
                 className = getBaseName(actor:GetFullName())
             end
@@ -451,7 +439,7 @@ local function cutObject()
     local actor = hitObject:GetOuter()
     if not actor or not actor:IsValid() then return end
 
-    local name = getAlias(actor, true) or getBaseName(actor:GetFullName())
+    local name = getAlias(actor, true)
 
     local act = {type="hide", name=name}
     applyAction(act)
