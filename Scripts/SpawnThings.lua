@@ -302,12 +302,10 @@ local function applyAction(act)
 
             print("spawning", name, "classname", className)
 
-            if className == 'StaticMesh' then
+            if className == 'StaticMesh' or className == 'BlueprintGeneratedClass' then
                 className = getBaseName(actor:GetFullName())
             elseif className == 'StaticMeshActor' then
                 className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
-            elseif className == 'BlueprintGeneratedClass' then
-                className = getBaseName(actor:GetFullName())
             else
                 className = getBaseName(actor:GetClass():GetFullName())
             end
