@@ -433,7 +433,7 @@ local function pasteObject()
     local r0 = getActorRotation(actor)
     --local r0 = {Pitch=0, Yaw=0, Roll=0}
     local crt = getCameraController().PlayerCameraManager:GetCameraRotation()
-    local rot = {Pitch=r0.Pitch, Yaw= crt.Yaw - selectedYaw + 180, Roll=r0.Roll   }
+    local rot = {Pitch=r0.Pitch, Yaw= crt.Yaw - selectedYaw, Roll=r0.Roll   }
 
     local scale = getActorScale(actor)
 
