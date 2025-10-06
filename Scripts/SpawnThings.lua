@@ -283,6 +283,8 @@ local function rotateActor(Object, yaw)
     end
 end
 
+local spawnThing
+
 local function applyAction(act)
     ExecuteInGameThread(function()
         if act.type == "spawn" then
