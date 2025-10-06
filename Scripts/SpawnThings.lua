@@ -319,10 +319,9 @@ local function applyAction(act)
             if className == '/SupraAssets/Meshes/Objects/Stuff/Plastic_Question_Mark.Plastic_Question_Mark' then
                 local alias = 'SecretVolume_C'
                 local rot = act.rot
-                local loc = getCameraImpactPoint()
                 local crt = getCameraController().PlayerCameraManager:GetCameraRotation()
                 local scale = {X=5, Y=5, Z=5}
-                local act1 = {type="spawn", className=alias, loc=loc, rot={Pitch=rot.Pitch, Yaw=crt.Yaw+rot.Yaw, Roll=rot.Roll}, scale=scale}
+                local act1 = {type="spawn", className=alias, loc=act.loc, rot={Pitch=rot.Pitch, Yaw=crt.Yaw+rot.Yaw, Roll=rot.Roll}, scale=scale}
                 print("--- spawning secret volume ---", alias, loc.X,loc.Y,loc.Z, scale.X)
                 applyAction(act1)
             end
