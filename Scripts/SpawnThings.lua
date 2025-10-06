@@ -283,7 +283,7 @@ local function rotateActor(Object, yaw)
     end
 end
 
-local function applyAction(act)
+local function applyAction(act, temporary)
     ExecuteInGameThread(function()
         if act.type == "spawn" then
 
@@ -306,24 +306,27 @@ local function applyAction(act)
                 className = getBaseName(actor:GetClass():GetFullName())
             end
 
-            print("trying to spawn object from className", className)
+            print("trying to spawn object from className", className, serializeTransform(act.loc,act.rot,act.scale))
 
             actor = SpawnActorFromClassName(className, act.loc, act.rot, act.scale)
 
-            local tag = getNextName()
-            actor.Tags[#actor.Tags + 1] = FName(tag)
-            print("actor tagged", tag)
-            act.result = actor
+            if not temporary then
+                local tag = getNextName()
+                actor.Tags[#actor.Tags + 1] = FName(tag)
+                print("actor tagged", tag)
+                act.result = actor
+            end
 
             -- each question mark gets its own secret volume (temporary item)
             if className == '/SupraAssets/Meshes/Objects/Stuff/Plastic_Question_Mark.Plastic_Question_Mark' then
-                local alias = 'SecretVolume_C'
-                local rot = act.rot
-                local crt = getCameraController().PlayerCameraManager:GetCameraRotation()
-                local scale = {X=5, Y=5, Z=5}
-                local act1 = {type="spawn", className=alias, loc=act.loc, rot={Pitch=rot.Pitch, Yaw=crt.Yaw+rot.Yaw, Roll=rot.Roll}, scale=scale}
-                print("--- spawning secret volume ---", alias, act.loc.X, act.loc.Y, act.loc.Z, scale.X)
-                applyAction(act1)
+                local act1 = {type="spawn", className='SecretVolume_C', loc=act.loc, rot=act.rot, scale={X=10, Y=10, Z=10}}
+
+                ExecuteWithDelay(20, function()
+                ExecuteInGameThread(function()
+                    applyAction(act1, true)
+                end)
+                end)
+
             end
 
         elseif act.type == "hide" then
