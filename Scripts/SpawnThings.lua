@@ -71,12 +71,6 @@ function getActorScale(actor)
     return actor.GetActorScale3D:IsValid() and actor:GetActorScale3D() or scale
 end
 
-function getTargetLocation()
-    local pc = UEHelpers.GetPlayerController()
-    local cam = pc.PlayerCameraManager
-    return getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
-end
-
 local function getActorByTag(tag)
     local world = UEHelpers.GetWorld()
     if not world:IsValid() then return nil end
@@ -489,9 +483,10 @@ end
 local function spawnClass(className)
     ExecuteWithDelay(250, function()
         ExecuteInGameThread(function()
-            local loc = getTargetLocation()
+            local loc = getCameraImpactPoint()
             local rot = {Pitch=0, Yaw=0, Roll=0}
-            SpawnActorFromClass(className, loc, rot)
+            local scale = {X=1, Y=1, Z=1}
+            SpawnActorFromClassName(className, loc, rot, scale)
         end)
     end)
 end
