@@ -1,10 +1,27 @@
 local UEHelpers = require("UEHelpers")
 
+-- this may fail in other games, because of player names, need to find better way to get lyra managers
+local function getInventoryManager()
+    for _, obj in ipairs(FindAllOf("LyraInventoryManagerComponent") or {}) do
+        if obj:IsValid() and string.find(obj:GetFullName(), "SupraworldPlayerController_C") then
+            return obj
+        end
+    end
+end
+
+local function getEquipmentManager()
+    for _, obj in ipairs(FindAllOf("LyraEquipmentManagerComponent") or {}) do
+        if obj:IsValid() and string.find(obj:GetFullName(), "Player_ToyCharacter") then
+            return obj
+        end
+    end
+end
+
 local function addInventory(InvMgr, InvDef)
     local item = InvMgr:FindFirstItemStackByDefinition(InvDef)
     if item and item:IsValid() then
-        print("Already granted")
-        return false
+        print("Already granted, re-applying (effects may double)...") -- Inventory_JumpHeightDouble_C certainly doubles the height
+        -- return false
     end
 
     if not InvMgr:CanAddItemDefinition(InvDef, 1) then
@@ -41,26 +58,52 @@ local function updateInventoryInternal(InvMgr, InvDef, doAdd)
 end
 
 local function updateInventory(InvDefPath, doAdd)
-    local InvMgr
-    for _, obj in ipairs(FindAllOf("LyraInventoryManagerComponent") or {}) do
-        if obj:IsValid() and string.find(obj:GetFullName(), "SupraworldPlayerController_C") then
-            InvMgr = obj
-            break
-        end
-    end
+    local InvMgr = getInventoryManager()
 
     if not InvMgr then
         print("Could not find inventory manager")
         return nil
     end
 
-    LoadAsset(InvDefPath)
     local InvDef = StaticFindObject(InvDefPath)
+    if not InvDef or not InvDef:IsValid() then
+        InvDef = LoadAsset(InvDefPath)
+    end
 
     if not InvDef or not InvDef:IsValid() then
         print("Could not load inventory definition", InvDefPath)
         return nil
     end
+
+    -- let's try to activate/deactivate item using equipment manager
+    local EquipMgr = getEquipmentManager()
+    local EquipDefPath = InvDefPath:gsub("Inventory_","Equipment_")
+
+    local ItemDef = StaticFindObject(EquipDefPath)
+    if not ItemDef or not ItemDef:IsValid() then
+        ItemDef = LoadAsset(EquipDefPath)
+    end
+
+    if EquipMgr:IsValid() and ItemDef:IsValid() then
+        print("ItemDef", ItemDef:GetFullName())
+        if doAdd then
+            ItemInstance = EquipMgr:EquipItem(ItemDef)
+            if ItemInstance:IsValid() then
+                print("EquipItem", ItemInstance:GetFullName())
+            end
+        else
+            for _,obj in ipairs(EquipMgr:GetEquipmentInstancesOfDefinitionType(ItemDef)or{}) do
+                local ItemInstance = obj:get()
+                if ItemInstance:IsValid() then
+                    print("UnequipItem", ItemInstance:GetFullName())
+                    ExecuteInGameThread(function()
+                        EquipMgr:UnequipItem(ItemInstance)
+                    end)
+                end
+            end
+        end
+    end
+
 
     return updateInventoryInternal(InvMgr, InvDef, doAdd)
 end
@@ -71,12 +114,6 @@ end
 
 local function revokeAbilityInternal(InvDefPath)
     return updateInventory(InvDefPath, false)
-end
-
-local function grantAbility(InvDefPath)
-    ExecuteInGameThread(function()
-        grantAbilityInternal(InvDefPath)
-    end)
 end
 
 local function getInventoryPath(str)
@@ -90,7 +127,7 @@ end
 
 local function getAllAbilities()
     local out = {}
-    for _, obj in pairs(FindObjects(10000, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
+    for _, obj in pairs(FindObjects(30000, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
         if obj and obj:IsValid() then
             local path = tostring(obj:GetFullName())
             if path:find("/Abilities/") and path:find("/Inventory") then
@@ -101,6 +138,7 @@ local function getAllAbilities()
             end
         end
     end
+    table.sort(out)
     return table.concat(out, "\n")
 end
 
@@ -126,35 +164,50 @@ local function inventoryHandler(fn, actionVerb, usageMsg, failMsg)
     end
 end
 
-local function grantAbilities()
-    grantAbility("/Supraworld/Abilities/Walk/Inventory_Walk.Inventory_Walk_C")
-    grantAbility("/Supraworld/Abilities/Crouch/Inventory_Crouch.Inventory_Crouch_C")
-    grantAbility("/Supraworld/Abilities/Run/Inventory_Run.Inventory_Run_C")
-    grantAbility("/Supraworld/Abilities/Jump/Jumps/Inventory_Jump.Inventory_Jump_C")
-    grantAbility("/Supraworld/Abilities/Jump/JumpHeight/Inventory_JumpHeightDouble.Inventory_JumpHeightDouble_C")
-    grantAbility("/Supraworld/Abilities/Strength/Inventory_Strength.Inventory_Strength_C")
+-- Centralized ability table
+local AbilityTable = {
+    "/Supraworld/Abilities/Walk/Inventory_Walk.Inventory_Walk_C",
+    "/Supraworld/Abilities/Crouch/Inventory_Crouch.Inventory_Crouch_C",
+    "/Supraworld/Abilities/Run/Inventory_Run.Inventory_Run_C",
+    "/Supraworld/Abilities/Jump/Jumps/Inventory_Jump.Inventory_Jump_C",
+    "/Supraworld/Abilities/Strength/Inventory_Strength.Inventory_Strength_C",
+    "/Supraworld/Abilities/Jump/JumpHeight/Inventory_JumpHeightDouble.Inventory_JumpHeightDouble_C",
+    "/Supraworld/Abilities/BlowGun/Core/Inventory_BlowGun.Inventory_BlowGun_C",
+    "/Supraworld/Abilities/Toothpick/Upgrades/ToothpickDart/Inventory_Toothpin_Dart.Inventory_Toothpin_Dart_C",
+    "/Supraworld/Abilities/ThoughtReading/Inventory_ThoughtReading.Inventory_ThoughtReading_C",
+    "/Supraworld/Abilities/Ghost/Inventory_ThirdEye.Inventory_ThirdEye_C",
+    "/Supraworld/Abilities/Dash/Inventory_Dash.Inventory_Dash_C",
+    "/Supraworld/Abilities/PlayerMap/Inventory_PlayerMap.Inventory_PlayerMap_C",
+    "/Supraworld/Abilities/SpongeSuit/Upgrades/Inventory_SpongeSuit.Inventory_SpongeSuit_C",
+    "/Supraworld/Abilities/LaserWalk/Inventory_LaserWalk.Inventory_LaserWalk_C",
+    "/Supraworld/Abilities/MindVision/Inventory_MindVision.Inventory_MindVision_C",
+    "/Supraworld/Abilities/Shield/Inventory_Shield.Inventory_Shield_C",
 
-    grantAbility("/Supraworld/Abilities/BlowGun/Core/Inventory_BlowGun.Inventory_BlowGun_C")
-    grantAbility("/Supraworld/Abilities/Toothpick/Lyra/Inventory_Toothpick.Inventory_Toothpick_C")
-    grantAbility("/Supraworld/Abilities/Toothpick/Upgrades/ToothpickDart/Inventory_Toothpin_Dart.Inventory_Toothpin_Dart_C")
+    "/Supraworld/Abilities/Toothpick/Lyra/Inventory_Toothpick.Inventory_Toothpick_C", -- not loaded at start
+    "/Supraworld/Abilities/Spark/Inventory_Spark.Inventory_Spark_C",  -- doesn't seem to work
+    "/Supraworld/Abilities/SmellImmunity/Inventory_SmellImmunity.Inventory_SmellImmunity_C", -- not loaded at start
+    -- "/Supraworld/Abilities/MindControl/Inventory_MindControl.Inventory_MindControl_C", -- unfinished, breaks saves
+}
 
-    grantAbility("/Supraworld/Abilities/ThoughtReading/Inventory_ThoughtReading.Inventory_ThoughtReading_C")
-    grantAbility("/Supraworld/Abilities/Ghost/Inventory_ThirdEye.Inventory_ThirdEye_C")
-    grantAbility("/Supraworld/Abilities/Dash/Inventory_Dash.Inventory_Dash_C")
-    grantAbility("/Supraworld/Abilities/PlayerMap/Inventory_PlayerMap.Inventory_PlayerMap_C")
-    grantAbility("/Supraworld/Abilities/SpongeSuit/Upgrades/Inventory_SpongeSuit.Inventory_SpongeSuit_C")
-
-    grantAbility("/Supraworld/Abilities/Spark/Inventory_Spark.Inventory_Spark_C")  -- doesn't seem to work
-    grantAbility("/Supraworld/Abilities/LaserWalk/Inventory_LaserWalk.Inventory_LaserWalk_C")
-    -- grantAbility("/Supraworld/Abilities/MindControl/Inventory_MindControl.Inventory_MindControl_C") -- unfinished, breaks saves
-    grantAbility("/Supraworld/Abilities/MindVision/Inventory_MindVision.Inventory_MindVision_C")
-    grantAbility("/Supraworld/Abilities/Shield/Inventory_Shield.Inventory_Shield_C")
-
-    grantAbility("/Supraworld/Abilities/SmellImmunity/Inventory_SmellImmunity.Inventory_SmellImmunity_C") -- not player compatible
+local function grantAllAbilities()
+    ExecuteInGameThread(function()
+        for i, abilityPath in ipairs(AbilityTable) do
+            grantAbilityInternal(abilityPath)
+        end
+    end)
 end
 
-RegisterKeyBind(Key.I, {ModifierKey.ALT}, grantAbilities) -- inventory, this "I"
+local function revokeAllAbilities()
+    ExecuteInGameThread(function()
+        for i, abilityPath in ipairs(AbilityTable) do
+            revokeAbilityInternal(abilityPath)
+        end
+    end)
+end
+
+-- Register keybinds
+RegisterKeyBind(Key.I, {ModifierKey.ALT}, grantAllAbilities) -- Alt+I to grant all abilities
+RegisterKeyBind(Key.I, {ModifierKey.ALT, ModifierKey.SHIFT}, revokeAllAbilities) -- Shift+Alt+I to revoke all abilities -- HANGS!!!
 
 RegisterConsoleCommandHandler("grant", inventoryHandler(grantAbilityInternal, "granted", "usage: grant <inventory>, e.g. grant spongesuit", "already have"))
 RegisterConsoleCommandHandler("revoke", inventoryHandler(revokeAbilityInternal, "revoked", "usage: revoke <inventory>", "not carrying"))
-
