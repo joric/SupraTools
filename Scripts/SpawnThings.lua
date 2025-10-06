@@ -1,5 +1,7 @@
 local UEHelpers = require("UEHelpers")
 
+-- save to the game save directory, e.g. %LOCALAPPDATA%/Supraworld/SpawnThings.txt
+
 local function getSavePath()
     local gameName = UEHelpers.GetKismetSystemLibrary():GetGameName():ToString()
     local basePath = os.getenv("LOCALAPPDATA") or (os.getenv("HOME") .. "/.local/share")

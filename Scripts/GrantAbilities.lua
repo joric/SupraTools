@@ -1,19 +1,16 @@
 local UEHelpers = require("UEHelpers")
 
--- this may fail in other games, because of player names, need to find better way to get lyra managers
+-- hardcoded to supraworld, need to find better way to get lyra managers
+
 local function getInventoryManager()
     for _, obj in ipairs(FindAllOf("LyraInventoryManagerComponent") or {}) do
-        if obj:IsValid() and string.find(obj:GetFullName(), "SupraworldPlayerController_C") then
-            return obj
-        end
+        if obj:IsValid() and string.find(obj:GetFullName(), "SupraworldPlayerController_C") then return obj end
     end
 end
 
 local function getEquipmentManager()
     for _, obj in ipairs(FindAllOf("LyraEquipmentManagerComponent") or {}) do
-        if obj:IsValid() and string.find(obj:GetFullName(), "Player_ToyCharacter") then
-            return obj
-        end
+        if obj:IsValid() and string.find(obj:GetFullName(), "Player_ToyCharacter") then return obj end
     end
 end
 
@@ -150,7 +147,6 @@ local function inventoryHandler(fn, actionVerb, usageMsg, failMsg)
             Ar:Log(getAllAbilities())
             return true
         end
-
         local path = getInventoryPath(arg)
         if not path then
             Ar:Log(string.format("could not find %s", arg))
@@ -173,7 +169,6 @@ local AbilityTable = {
     "/Supraworld/Abilities/Strength/Inventory_Strength.Inventory_Strength_C",
     "/Supraworld/Abilities/Jump/JumpHeight/Inventory_JumpHeightDouble.Inventory_JumpHeightDouble_C",
     "/Supraworld/Abilities/BlowGun/Core/Inventory_BlowGun.Inventory_BlowGun_C",
-    "/Supraworld/Abilities/Toothpick/Upgrades/ToothpickDart/Inventory_Toothpin_Dart.Inventory_Toothpin_Dart_C",
     "/Supraworld/Abilities/ThoughtReading/Inventory_ThoughtReading.Inventory_ThoughtReading_C",
     "/Supraworld/Abilities/Ghost/Inventory_ThirdEye.Inventory_ThirdEye_C",
     "/Supraworld/Abilities/Dash/Inventory_Dash.Inventory_Dash_C",
@@ -182,8 +177,8 @@ local AbilityTable = {
     "/Supraworld/Abilities/LaserWalk/Inventory_LaserWalk.Inventory_LaserWalk_C",
     "/Supraworld/Abilities/MindVision/Inventory_MindVision.Inventory_MindVision_C",
     "/Supraworld/Abilities/Shield/Inventory_Shield.Inventory_Shield_C",
-
     "/Supraworld/Abilities/Toothpick/Lyra/Inventory_Toothpick.Inventory_Toothpick_C", -- not loaded at start
+    "/Supraworld/Abilities/Toothpick/Upgrades/ToothpickDart/Inventory_Toothpin_Dart.Inventory_Toothpin_Dart_C",
     "/Supraworld/Abilities/Spark/Inventory_Spark.Inventory_Spark_C",  -- doesn't seem to work
     "/Supraworld/Abilities/SmellImmunity/Inventory_SmellImmunity.Inventory_SmellImmunity_C", -- not loaded at start
     -- "/Supraworld/Abilities/MindControl/Inventory_MindControl.Inventory_MindControl_C", -- unfinished, breaks saves
