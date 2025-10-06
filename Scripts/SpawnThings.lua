@@ -319,7 +319,7 @@ local function applyAction(act, temporary)
 
             -- each question mark gets its own secret volume (temporary item)
             if className == '/SupraAssets/Meshes/Objects/Stuff/Plastic_Question_Mark.Plastic_Question_Mark' then
-                local act1 = {type="spawn", className='SecretVolume_C', loc=act.loc, rot=act.rot, scale={X=10, Y=10, Z=10}}
+                local act1 = {type="spawn", className='SecretVolume_C', loc=act.loc, rot=act.rot, scale={X=15, Y=15, Z=10}}
 
                 ExecuteWithDelay(20, function()
                 ExecuteInGameThread(function()
