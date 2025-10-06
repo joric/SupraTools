@@ -356,7 +356,7 @@ end
 -- Undo Last Action
 -- ==============================================================
 
-local function undoLastAction()
+local function undoLastAction(skipSave)
     if #actions == 0 then
         print("No more actions to undo.")
         return
@@ -384,7 +384,9 @@ local function undoLastAction()
         nameIndex = nameIndex - 1
     end
 
-    saveActions()
+    if not skipSave then
+        saveActions()
+    end
 end
 
 -- ==============================================================
@@ -510,6 +512,15 @@ local function spawnThings()
     -- UEHelpers.GetPlayerController().CheatManager.Summon('Bush_C')
 end
 
+local function reloadThings()
+    print("--- reloading things ---")
+    for _, act in ipairs(actions) do
+        undoLastAction(true)
+    end
+    undoLastAction(true)
+    loadSaves()
+end
+
 -- ==============================================================
 -- Hooks & Keybinds
 -- ==============================================================
@@ -534,4 +545,6 @@ RegisterKeyBind(Key.R, {ModifierKey.ALT}, rotateObject)
 
 RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.ALT}, copyObject)
 RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, {ModifierKey.ALT}, pasteObject)
+
+RegisterKeyBind(Key.R, {ModifierKey.CONTROL, ModifierKey.ALT}, reloadThings)
 
