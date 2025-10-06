@@ -433,7 +433,7 @@ local function pasteObject()
     local r0 = getActorRotation(actor)
     --local r0 = {Pitch=0, Yaw=0, Roll=0}
     local crt = getCameraController().PlayerCameraManager:GetCameraRotation()
-    local rot = {Pitch=r0.Pitch, Yaw= crt.Yaw - selectedYaw, Roll=r0.Roll   }
+    local rot = {Pitch=r0.Pitch, Yaw=crt.Yaw-180, Roll=r0.Roll   }
 
     local scale = getActorScale(actor)
 
@@ -441,11 +441,13 @@ local function pasteObject()
 
     print("got Alias", alias)
 
-    local act = {type="spawn", className=alias, loc=loc, rot=rot, scale=scale}
-    applyAction(act)
+    ExecuteWithDelay(20, function()
+        local act = {type="spawn", className=alias, loc=loc, rot=rot, scale=scale}
+        applyAction(act)
 
-    table.insert(actions, act)
-    saveActions()
+        table.insert(actions, act)
+        saveActions()
+    end)
 end
 
 local function cutObject()
