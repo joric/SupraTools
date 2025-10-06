@@ -550,6 +550,7 @@ RegisterKeyBind(Key.R, {ModifierKey.CONTROL, ModifierKey.ALT}, reloadThings)
 
 RegisterConsoleCommandHandler("reload", function(FullCommand, Parameters, Ar)
     Ar:Log(string.format("reloading %d things", #actions))
+    reloadThings()
     return true
 end)
 
