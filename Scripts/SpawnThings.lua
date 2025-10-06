@@ -322,7 +322,7 @@ local function applyAction(act)
                 local crt = getCameraController().PlayerCameraManager:GetCameraRotation()
                 local scale = {X=5, Y=5, Z=5}
                 local act1 = {type="spawn", className=alias, loc=act.loc, rot={Pitch=rot.Pitch, Yaw=crt.Yaw+rot.Yaw, Roll=rot.Roll}, scale=scale}
-                print("--- spawning secret volume ---", alias, loc.X,loc.Y,loc.Z, scale.X)
+                print("--- spawning secret volume ---", alias, act.loc.X, act.loc.Y, act.loc.Z, scale.X)
                 applyAction(act1)
             end
 
