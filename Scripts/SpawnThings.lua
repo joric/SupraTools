@@ -526,7 +526,7 @@ local function spawnThings()
     -- you can also use cheats, e.g. "summon Bush_C" in game console (uses LoadAsset internally)
     -- UEHelpers.GetPlayerController().CheatManager['summon']('Bush_C')
     -- UEHelpers.GetPlayerController().CheatManager.Summon('Bush_C')
-    spawnThing('Plastic_Question_Mark', {Pitch=0, Yaw=90, Roll=0}, {X=0.5, Y=0.5, Z=0.5})
+    spawnThing('Plastic_Question_Mark', {Pitch=0, Yaw=0, Roll=0}, {X=0.5, Y=0.5, Z=0.5})
 end
 
 local function reloadThings()
