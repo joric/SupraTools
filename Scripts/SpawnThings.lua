@@ -433,11 +433,7 @@ local function pasteObject()
 end
 
 local function cutObject()
-    local pc = UEHelpers.GetPlayerController()
-    if not pc or not pc:IsValid() or not pc.Pawn then return end
-
-    local cam = pc.PlayerCameraManager
-    local hitObject = getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
+    local hitObject = getCameraHitObject()
     if not hitObject or not hitObject:IsValid() then return end
 
     selectedObject = hitObject
