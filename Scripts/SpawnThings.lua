@@ -548,3 +548,8 @@ RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, {ModifierKey.ALT}, pasteObject)
 
 RegisterKeyBind(Key.R, {ModifierKey.CONTROL, ModifierKey.ALT}, reloadThings)
 
+RegisterConsoleCommandHandler("reload", function(FullCommand, Parameters, Ar)
+    reloadThings()
+    return true
+end)
+
