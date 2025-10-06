@@ -41,6 +41,7 @@ local function remoteControl()
 
     ExecuteWithDelay(250, function()
         ExecuteInGameThread(function()
+            local pc = UEHelpers.GetPlayerController()
             if not runFirstAvailableAction(hitObject, { pc = pc }) then
                 local actor = hitObject:GetOuter()
                 if not actor or not actor:IsValid() then return end
