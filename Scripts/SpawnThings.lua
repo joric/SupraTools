@@ -283,8 +283,6 @@ local function rotateActor(Object, yaw)
     end
 end
 
-local spawnThing
-
 local function applyAction(act)
     ExecuteInGameThread(function()
         if act.type == "spawn" then
@@ -318,10 +316,16 @@ local function applyAction(act)
             act.result = actor
 
             -- each question mark gets its own secret volume (temporary item)
-            if name == 'Plastic_Question_Mark' then
-                spawnThing('SecretVolume_C', rot, {X=5, Y=5, Z=5}, true)
+            if className == '/SupraAssets/Meshes/Objects/Stuff/Plastic_Question_Mark.Plastic_Question_Mark' then
+                local alias = 'SecretVolume_C'
+                local rot = act.rot
+                local loc = getCameraImpactPoint()
+                local crt = getCameraController().PlayerCameraManager:GetCameraRotation()
+                local scale = {X=5, Y=5, Z=5}
+                local act1 = {type="spawn", className=alias, loc=loc, rot={Pitch=rot.Pitch, Yaw=crt.Yaw+rot.Yaw, Roll=rot.Roll}, scale=scale}
+                print("--- spawning secret volume ---", alias, loc.X,loc.Y,loc.Z, scale.X)
+                applyAction(act1)
             end
-
 
         elseif act.type == "hide" then
             local Object = getActorByAlias(act.name)
