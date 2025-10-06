@@ -336,8 +336,6 @@ local function applyAction(act, temporary)
                 end)
             end
 
-
-
         elseif act.type == "hide" then
             local Object = getActorByAlias(act.name)
             if Object and Object:IsValid() and Object.SetActorHiddenInGame then
