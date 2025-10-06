@@ -1,5 +1,8 @@
 local UEHelpers = require("UEHelpers")
 
+local selectedObject = nil
+local selectedYaw = 0
+
 -- save to the game save directory, e.g. %LOCALAPPDATA%/Supraworld/SpawnThings.txt
 
 local function getSavePath()
@@ -401,14 +404,13 @@ end
 -- Editor Operations
 -- ==============================================================
 
-local selectedObject = nil
-
 local function copyObject()
     local hitObject = getCameraHitObject()
     if not hitObject or not hitObject:IsValid() then return end
     selectedObject = hitObject
     if not selectedObject:IsValid() then return end
     print("Copied: " .. selectedObject:GetFullName())
+    local cameraYaw = getCameraController().PlayerCameraManager:GetCameraRotation().Yaw
     return selectedObject
 end
 
@@ -431,7 +433,7 @@ local function pasteObject()
     local r0 = getActorRotation(actor)
     --local r0 = {Pitch=0, Yaw=0, Roll=0}
     local crt = getCameraController().PlayerCameraManager:GetCameraRotation()
-    local rot = {Pitch=r0.Pitch, Yaw=crt.Yaw+r0.Yaw, Roll=r0.Roll   }
+    local rot = {Pitch=r0.Pitch, Yaw= crt.Yaw - selectedYaw + 180, Roll=r0.Roll   }
 
     local scale = getActorScale(actor)
 
