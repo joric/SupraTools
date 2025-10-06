@@ -136,7 +136,21 @@ local function getAllAbilities()
         end
     end
     table.sort(out)
-    return table.concat(out, "\n")
+
+    local result = {}
+    local lastFirst = ""
+    for _, name in ipairs(out) do
+        local first = name:sub(1,1)
+        if first ~= lastFirst and lastFirst ~= "" then
+            table.insert(result, "\n")
+        elseif lastFirst ~= "" then
+            table.insert(result, " ")
+        end
+        table.insert(result, name)
+        lastFirst = first
+    end
+
+    return table.concat(result)
 end
 
 local function inventoryHandler(fn, actionVerb, usageMsg, failMsg)

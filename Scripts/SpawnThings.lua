@@ -299,8 +299,6 @@ local function applyAction(act, temporary)
 
             local className = getName(actor:GetClass())
 
-            print("spawning", name, "classname", className)
-
             if className == 'StaticMesh' or className == 'BlueprintGeneratedClass' then
                 className = getBaseName(actor:GetFullName())
             elseif className == 'StaticMeshActor' then
@@ -309,28 +307,36 @@ local function applyAction(act, temporary)
                 className = getBaseName(actor:GetClass():GetFullName())
             end
 
-            print("trying to spawn object from className", className, serializeTransform(act.loc,act.rot,act.scale))
-
             actor = SpawnActorFromClassName(className, act.loc, act.rot, act.scale)
+
+            if not actor or not actor:IsValid() then return end
+
+            print("spawned", actor:GetFullName())
 
             if not temporary then
                 local tag = getNextName()
                 actor.Tags[#actor.Tags + 1] = FName(tag)
-                print("actor tagged", tag)
-                act.result = actor
+                -- print("actor tagged", tag)
+            end
+
+            act.result = actor
+
+            if name=="SecretVolume_C" then
+                actor:RegisterToStatSubsystem()
+                actor:ReceiveBeginPlay()
             end
 
             -- each question mark gets its own secret volume (temporary item)
             if className == '/SupraAssets/Meshes/Objects/Stuff/Plastic_Question_Mark.Plastic_Question_Mark' then
-                local act1 = {type="spawn", className='SecretVolume_C', loc=act.loc, rot=act.rot, scale={X=15, Y=15, Z=10}}
-
-                ExecuteWithDelay(20, function()
-                ExecuteInGameThread(function()
-                    applyAction(act1, true)
+                ExecuteWithDelay(250, function()
+                    ExecuteInGameThread(function()
+                        local act1 = {type="spawn", className='SecretVolume_C', loc=act.loc, rot=act.rot, scale={X=15, Y=15, Z=10}}
+                        applyAction(act1, true)
+                    end)
                 end)
-                end)
-
             end
+
+
 
         elseif act.type == "hide" then
             local Object = getActorByAlias(act.name)
@@ -536,7 +542,7 @@ local function spawnThings()
     -- you can also use cheats, e.g. "summon Bush_C" in game console (uses LoadAsset internally)
     -- UEHelpers.GetPlayerController().CheatManager['summon']('Bush_C')
     -- UEHelpers.GetPlayerController().CheatManager.Summon('Bush_C')
-    spawnThing('Plastic_Question_Mark', {Pitch=0, Yaw=0, Roll=0}, {X=0.5, Y=0.5, Z=0.5})
+    spawnThing('Plastic_Question_Mark', {Pitch=0, Yaw=90, Roll=0}, {X=0.5, Y=0.5, Z=0.5})
 end
 
 local function reloadThings()

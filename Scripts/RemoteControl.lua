@@ -54,5 +54,5 @@ local function remoteControl()
     end)
 end
 
-RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.ALT}, remoteControl)
+RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, {ModifierKey.CONTROL}, remoteControl)
 
