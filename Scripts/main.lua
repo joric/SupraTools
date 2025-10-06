@@ -19,15 +19,27 @@ end
 
 inDebugCamera = false -- global variable
 
+function getCameraController()
+    local pc = UEHelpers.GetPlayerController()
+    if inDebugCamera then
+        for _, Controller in ipairs(FindAllOf("DebugCameraController") or {}) do
+            if Controller:IsValid() and (Controller.IsPlayerController and Controller:IsPlayerController() or Controller:IsLocalPlayerController()) then
+                return Controller
+            end
+        end
+    end
+    return pc
+end
+
 function getCameraHitObject()
     local pc = UEHelpers.GetPlayerController()
-    local cam = (inDebugCamera and FindFirstOf("DebugCameraController") or pc).PlayerCameraManager
+    local cam = getCameraController().PlayerCameraManager
     return getHitObject(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
 end
 
 function getCameraImpactPoint()
     local pc = UEHelpers.GetPlayerController()
-    local cam = (inDebugCamera and FindFirstOf("DebugCameraController") or pc).PlayerCameraManager
+    local cam = getCameraController().PlayerCameraManager
     return getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
 end
 

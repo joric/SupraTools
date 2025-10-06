@@ -315,6 +315,12 @@ local function applyAction(act)
             print("actor tagged", tag)
             act.result = actor
 
+            -- each question mark gets its own secret volume (temporary item)
+            if name == 'Plastic_Question_Mark' then
+                spawnThing('SecretVolume_C', rot, {X=5, Y=5, Z=5}, true)
+            end
+
+
         elseif act.type == "hide" then
             local Object = getActorByAlias(act.name)
             if Object and Object:IsValid() and Object.SetActorHiddenInGame then
@@ -412,7 +418,13 @@ local function pasteObject()
     print("Outer: " .. actor:GetFullName())
 
     local loc = getCameraImpactPoint()
-    local rot = getActorRotation(actor)
+
+    local loc = getCameraImpactPoint()
+    -- local rot = getActorRotation(actor)
+    local r0 = {Pitch=0, Yaw=0, Roll=0}
+    local crt = getCameraController().PlayerCameraManager:GetCameraRotation()
+    local rot = {Pitch=r0.Pitch, Yaw=crt.Yaw+r0.Yaw, Roll=r0.Roll   }
+
     local scale = getActorScale(actor)
 
     local alias = getAlias(actor)
@@ -491,16 +503,28 @@ local function spawnClass(className)
     end)
 end
 
+local function spawnThing(alias, rot, scale, temporary)
+    local loc = getCameraImpactPoint()
+    local crt = getCameraController().PlayerCameraManager:GetCameraRotation()
+    local act = {type="spawn", className=alias, loc=loc, rot={Pitch=rot.Pitch, Yaw=crt.Yaw+rot.Yaw, Roll=rot.Roll}, scale=scale}
+    applyAction(act)
+    if not temporary then
+        table.insert(actions, act)
+        saveActions()
+    end
+end
+
 local function spawnThings()
     -- spawnClass('/Supraworld/Levelobjects/Carriables/AluminumBall.AluminumBall_C')
     -- spawnClass('/Supraworld/Levelobjects/Carriables/FourLeafClover.FourLeafClover_C')
     -- spawnClass('/Supraworld/Levelobjects/Carriables/Hats/JesterHat.JesterHat_C')
     -- spawnClass('/Supraworld/Levelobjects/Carriables/Die.Die_C')
     -- spawnClass('/Supraworld/Levelobjects/Carriables/ButtonBattery.ButtonBattery_C')
-    spawnClass('/Supraworld/Abilities/SpongeSuit/ShopItem_SpongeSuit.ShopItem_SpongeSuit_C')
+    -- spawnClass('/Supraworld/Abilities/SpongeSuit/ShopItem_SpongeSuit.ShopItem_SpongeSuit_C')
     -- you can also use cheats, e.g. "summon Bush_C" in game console (uses LoadAsset internally)
     -- UEHelpers.GetPlayerController().CheatManager['summon']('Bush_C')
     -- UEHelpers.GetPlayerController().CheatManager.Summon('Bush_C')
+    spawnThing('Plastic_Question_Mark', {Pitch=0, Yaw=90, Roll=0}, {X=0.5, Y=0.5, Z=0.5})
 end
 
 local function reloadThings()
@@ -544,4 +568,3 @@ RegisterConsoleCommandHandler("reload", function(FullCommand, Parameters, Ar)
     reloadThings()
     return true
 end)
-
