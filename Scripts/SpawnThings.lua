@@ -85,7 +85,7 @@ local function getActorByTag(tag)
     return nil
 end
 
-local function getActorByAlias(name)
+local function getActorByName(name)
     local actor = StaticFindObject(name)
     if actor and actor:IsValid() then return actor end
 
@@ -107,7 +107,7 @@ local function getActorByAlias(name)
     return nil
 end
 
-local function getAlias(actor, instancesOnly)
+local function getActorName(actor, instancesOnly)
     if actor.Tags:IsValid() and #actor.Tags>0 then
         local tag = actor.Tags[#actor.Tags]:ToString()
         if tag:find('SpawnedThings_') then
@@ -290,7 +290,7 @@ local function applyAction(act, temporary)
     ExecuteInGameThread(function()
 
         if act.type == "spawn" then
-            local actor = getActorByAlias(act.name)
+            local actor = getActorByName(act.name)
             if not actor or not actor:IsValid() then return end
 
             local classType = getName(actor:GetClass())
@@ -332,24 +332,24 @@ local function applyAction(act, temporary)
             end
 
         elseif act.type == "hide" then
-            local Object = getActorByAlias(act.name)
+            local Object = getActorByName(act.name)
             if Object and Object:IsValid() and Object.SetActorHiddenInGame then
-                print("hiding", act.name)
+                print("Hiding", act.name)
                 Object:SetActorHiddenInGame(true)
                 Object:SetActorEnableCollision(false)
             end
         elseif act.type == "unhide" then
-            local Object = getActorByAlias(act.name)
+            local Object = getActorByName(act.name)
             if Object and Object:IsValid() and Object.SetActorHiddenInGame then
-                print("unhiding", act.name)
+                print("Unhiding", act.name)
                 Object:SetActorHiddenInGame(false)
                 Object:SetActorEnableCollision(true)
             end
         elseif act.type == "rotate" then
-            local Object = getActorByAlias(act.name)
+            local Object = getActorByName(act.name)
             -- print("---------- trying to rotate", act.name, Object and Object:IsValid())
             if Object and Object:IsValid() then
-                print("rotating class", act.name, Object:GetClass():GetFullName())
+                print("Rotating", act.name, Object:GetClass():GetFullName())
                 rotateActor(Object, act.yaw)
             end
         end
@@ -436,13 +436,10 @@ local function pasteObject()
     local rot = {Pitch=r0.Pitch, Yaw=crt.Yaw-180, Roll=r0.Roll   }
 
     local scale = getActorScale(actor)
-
-    local alias = getAlias(actor)
-
-    print("got Alias", alias)
+    local name = getActorName(actor)
 
     ExecuteWithDelay(20, function()
-        local act = {type="spawn", name=alias, loc=loc, rot=rot, scale=scale}
+        local act = {type="spawn", name=name, loc=loc, rot=rot, scale=scale}
         applyAction(act)
 
         table.insert(actions, act)
@@ -459,7 +456,7 @@ local function cutObject()
     local actor = hitObject:GetOuter()
     if not actor or not actor:IsValid() then return end
 
-    local name = getAlias(actor, true)
+    local name = getActorName(actor, true)
 
     local act = {type="hide", name=name}
     applyAction(act)
@@ -475,7 +472,7 @@ local function rotateObject()
     local actor = hitObject:GetOuter()
     if not actor or not actor:IsValid() then return end
 
-    local name = getAlias(actor, true)
+    local name = getActorName(actor, true)
 
     local rot = actor:K2_GetActorRotation()
 
