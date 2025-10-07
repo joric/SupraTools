@@ -306,7 +306,7 @@ local function applyAction(act, temporary)
 
             if not actor or not actor:IsValid() then return end
 
-            print("Spawned", actor:GetFullName(), "From", className, "Action", serializeAction(act))
+            print("Action", serializeAction(act), "Spawned", actor:GetFullName(), "From", className)
 
             if not temporary then
                 local tag = getNextName()
@@ -334,22 +334,21 @@ local function applyAction(act, temporary)
         elseif act.type == "hide" then
             local Object = getActorByName(act.name)
             if Object and Object:IsValid() and Object.SetActorHiddenInGame then
-                print("Hiding", act.name, Object:GetFullName())
+                print("Action", serializeAction(act), "Hiding", Object:GetFullName())
                 Object:SetActorHiddenInGame(true)
                 Object:SetActorEnableCollision(false)
             end
         elseif act.type == "unhide" then
             local Object = getActorByName(act.name)
             if Object and Object:IsValid() and Object.SetActorHiddenInGame then
-                print("Unhiding", act.name, Object:GetFullName())
+                print("Action", serializeAction(act), "Unhiding", Object:GetFullName())
                 Object:SetActorHiddenInGame(false)
                 Object:SetActorEnableCollision(true)
             end
         elseif act.type == "rotate" then
             local Object = getActorByName(act.name)
-            -- print("---------- trying to rotate", act.name, Object and Object:IsValid())
             if Object and Object:IsValid() then
-                print("Rotating", act.name, Object:GetFullName())
+                print("Action", serializeAction(act), "Rotating", Object:GetFullName())
                 rotateActor(Object, act.yaw)
             end
         end
