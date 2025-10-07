@@ -334,14 +334,14 @@ local function applyAction(act, temporary)
         elseif act.type == "hide" then
             local Object = getActorByName(act.name)
             if Object and Object:IsValid() and Object.SetActorHiddenInGame then
-                print("Hiding", act.name)
+                print("Hiding", act.name, Object:GetFullName())
                 Object:SetActorHiddenInGame(true)
                 Object:SetActorEnableCollision(false)
             end
         elseif act.type == "unhide" then
             local Object = getActorByName(act.name)
             if Object and Object:IsValid() and Object.SetActorHiddenInGame then
-                print("Unhiding", act.name)
+                print("Unhiding", act.name, Object:GetFullName())
                 Object:SetActorHiddenInGame(false)
                 Object:SetActorEnableCollision(true)
             end
@@ -349,7 +349,7 @@ local function applyAction(act, temporary)
             local Object = getActorByName(act.name)
             -- print("---------- trying to rotate", act.name, Object and Object:IsValid())
             if Object and Object:IsValid() then
-                print("Rotating", act.name, Object:GetClass():GetFullName())
+                print("Rotating", act.name, Object:GetFullName())
                 rotateActor(Object, act.yaw)
             end
         end
