@@ -56,7 +56,6 @@ end
 
 local function addTag(actor, tag)
     actor.Tags[#actor.Tags + 1] = FName(tag)
-    print("actor tagged", tag)
 end
 
 function getActorRotation(actor) -- UE4 doesn't seem to have it
@@ -309,7 +308,7 @@ local function applyAction(act, temporary)
             local tag = nil
             if not temporary then
                 tag = getNextName()
-                actor.Tags[#actor.Tags + 1] = FName(tag)
+                addTag(actor, tag)
             end
 
             print("Action", serializeAction(act), "Tag", tag, "Spawned", actor:GetFullName(), "From", assetName)
@@ -415,13 +414,13 @@ end
 
 local function pasteObject()
     if not selectedObject or not selectedObject:IsValid() then return end
+    local actor = selectedObject
 
-    print("Pasting", selectedObject:GetFullName())
+    print("Pasting", actor:GetFullName())
 
-    local actor = selectedObject:GetOuter()
-
-    if getClassName(actor:GetFullName())=='Level' then
-        actor = selectedObject
+    if getName(actor:GetClass())=='StaticMeshComponent' then
+        actor = selectedObject:GetOuter()
+        print("Using Outer Object", actor:GetFullName())
     end
 
     local loc = getCameraImpactPoint()
