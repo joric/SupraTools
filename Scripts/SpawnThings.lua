@@ -208,7 +208,7 @@ end
 local function serializeAction(action)
     if action.type == "spawn" then
         -- spawn|className|loc,rot,scale
-        return string.format("spawn|%s|%s", action.className, serializeTransform(action.loc, action.rot, action.scale))
+        return string.format("spawn|%s|%s", action.name, serializeTransform(action.loc, action.rot, action.scale))
     elseif action.type == "hide" then
         return string.format("hide|%s", action.name)
     elseif action.type == "unhide" then
@@ -226,7 +226,7 @@ local function parseAction(line)
     if not action or not obj then return nil end
     if action == "spawn" then
         local tf = deserializeTransform(params)
-        return {type="spawn", className=obj, loc=tf.loc, rot=tf.rot, scale=tf.scale}
+        return {type="spawn", name=obj, loc=tf.loc, rot=tf.rot, scale=tf.scale}
     elseif action == "hide" then
         return {type="hide", name=obj}
     elseif action == "unhide" then
@@ -290,25 +290,23 @@ local function applyAction(act, temporary)
     ExecuteInGameThread(function()
 
         if act.type == "spawn" then
-            local name = act.className
-            local actor = getActorByAlias(name)
+            local actor = getActorByAlias(act.name)
             if not actor or not actor:IsValid() then return end
 
-            local className = getName(actor:GetClass())
+            local classType = getName(actor:GetClass())
+            local className = getBaseName(actor:GetClass():GetFullName())
 
-            if className == 'StaticMesh' or className == 'BlueprintGeneratedClass' then
+            if classType == 'StaticMesh' or classType == 'BlueprintGeneratedClass' then
                 className = getBaseName(actor:GetFullName())
             elseif className == 'StaticMeshActor' then
                 className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
-            else
-                className = getBaseName(actor:GetClass():GetFullName())
             end
 
             actor = SpawnActorFromClassName(className, act.loc, act.rot, act.scale)
 
             if not actor or not actor:IsValid() then return end
 
-            print("Spawned", actor:GetFullName(), serializeAction(act))
+            print("Spawned", actor:GetFullName(), "From", className, "Action", serializeAction(act))
 
             if not temporary then
                 local tag = getNextName()
@@ -327,7 +325,7 @@ local function applyAction(act, temporary)
             if className == '/SupraAssets/Meshes/Objects/Stuff/Plastic_Question_Mark.Plastic_Question_Mark' then
                 ExecuteWithDelay(250, function()
                     ExecuteInGameThread(function()
-                        local act1 = {type="spawn", className='SecretVolume_C', loc=act.loc, rot=act.rot, scale={X=15, Y=15, Z=10}}
+                        local act1 = {type="spawn", name='SecretVolume_C', loc=act.loc, rot=act.rot, scale={X=15, Y=15, Z=10}}
                         applyAction(act1, true)
                     end)
                 end)
@@ -444,7 +442,7 @@ local function pasteObject()
     print("got Alias", alias)
 
     ExecuteWithDelay(20, function()
-        local act = {type="spawn", className=alias, loc=loc, rot=rot, scale=scale}
+        local act = {type="spawn", name=alias, loc=loc, rot=rot, scale=scale}
         applyAction(act)
 
         table.insert(actions, act)
@@ -520,7 +518,7 @@ end
 local function spawnThing(alias, rot, scale, temporary)
     local loc = getCameraImpactPoint()
     local crt = getCameraController().PlayerCameraManager:GetCameraRotation()
-    local act = {type="spawn", className=alias, loc=loc, rot={Pitch=rot.Pitch, Yaw=crt.Yaw+rot.Yaw, Roll=rot.Roll}, scale=scale}
+    local act = {type="spawn", name=alias, loc=loc, rot={Pitch=rot.Pitch, Yaw=crt.Yaw+rot.Yaw, Roll=rot.Roll}, scale=scale}
     applyAction(act)
     if not temporary then
         table.insert(actions, act)
