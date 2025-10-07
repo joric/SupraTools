@@ -45,17 +45,13 @@ local function getName(actor)
     return actor and actor:IsValid() and actor:GetFName():ToString() or "";
 end
 
-local function getBaseName(fullName)
+local function getAssetName(fullName)
     local name = fullName:match("^%S+%s+(.+)")
     return name or fullName
 end
 
 local function getClassName(fullName)
     return fullName:match("^(%S+)")
-end
-
-local function getShortName(className)
-    return className:match(".*%.(.+)") or className
 end
 
 local function addTag(actor, tag)
@@ -126,7 +122,7 @@ local function getActorName(actor, instancesOnly)
     return className
 end
 
-local function CloneStaticMeshActor(meshPath, location, rotation, scale)
+local function CloneStaticMeshActor(assetName, location, rotation, scale)
     local world = UEHelpers.GetWorld()
 
     local staticMeshActorClass = StaticFindObject("/Script/Engine.StaticMeshActor")
@@ -134,7 +130,7 @@ local function CloneStaticMeshActor(meshPath, location, rotation, scale)
 
     local actor = CreateInvalidObject() ---@cast actor AActor
 
-    local loadedAsset = StaticFindObject(meshPath)
+    local loadedAsset = StaticFindObject(assetName)
     if not loadedAsset:IsValid() then
         return actor
     end
@@ -175,27 +171,32 @@ function spawnActor(world, actorClass, loc, rot, scale)
     end
 end
 
-function SpawnActorFromClassName(ActorClassName, Location, Rotation, Scale)
+function SpawnActorFromAssetName(assetName, loc, rot, scale)
     local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
-    if type(ActorClassName) ~= "string" or not Location then return invalidActor end
+    if type(assetName) ~= "string" or not loc then
+        print("InvalidActor", assetName)
+        return invalidActor
+    end
 
-    LoadAsset(ActorClassName)
+    local actorClass = StaticFindObject(assetName)
+    if not actorClass:IsValid() then
+        actorClass = LoadAsset(assetName)
+    end
+
+    if not actorClass:IsValid() then
+        print("SpawnActorFromClassName: Couldn't find static object:", assetName)
+        return invalidActor
+    end
 
     local world = UEHelpers.GetWorld()
     if not world:IsValid() then return invalidActor end
 
-    local actorClass = StaticFindObject(ActorClassName)
-    if not actorClass:IsValid() then
-        print("SpawnActorFromClassName: Couldn't find static object:", ActorClassName)
-        return invalidActor
-    end
-
-    local actor = spawnActor(world, actorClass, Location, Rotation, Scale)
+    local actor = spawnActor(world, actorClass, loc, rot, scale)
 
     if actor:IsValid() then
         return actor
     else
-        return CloneStaticMeshActor(ActorClassName, Location, Rotation, Scale)
+        return CloneStaticMeshActor(assetName, loc, rot, scale)
     end
 
     return invalidActor
@@ -293,36 +294,35 @@ local function applyAction(act, temporary)
             local actor = getActorByName(act.name)
             if not actor or not actor:IsValid() then return end
 
-            local classType = getName(actor:GetClass())
-            local className = getBaseName(actor:GetClass():GetFullName())
+            local assetName = getAssetName(actor:GetClass():GetFullName())
+            local className = getName(actor:GetClass())
 
-            if classType == 'StaticMesh' or classType == 'BlueprintGeneratedClass' then
-                className = getBaseName(actor:GetFullName())
+            if className == 'StaticMesh' or className == 'BlueprintGeneratedClass' then
+                assetName = getAssetName(actor:GetFullName())
             elseif className == 'StaticMeshActor' then
-                className = getBaseName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
+                assetName = getAssetName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
             end
 
-            actor = SpawnActorFromClassName(className, act.loc, act.rot, act.scale)
-
+            actor = SpawnActorFromAssetName(assetName, act.loc, act.rot, act.scale)
             if not actor or not actor:IsValid() then return end
 
-            print("Action", serializeAction(act), "Spawned", actor:GetFullName(), "From", className)
-
+            local tag = nil
             if not temporary then
-                local tag = getNextName()
+                tag = getNextName()
                 actor.Tags[#actor.Tags + 1] = FName(tag)
-                -- print("actor tagged", tag)
             end
+
+            print("Action", serializeAction(act), "Tag", tag, "Spawned", actor:GetFullName(), "From", assetName)
 
             act.result = actor
 
-            if name=="SecretVolume_C" then
+            if act.name=="SecretVolume_C" then
                 actor:RegisterToStatSubsystem()
                 actor:ReceiveBeginPlay()
             end
 
             -- each question mark gets its own secret volume (temporary item)
-            if className == '/SupraAssets/Meshes/Objects/Stuff/Plastic_Question_Mark.Plastic_Question_Mark' then
+            if assetName == '/SupraAssets/Meshes/Objects/Stuff/Plastic_Question_Mark.Plastic_Question_Mark' then
                 ExecuteWithDelay(250, function()
                     ExecuteInGameThread(function()
                         local act1 = {type="spawn", name='SecretVolume_C', loc=act.loc, rot=act.rot, scale={X=15, Y=15, Z=10}}
@@ -423,8 +423,6 @@ local function pasteObject()
     if getClassName(actor:GetFullName())=='Level' then
         actor = selectedObject
     end
-
-    print("Outer", actor:GetFullName())
 
     local loc = getCameraImpactPoint()
 

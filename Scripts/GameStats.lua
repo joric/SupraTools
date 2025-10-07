@@ -43,9 +43,3 @@ local function showText()
 end
 
 RegisterKeyBind(Key.O, {ModifierKey.ALT}, showText) -- Onscreen Objectives, thus "O"
-
-RegisterConsoleCommandHandler("reload", function(FullCommand, Parameters, Ar)
-    Ar:Log("reloading stats")
-    return true
-end)
-
