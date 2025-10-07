@@ -43,6 +43,19 @@ function getCameraImpactPoint()
     return getImpactPoint(pc.Pawn, cam:GetCameraLocation(), cam:GetCameraRotation())
 end
 
+local old_print = print
+
+function print(...)
+  local info = debug.getinfo(2, "S")      -- caller info
+  local src = info and info.short_src or "?"
+  local name = src:match("([^/\\]+)%.lua$") or src
+  local args = {}
+  for i = 1, select("#", ...) do
+    args[#args+1] = tostring(select(i, ...))
+  end
+  old_print(("[%s] %s"):format(name, table.concat(args, " ")))
+end
+
 require("UnblockEA")
 require("DebugCamera")
 require("SuitRefill")

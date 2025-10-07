@@ -152,7 +152,7 @@ local function CloneStaticMeshActor(meshPath, location, rotation, scale)
         actor:SetMobility(2)
 
         if not actor.StaticMeshComponent:SetStaticMesh(loadedAsset) then
-            error("Failed to set " .. loadedAsset:GetFullName() .. " as static mesh")
+            print("Failed to set ",loadedAsset:GetFullName(),"as static mesh")
             return actor
         end
 
@@ -241,7 +241,7 @@ end
 
 local function saveActions()
     local savePath = getSavePath()
-    print("Saving to " .. savePath)
+    print("Saving to", savePath)
     local f = io.open(savePath, "w")
     if not f then return end
     for _, action in ipairs(actions) do
@@ -255,7 +255,7 @@ end
 
 local function loadActions()
     local savePath = getSavePath()
-    print("Loading from " .. savePath)
+    print("Loading from", savePath)
     actions = {}
     local f = io.open(savePath, "r")
     if not f then return end
@@ -288,12 +288,9 @@ end
 
 local function applyAction(act, temporary)
     ExecuteInGameThread(function()
+
         if act.type == "spawn" then
-
             local name = act.className
-
-            -- className is either virtual or mesh actor or class
-
             local actor = getActorByAlias(name)
             if not actor or not actor:IsValid() then return end
 
@@ -311,7 +308,7 @@ local function applyAction(act, temporary)
 
             if not actor or not actor:IsValid() then return end
 
-            print("spawned", actor:GetFullName())
+            print("Spawned", actor:GetFullName(), serializeAction(act))
 
             if not temporary then
                 local tag = getNextName()
@@ -379,7 +376,7 @@ local function undoLastAction(skipSave)
 
     local act = table.remove(actions)
 
-    print("Undoing last action: " .. (act.type or "?"))
+    print("Undoing last action", serializeAction(act))
 
     if act.type == "hide" then
         act.type = "unhide"
@@ -394,6 +391,7 @@ local function undoLastAction(skipSave)
     if act.type == "spawn" then
         local actor = act.result
         if actor and actor:IsValid() then
+            print("Destroyed", actor:GetFullName())
             actor:K2_DestroyActor()
         end
         nameIndex = nameIndex - 1
@@ -413,7 +411,7 @@ local function copyObject()
     if not hitObject or not hitObject:IsValid() then return end
     selectedObject = hitObject
     if not selectedObject:IsValid() then return end
-    print("Copied: " .. selectedObject:GetFullName())
+    print("Copied", selectedObject:GetFullName())
     local cameraYaw = getCameraController().PlayerCameraManager:GetCameraRotation().Yaw
     return selectedObject
 end
@@ -421,7 +419,7 @@ end
 local function pasteObject()
     if not selectedObject or not selectedObject:IsValid() then return end
 
-    print("Pasting: " .. selectedObject:GetFullName())
+    print("Pasting", selectedObject:GetFullName())
 
     local actor = selectedObject:GetOuter()
 
@@ -429,7 +427,7 @@ local function pasteObject()
         actor = selectedObject
     end
 
-    print("Outer: " .. actor:GetFullName())
+    print("Outer", actor:GetFullName())
 
     local loc = getCameraImpactPoint()
 
@@ -544,7 +542,7 @@ local function spawnThings()
 end
 
 local function reloadThings()
-    print("--- reloading things ---")
+    print("Reloading things.")
     for _, act in ipairs(actions) do
         undoLastAction(true)
     end
