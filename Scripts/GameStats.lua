@@ -43,3 +43,10 @@ local function showText()
 end
 
 RegisterKeyBind(Key.O, {ModifierKey.ALT}, showText) -- Onscreen Objectives, thus "O"
+
+RegisterHook("/Script/UMG.TextBlock:SetText", function(Context, InText)
+  -- InText:Set(FText("Hello!")) -- crashes
+  -- print(FText("Hello"):ToString()) -- crashes, apparently FText is cursed
+  -- print("SetText", InText:get(), Context:get():GetFName():ToString())
+end)
+
