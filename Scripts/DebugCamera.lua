@@ -19,17 +19,13 @@ NotifyOnNewObject("/Script/Engine.PlayerController", function(PlayerController)
     return cheatable(PlayerController)
 end)
 
-local function getDebugCameraController()
-    return FindFirstOf("DebugCameraController") or UEHelpers.GetPlayerController()
-end
-
 local function toggleDebugCamera()
     if not inDebugCamera then
+        cheatable(getCameraController()).CheatManager:EnableDebugCamera()
         inDebugCamera = true
-        cheatable(UEHelpers.GetPlayerController()).CheatManager:EnableDebugCamera()
     else
+        cheatable(getCameraController()).CheatManager:DisableDebugCamera()
         inDebugCamera = false
-        cheatable(getDebugCameraController()).CheatManager:DisableDebugCamera()
     end
 end
 
