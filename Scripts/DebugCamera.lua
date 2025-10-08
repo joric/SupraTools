@@ -20,14 +20,18 @@ local function toggleDebugCamera()
     if not inDebugCamera then
         local pc = cheatable(UEHelpers.GetPlayerController())
         ExecuteInGameThread(function()
-            pc.CheatManager:EnableDebugCamera()
-            inDebugCamera = true
+            ExecuteInGameThread(function()
+                pc.CheatManager:EnableDebugCamera()
+                inDebugCamera = true
+            end)
         end)
     else
         local pc = cheatable(getDebugCameraController())
         ExecuteInGameThread(function()
-            pc.CheatManager:DisableDebugCamera()
-            inDebugCamera = false
+            ExecuteInGameThread(function()
+                pc.CheatManager:DisableDebugCamera()
+                inDebugCamera = false
+            end)
         end)
     end
 end
