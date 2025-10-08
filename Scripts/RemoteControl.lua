@@ -54,5 +54,5 @@ local function remoteControl()
     end)
 end
 
-RegisterKeyBind(Key.E, {ModifierKey.CONTROL}, remoteControl)
+RegisterKeyBind(Key.E, {ModifierKey.ALT}, remoteControl)
 
