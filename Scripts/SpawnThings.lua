@@ -549,7 +549,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     loadSaves()
 end)
 
-RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings)
+RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings)
 
 RegisterKeyBind(Key.C, {ModifierKey.CONTROL}, copyObject)
 RegisterKeyBind(Key.V, {ModifierKey.CONTROL}, pasteObject)
