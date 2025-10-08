@@ -21,16 +21,16 @@ end)
 
 local function toggleDebugCamera()
     if not inDebugCamera then
-        cheatable(getCameraController()).CheatManager:EnableDebugCamera()
+        cheatable(UEHelpers.GetPlayerController()).CheatManager:EnableDebugCamera()
         inDebugCamera = true
     else
-        cheatable(getCameraController()).CheatManager:DisableDebugCamera()
+        cheatable(getDebugCameraController()).CheatManager:DisableDebugCamera()
         inDebugCamera = false
     end
 end
 
 local function teleportToTrace(PlayerPawn)
-    local cam = getDebugCameraController().PlayerCameraManager
+    local cam = getCameraController().PlayerCameraManager
     local rot = cam:GetCameraRotation()
     local loc = getImpactPoint(PlayerPawn, cam:GetCameraLocation(), rot)
     loc.Z = loc.Z + 100 -- above the ground
@@ -45,22 +45,22 @@ local function teleportPlayer()
     local cc = getDebugCameraController()
     local cam = cc.PlayerCameraManager
 
-    pc:ClientFlushLevelStreaming()
-    pc:ClientForceGarbageCollection()
-
     cc:ClientFlushLevelStreaming()
     cc:ClientForceGarbageCollection()
+
+    pc:ClientFlushLevelStreaming()
+    pc:ClientForceGarbageCollection()
 
     local throttleMs = 300
     ExecuteWithDelay(throttleMs, function()
         ExecuteInGameThread(function()
-        ExecuteInGameThread(function()
-            if (os.clock() - (lastTime or 0)) * 1000 < throttleMs then return end
-            lastTime = os.clock()
-            -- pc.Pawn:K2_TeleportTo(cam:GetCameraLocation(), cam:GetCameraRotation()) -- teleport to debug camera position
-            -- getDebugCameraController().CheatManager:Teleport() -- built-in teleport console command, needs line of sight
-            teleportToTrace(pc.Pawn) -- teleport to impact point, may hit hidden volumes
-        end)
+            ExecuteInGameThread(function()
+                if (os.clock() - (lastTime or 0)) * 1000 < throttleMs then return end
+                lastTime = os.clock()
+                -- pc.Pawn:K2_TeleportTo(cam:GetCameraLocation(), cam:GetCameraRotation()) -- teleport to debug camera position
+                -- getCameraController().CheatManager:Teleport() -- built-in teleport console command, needs line of sight
+                teleportToTrace(pc.Pawn) -- teleport to impact point, may hit hidden volumes
+            end)
         end)
     end)
 end

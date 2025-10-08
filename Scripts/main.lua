@@ -19,16 +19,20 @@ end
 
 inDebugCamera = false -- global variable
 
-function getCameraController()
-    local pc = UEHelpers.GetPlayerController()
-    if inDebugCamera then
-        for _, Controller in ipairs(FindAllOf("DebugCameraController") or {}) do
-            if Controller:IsValid() and (Controller.IsPlayerController and Controller:IsPlayerController() or Controller:IsLocalPlayerController()) then
-                return Controller
-            end
+function getDebugCameraController()
+    for _, Controller in ipairs(FindAllOf("DebugCameraController") or {}) do
+        if Controller:IsValid() and (Controller.IsPlayerController and Controller:IsPlayerController() or Controller:IsLocalPlayerController()) then
+            return Controller
         end
     end
-    return pc
+    return UEHelpers.GetPlayerController()
+end
+
+function getCameraController()
+    if inDebugCamera then
+        return getDebugCameraController()
+    end
+    return UEHelpers.GetPlayerController()
 end
 
 function getCameraHitObject()
