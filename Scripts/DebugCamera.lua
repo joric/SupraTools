@@ -8,6 +8,12 @@ local function cheatable(PlayerController)
         if CheatManagerClass:IsValid() then
             PlayerController.CheatManager = StaticConstructObject(CheatManagerClass, PlayerController)
         end
+
+        if not PlayerController.CheatManager:IsValid() then
+            print("re-creating cheat manager")
+            PlayerController.CheatManager = LoadAsset("/Script/Engine.CheatManager")
+        end
+
     end
     return PlayerController
 end
