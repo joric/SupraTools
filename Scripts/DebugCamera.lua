@@ -6,10 +6,7 @@ local function cheatable(PlayerController)
         print("Restoring CheatManager")
         local CheatManagerClass = StaticFindObject("/Script/Engine.CheatManager")
         if CheatManagerClass:IsValid() then
-            local CreatedCheatManager = StaticConstructObject(CheatManagerClass, PlayerController)
-            if CreatedCheatManager:IsValid() then
-                PlayerController.CheatManager = CreatedCheatManager
-            end
+            PlayerController.CheatManager = StaticConstructObject(CheatManagerClass, PlayerController)
         end
     end
     return PlayerController
@@ -21,11 +18,17 @@ end)
 
 local function toggleDebugCamera()
     if not inDebugCamera then
-        cheatable(UEHelpers.GetPlayerController()).CheatManager:EnableDebugCamera()
-        inDebugCamera = true
+        local pc = cheatable(UEHelpers.GetPlayerController())
+        ExecuteInGameThread(function()
+            pc.CheatManager:EnableDebugCamera()
+            inDebugCamera = true
+        end)
     else
-        cheatable(getDebugCameraController()).CheatManager:DisableDebugCamera()
-        inDebugCamera = false
+        local pc = cheatable(getDebugCameraController())
+        ExecuteInGameThread(function()
+            pc.CheatManager:DisableDebugCamera()
+            inDebugCamera = false
+        end)
     end
 end
 
