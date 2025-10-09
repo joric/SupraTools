@@ -409,7 +409,7 @@ local function copyObject()
     if not hitObject or not hitObject:IsValid() then return end
     selectedObject = hitObject
     if not selectedObject:IsValid() then return end
-    print("Copied", selectedObject:GetFullName())
+    print("Selected", selectedObject:GetFullName())
     local cameraYaw = getCameraController().PlayerCameraManager:GetCameraRotation().Yaw
     return selectedObject
 end
@@ -461,6 +461,8 @@ local function cutObject()
     if not actor or not actor:IsValid() then return end
 
     local name = getActorName(actor, true)
+
+    print("Hide object", name)
 
     local act = {type="hide", name=name}
     applyAction(act)
