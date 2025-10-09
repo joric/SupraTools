@@ -118,6 +118,12 @@ local function getInventoryPath(str)
     if not obj or not obj:IsValid() then
         obj = FindObject("BlueprintGeneratedClass", string.format("Inventory_%s_C", str))
     end
+
+    obj = StaticFindObject(str)
+    if not ob or not obj:IsValid() then
+        obj = LoadAsset(str)
+    end
+
     if not obj or not obj:IsValid() then return nil end
     return obj:GetFullName():match("%s(.+)")
 end
@@ -196,6 +202,10 @@ local AbilityTable = {
     "/Supraworld/Abilities/Spark/Inventory_Spark.Inventory_Spark_C",  -- doesn't seem to work
     "/Supraworld/Abilities/SmellImmunity/Inventory_SmellImmunity.Inventory_SmellImmunity_C", -- not loaded at start
     -- "/Supraworld/Abilities/MindControl/Inventory_MindControl.Inventory_MindControl_C", -- unfinished, breaks saves
+
+
+
+    -- "/Supraworld/Abilities/Toothpick/Upgrades/ToothpickWedge/Equipment_ToothpickStake.Equipment_ToothpickStake_C"
 }
 
 local function grantAllAbilities()
