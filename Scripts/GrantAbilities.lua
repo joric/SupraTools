@@ -101,7 +101,6 @@ local function updateInventory(InvDefPath, doAdd)
         end
     end
 
-
     return updateInventoryInternal(InvMgr, InvDef, doAdd)
 end
 
@@ -204,8 +203,8 @@ local AbilityTable = {
     -- "/Supraworld/Abilities/MindControl/Inventory_MindControl.Inventory_MindControl_C", -- unfinished, breaks saves
 
 
-
     -- "/Supraworld/Abilities/Toothpick/Upgrades/ToothpickWedge/Equipment_ToothpickStake.Equipment_ToothpickStake_C"
+    -- "/Supraworld/Abilities/Shield/Equipment_Shield.Equipment_Shield_C",
 }
 
 local function grantAllAbilities()
