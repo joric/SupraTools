@@ -94,7 +94,6 @@ local function FindAssetsByKeywords(keywords)
         end
 
         if match then
-            -- print(path)
             table.insert(results, path)
 
             i = i + 1
@@ -103,6 +102,12 @@ local function FindAssetsByKeywords(keywords)
 
     end
     table.sort(results)
+
+    print("results:")
+    for _, str in ipairs(results) do
+        print(str)
+    end
+
     return results
 end
 
