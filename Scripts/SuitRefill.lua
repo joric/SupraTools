@@ -17,7 +17,7 @@ local function suitRefill(color)
             obj:Liquid(pc, 2, 16, 0.0) -- paint, white. does not work. maybe use real paint volume as instigator?
         end
 
-        obj:SetCurrentFill(1.0)
+        obj:SetCurrentFill(9.0)
     end
     return true
 end
