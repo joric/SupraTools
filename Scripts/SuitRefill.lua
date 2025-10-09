@@ -27,11 +27,11 @@ end
 -- cannot use Alt+R (bind on rotation)
 
 RegisterKeyBind(Key.F, {ModifierKey.ALT}, function()
-    suitRefill(1)
+    suitRefill(9)
 end)
 
 RegisterKeyBind(Key.F, {ModifierKey.CONTROL}, function()
-    suitRefill(1)
+    suitRefill(9)
 end)
 
 RegisterConsoleCommandHandler("refill", function(FullCommand, Parameters, Ar)
