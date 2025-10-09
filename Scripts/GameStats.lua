@@ -1,3 +1,5 @@
+local UEHelpers = require("UEHelpers")
+
 -- experimental, under construction
 
 local function createTextWidget(text)
@@ -17,36 +19,36 @@ local function createTextWidget(text)
     hud:SetVisibility(0)
     hud:AddToViewport(10000)
 
-    print('--- text client message ---')
-    local pc = UEHelpers.GetPlayerController()
-    pc:ClientMessage("Hello from ClientMessage", "None", 3.0)
-
-    print('--- text ksl message ---')
-    local ksl = StaticFindObject("/Script/Engine.Default__KismetSystemLibrary")
-    ksl:PrintString(nil, "Hello from PrintString", true, false, {R=0,G=255,B=0,A=255}, 5.0)
-
-    print('--- text debug message ---')
-    local engine = FindFirstOf("Engine")
-    engine:AddOnScreenDebugMessage(-1, 5.0, {R=0,G=255,B=0,A=255}, "Hello from DebugMessage")
-
-    print('--- text block ---')
-    block:SetText(FText(text)) -- everything is valid but it crashes here
+    print("adding text")
+    block:SetText(FText(text))
 
 end
 
 local function showText()
-    ExecuteWithDelay(250, function()
-        ExecuteInGameThread(function()
-            createTextWidget('Hello, World!')
-        end)
+    ExecuteInGameThread(function()
+        createTextWidget('Hello, World!')
     end)
 end
 
 RegisterKeyBind(Key.O, {ModifierKey.ALT}, showText) -- Onscreen Objectives, thus "O"
 
+-- RegisterKeyBind(Key.D, {ModifierKey.ALT}, showText) -- debug
+
+--[[
+-- added this to ue4ss\UE4SS_Signatures\FText_Constructor.lua
+function Register()
+    return "40 53 57 48 83 EC 38 48 89 6C 24 ?? 48 8B FA 48 89 74 24 ?? 48 8B D9 33 F6 4C 89 74 24 30 ?? ?? ?? ?? ?? ?? ?? ?? 7F ?? E8 ?? ?? 00 00 48 8B F0"
+end
+function OnMatchFound(MatchAddress)
+    return MatchAddress
+end
+]]
+
 RegisterHook("/Script/UMG.TextBlock:SetText", function(Context, InText)
-  -- InText:Set(FText("Hello!")) -- crashes
-  -- print(FText("Hello"):ToString()) -- crashes, apparently FText is cursed
-  -- print("SetText", InText:get(), Context:get():GetFName():ToString())
+  -- Context:get():SetText(FText("Hello!")) -- stack overflow (probably recursion)
+  -- print(FText("Hello"):ToString()) -- this doesn't crash now
+  -- print("SetText", InText:get(), Context:get():GetFName():ToString()) -- prints FText: 000002B1B8086268 ReasonTextWidget
+  -- InText:Set(FText("Hello!")) -- does not crash but doesn't change text either
+  -- print("TextContent", InText:get():ToString()) -- still crashes if InText is not set in a line above
 end)
 

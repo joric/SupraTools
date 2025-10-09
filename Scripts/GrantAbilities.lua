@@ -220,3 +220,54 @@ RegisterKeyBind(Key.I, {ModifierKey.ALT, ModifierKey.SHIFT}, revokeAllAbilities)
 
 RegisterConsoleCommandHandler("grant", inventoryHandler(grantAbilityInternal, "granted", "usage: grant <inventory>, e.g. grant spongesuit", "already have"))
 RegisterConsoleCommandHandler("revoke", inventoryHandler(revokeAbilityInternal, "revoked", "usage: revoke <inventory>", "not carrying"))
+
+-- check volumes
+
+local function overlaps(loc, box)
+    return math.abs(loc.X - box.Center.X) <= box.Size.X / 2
+       and math.abs(loc.Y - box.Center.Y) <= box.Size.Y / 2
+       and math.abs(loc.Z - box.Center.Z) <= box.Size.Z / 2
+end
+
+local defaultSize = { X = 1000, Y = 1000, Z = 1000 } -- size in mm
+
+local volumes = {
+    {
+        inside = false,
+        Box = {Center={ X = 0, Y = 0, Z = 0 }, Size = defaultSize},
+        onEnter = function() print("entered box1"); end,
+        onLeave = function() print("left box1"); end
+    },
+    {
+        inside = false,
+        Box = {Center={ X = -1000, Y = 0, Z = 0 }, Size = defaultSize},
+        onEnter = function() print("entered box2") end,
+        onLeave = function() print("left box2") end
+    },
+}
+
+local function checkVolumes()
+    local pc = UEHelpers.GetPlayerController()
+    if not pc or not pc:IsValid() or not pc.Pawn or not pc.Pawn:IsValid() then return end
+    local loc = pc.Pawn:K2_GetActorLocation()
+    for _, vol in ipairs(volumes) do
+        local currentlyInside = overlaps(loc, vol.Box)
+        if currentlyInside and not vol.inside then
+            vol.inside = true
+            if vol.onEnter then vol.onEnter() end
+        elseif not currentlyInside and vol.inside then
+            vol.inside = false
+            if vol.onLeave then vol.onLeave() end
+        end
+    end
+end
+
+RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
+    print("-- initialize checkVolumes loop --")
+    ExecuteWithDelay(250, function()
+        ExecuteInGameThread(function()
+            LoopAsync(100, checkVolumes)
+        end)
+    end)
+end)
+
