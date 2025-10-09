@@ -2,6 +2,27 @@ local UEHelpers = require("UEHelpers")
 
 -- hardcoded to supraworld, need to find better way to get lyra managers
 
+local AssetRegistryHelpers = nil
+local AssetRegistry = nil
+
+local function CacheAssetRegistry()
+    if AssetRegistryHelpers and AssetRegistry then return end
+
+    AssetRegistryHelpers = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryHelpers")
+    if not AssetRegistryHelpers:IsValid() then Log("AssetRegistryHelpers is not valid\n") end
+
+    if AssetRegistryHelpers then
+        AssetRegistry = AssetRegistryHelpers:GetAssetRegistry()
+        if AssetRegistry:IsValid() then return end
+    end
+
+    AssetRegistry = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryImpl")
+    if AssetRegistry:IsValid() then return end
+
+    error("AssetRegistry is not valid\n")
+end
+
+
 local function getInventoryManager()
     for _, obj in ipairs(FindAllOf("LyraInventoryManagerComponent") or {}) do
         if obj:IsValid() and string.find(obj:GetFullName(), "SupraworldPlayerController_C") then return obj end
@@ -134,6 +155,23 @@ local function getInventoryPath(str)
     return obj:GetFullName():match("%s(.+)")
 end
 
+local function groupResults(items)
+    table.sort(items)
+    local res = {}
+    local lastFirst = ""
+    for _, name in ipairs(items) do
+        local first = name:sub(1,1)
+        if first ~= lastFirst and lastFirst ~= "" then
+            table.insert(res, "\n")
+        elseif lastFirst ~= "" then
+            table.insert(res, " ")
+        end
+        table.insert(res, name)
+        lastFirst = first
+    end
+    return table.concat(res)
+end
+
 local function getAllAbilities()
     local out = {}
     for _, obj in pairs(FindObjects(30000, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
@@ -212,6 +250,7 @@ local AbilityTable = {
 
     -- "/Supraworld/Abilities/Toothpick/Upgrades/ToothpickWedge/Equipment_ToothpickStake.Equipment_ToothpickStake_C"
     -- "/Supraworld/Abilities/Shield/Equipment_Shield.Equipment_Shield_C",
+    -- "/Supraworld/Abilities/BlowGun/Upgrades/Time/Inventory_BlowgunBlowTimeUnlimited.Inventory_BlowgunBlowTimeUnlimited_C"
 }
 
 local function grantAllAbilities()
@@ -236,6 +275,80 @@ RegisterKeyBind(Key.I, {ModifierKey.ALT, ModifierKey.SHIFT}, revokeAllAbilities)
 
 RegisterConsoleCommandHandler("grant", inventoryHandler(grantAbilityInternal, "granted", "usage: grant <inventory>, e.g. grant spongesuit", "already have"))
 RegisterConsoleCommandHandler("revoke", inventoryHandler(revokeAbilityInternal, "revoked", "usage: revoke <inventory>", "not carrying"))
+
+
+    --[[
+        local path = fstr:get():ToString()
+        local loweredPath = path:lower()
+        local match = true
+
+        for _, kw in ipairs(keywords) do
+            if not loweredPath:find(kw:lower(), 1, true) then
+                match = false
+                break
+            end
+        end
+
+        if match then
+            table.insert(results, path)
+        end
+     ]]
+
+local function FindAssetsByKeywords(keywords)
+    local results = {}
+    CacheAssetRegistry()
+
+    local assets = {}
+    AssetRegistry:GetAllAssets(assets, false) -- (table in, bool onDiskOnly)
+
+    table.insert(keywords, "/Inventory_")
+    table.insert(keywords, "_C")
+
+    i = 0
+    for _, data in ipairs(assets) do
+        local a_name  = data:get().AssetName:ToString()
+        local a_class = data:get().AssetClass:ToString()
+        local p_name = data:get().PackageName:ToString()
+        local p_path = data:get().PackagePath:ToString()
+
+        local path = p_name .. "." .. a_name
+
+        local loweredPath = path:lower()
+        local match = true
+
+        for _, kw in ipairs(keywords) do
+            if not loweredPath:find(kw:lower(), 1, true) then
+                match = false
+                break
+            end
+        end
+
+        if match then
+            str = a_name
+            str = str:gsub("Inventory_","")
+            str = str:gsub("_C","")
+            str = str:lower()
+
+            table.insert(results, str)
+
+            i = i + 1
+            if i==100 then break end
+        end
+
+    end
+    return results
+end
+
+
+RegisterConsoleCommandHandler("give", function(FullCommand, Parameters, Ar)
+    local results = FindAssetsByKeywords(Parameters)
+        Ar:Log(groupResults(results))
+    -- for i, str in ipairs(results) do
+    --     Ar:Log(str)
+    -- end
+    return true
+end)
+
 
 -- check volumes
 
