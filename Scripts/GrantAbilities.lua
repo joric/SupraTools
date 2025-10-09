@@ -55,6 +55,9 @@ local function updateInventoryInternal(InvMgr, InvDef, doAdd)
 end
 
 local function updateInventory(InvDefPath, doAdd)
+
+    print("updateInventory", InvDefPath, doAdd);
+
     local InvMgr = getInventoryManager()
 
     if not InvMgr then
@@ -114,13 +117,17 @@ end
 
 local function getInventoryPath(str)
     local obj = FindObject("BlueprintGeneratedClass", str)
+
     if not obj or not obj:IsValid() then
         obj = FindObject("BlueprintGeneratedClass", string.format("Inventory_%s_C", str))
     end
 
-    obj = StaticFindObject(str)
-    if not ob or not obj:IsValid() then
-        obj = LoadAsset(str)
+    if not obj or not obj:IsValid() then
+        obj = StaticFindObject(str)
+        if not obj or not obj:IsValid() then
+            print("loading asset", str)
+            obj = LoadAsset(str)
+        end
     end
 
     if not obj or not obj:IsValid() then return nil end
@@ -275,7 +282,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     print("-- initialize checkVolumes loop --")
     ExecuteWithDelay(250, function()
         ExecuteInGameThread(function()
-            LoopAsync(100, checkVolumes)
+            -- LoopAsync(100, checkVolumes)
         end)
     end)
 end)
