@@ -571,7 +571,7 @@ RegisterKeyBind(Key.V, {ModifierKey.ALT}, pasteObject)
 RegisterKeyBind(Key.X, {ModifierKey.ALT}, cutObject)
 RegisterKeyBind(Key.Z, {ModifierKey.ALT}, undoLastAction)
 
-RegisterKeyBind(Key.R, {ModifierKey.SHIFT}, rotateObject) -- Alt+R interferes with screen capture
+RegisterKeyBind(Key.R, {ModifierKey.ALT}, rotateObject) -- Alt+R interferes with screen capture
 
 RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.ALT}, copyObject)
 RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, {ModifierKey.ALT}, pasteObject)
