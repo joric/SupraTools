@@ -36,6 +36,7 @@ RegisterKeyBind(Key.O, {ModifierKey.ALT}, showText) -- Onscreen Objectives, thus
 
 --[[
 -- added this to ue4ss\UE4SS_Signatures\FText_Constructor.lua
+-- see https://docs.ue4ss.com/guides/fixing-compatibility-problems.html
 function Register()
     return "40 53 57 48 83 EC 38 48 89 6C 24 ?? 48 8B FA 48 89 74 24 ?? 48 8B D9 33 F6 4C 89 74 24 30 ?? ?? ?? ?? ?? ?? ?? ?? 7F ?? E8 ?? ?? 00 00 48 8B F0"
 end
