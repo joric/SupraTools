@@ -325,7 +325,7 @@ local function applyAction(act, temporary)
                 ExecuteWithDelay(250, function()
                     ExecuteInGameThread(function()
                         local act1 = {type="spawn", name='SecretVolume_C', loc=act.loc, rot=act.rot, scale={X=15, Y=15, Z=10}}
-                        applyAction(act1, true)
+                        applyAction(act1, true) -- comment this out to stop spawning secret volumes on each question mark
                     end)
                 end)
             end
