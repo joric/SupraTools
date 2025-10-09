@@ -571,12 +571,12 @@ RegisterKeyBind(Key.V, {ModifierKey.ALT}, pasteObject)
 RegisterKeyBind(Key.X, {ModifierKey.ALT}, cutObject)
 RegisterKeyBind(Key.Z, {ModifierKey.ALT}, undoLastAction)
 
-RegisterKeyBind(Key.R, {ModifierKey.ALT}, rotateObject) -- Alt+R interferes with screen capture
+RegisterKeyBind(Key.R, {ModifierKey.ALT, ModifierKey.CONTROL}, rotateObject) -- Alt+R interferes with screen capture
 
 RegisterKeyBind(Key.RIGHT_MOUSE_BUTTON, {ModifierKey.ALT}, copyObject)
 RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, {ModifierKey.ALT}, pasteObject)
 
-RegisterKeyBind(Key.R, {ModifierKey.CONTROL, ModifierKey.ALT}, reloadThings)
+RegisterKeyBind(Key.R, {ModifierKey.SHIFT}, reloadThings)
 
 RegisterConsoleCommandHandler("reload", function(FullCommand, Parameters, Ar)
     Ar:Log(string.format("reloading %d thing(s)", #actions))
