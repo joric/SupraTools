@@ -421,9 +421,11 @@ local function pasteObject()
 
     print("Pasting", className, actor:GetFullName() )
 
-    if className == 'StaticMeshComponent' or className == 'CapsuleComponent' then
+    if className == 'StaticMeshComponent' or className == 'CapsuleComponent' or className == 'SkeletalMeshComponent' then
         actor = selectedObject:GetOuter()
         print("Using Outer Object", actor:GetFullName())
+
+        print("Outer Parent Is", actor:GetOuter():GetFullName())
     end
 
     local loc = getCameraImpactPoint()
