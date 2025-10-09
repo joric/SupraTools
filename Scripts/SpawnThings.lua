@@ -290,7 +290,8 @@ end
 
 local function applyAction(act, temporary)
     ExecuteInGameThread(function()
-
+    ExecuteWithDelay(10, function()
+    ExecuteInGameThread(function()
         if act.type == "spawn" then
             local actor = getActorByName(act.name)
             if not actor or not actor:IsValid() then return end
@@ -354,6 +355,8 @@ local function applyAction(act, temporary)
             end
         end
     end)
+    end)
+    end)
 end
 
 local function applyActions()
@@ -390,7 +393,13 @@ local function undoLastAction(skipSave)
         local actor = act.result
         if actor and actor:IsValid() then
             print("Destroyed", actor:GetFullName())
+
+    ExecuteInGameThread(function()
+    ExecuteWithDelay(10, function()
+    ExecuteInGameThread(function()
             actor:K2_DestroyActor()
+    end)end)end)
+
         end
         nameIndex = nameIndex - 1
     end
@@ -424,8 +433,7 @@ local function pasteObject()
     if className == 'StaticMeshComponent' or className == 'CapsuleComponent' or className == 'SkeletalMeshComponent' then
         actor = selectedObject:GetOuter()
         print("Using Outer Object", actor:GetFullName())
-
-        print("Outer Parent Is", actor:GetOuter():GetFullName())
+        -- print("Outer Parent Is", actor:GetOuter():GetFullName())
     end
 
     local loc = getCameraImpactPoint()
@@ -440,17 +448,10 @@ local function pasteObject()
 
     print("Spawning", name)
 
-    if name=="ToyCharacterBase_C" then
-        print("Cannot spawn people, they crash!")
-        return
-    end
-
-    ExecuteWithDelay(5, function()
-        local act = {type="spawn", name=name, loc=loc, rot=rot, scale=scale}
-        applyAction(act)
-        table.insert(actions, act)
-        saveActions()
-    end)
+    local act = {type="spawn", name=name, loc=loc, rot=rot, scale=scale}
+    applyAction(act)
+    table.insert(actions, act)
+    saveActions()
 end
 
 local function cutObject()
