@@ -4,7 +4,19 @@ local function getHitResult(WorldObject, StartVector, Rotation)
     local AddValue = UEHelpers.GetKismetMathLibrary():Multiply_VectorInt(UEHelpers.GetKismetMathLibrary():GetForwardVector(Rotation), 90000.0)
     local EndVector = UEHelpers.GetKismetMathLibrary():Add_VectorVector(StartVector, AddValue)
     local Color, HitResult = {R=0, G=0, B=0, A=0}, {}
-    local WasHit = UEHelpers.GetKismetSystemLibrary():LineTraceSingle(WorldObject, StartVector, EndVector, 0, false, {}, 0, HitResult, true, Color, Color, 0.0)
+    --[[
+    ECollisionChannel
+    ECC_WorldStatic = 0,
+    ECC_WorldDynamic = 1,
+    ECC_Pawn = 2,
+    ECC_Visibility = 3,
+    ECC_Camera = 4,
+    ECC_PhysicsBody = 5,
+    ECC_Vehicle = 6,
+    ECC_Destructible = 7,
+    ]]
+    local TraceChannel = 1
+    local WasHit = UEHelpers.GetKismetSystemLibrary():LineTraceSingle(WorldObject, StartVector, EndVector, TraceChannel, false, {}, 0, HitResult, true, Color, Color, 0.0)
     if WasHit then return HitResult end
     return nil
 end

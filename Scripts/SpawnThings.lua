@@ -103,14 +103,16 @@ local function getActorByName(name)
 end
 
 local function getActorName(actor, instancesOnly)
-    if actor.Tags:IsValid() and #actor.Tags>0 then
-        local tag = actor.Tags[#actor.Tags]:ToString()
-        if tag:find('SpawnedThings_') then
-            return tag
+    
+    if instancesOnly then
+        if actor.Tags:IsValid() and #actor.Tags>0 then
+            local tag = actor.Tags[#actor.Tags]:ToString()
+            if tag:find('SpawnedThings_') then
+                return tag
+            end
         end
+        return getName(actor)
     end
-
-    if instancesOnly then return getName(actor) end
 
     local className = getName(actor:GetClass())
 
@@ -415,17 +417,17 @@ end
 local function pasteObject()
     if not selectedObject or not selectedObject:IsValid() then return end
     local actor = selectedObject
+    local className = getName(actor:GetClass())
 
-    print("Pasting", actor:GetFullName())
+    print("Pasting", className, actor:GetFullName() )
 
-    if getName(actor:GetClass())=='StaticMeshComponent' then
+    if className == 'StaticMeshComponent' or className == 'CapsuleComponent' then
         actor = selectedObject:GetOuter()
         print("Using Outer Object", actor:GetFullName())
     end
 
     local loc = getCameraImpactPoint()
 
-    local loc = getCameraImpactPoint()
     local r0 = getActorRotation(actor)
     --local r0 = {Pitch=0, Yaw=0, Roll=0}
     local crt = getCameraController().PlayerCameraManager:GetCameraRotation()
@@ -434,10 +436,16 @@ local function pasteObject()
     local scale = getActorScale(actor)
     local name = getActorName(actor)
 
+    print("Spawning", name)
+
+    if name=="ToyCharacterBase_C" then
+        print("Cannot spawn people, they crash!")
+        return
+    end
+
     ExecuteWithDelay(5, function()
         local act = {type="spawn", name=name, loc=loc, rot=rot, scale=scale}
         applyAction(act)
-
         table.insert(actions, act)
         saveActions()
     end)
