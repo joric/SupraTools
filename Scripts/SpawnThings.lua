@@ -434,7 +434,7 @@ local function pasteObject()
     local scale = getActorScale(actor)
     local name = getActorName(actor)
 
-    ExecuteWithDelay(20, function()
+    ExecuteWithDelay(5, function()
         local act = {type="spawn", name=name, loc=loc, rot=rot, scale=scale}
         applyAction(act)
 
