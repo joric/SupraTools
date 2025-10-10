@@ -125,17 +125,31 @@ local function toggleObjectives()
     toggleWidget()
 end
 
+function checkObject()
+    local actor = getCameraHitObject()
+    if not actor or not actor:IsValid() then return end
+    setText(actor:GetOuter():GetFullName())
+end
+
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     createWidget('topleft')
     hideWidget()
     toggleHelp()
+    ExecuteWithDelay(250, function()
+        ExecuteInGameThread(function()
+            -- LoopAsync(250, checkObject)
+        end)
+    end)
 end)
 
 RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleObjectives ) -- Onscreen Objectives, thus "O"
 RegisterKeyBind(Key.H, {ModifierKey.ALT}, toggleHelp)
 
 -- RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, hideWidget) -- fires too early
-RegisterKeyBind(Key.W, hideWidget)
-RegisterKeyBind(Key.A, hideWidget)
-RegisterKeyBind(Key.S, hideWidget)
-RegisterKeyBind(Key.D, hideWidget)
+-- RegisterKeyBind(Key.W, hideWidget)
+-- RegisterKeyBind(Key.A, hideWidget)
+-- RegisterKeyBind(Key.S, hideWidget)
+-- RegisterKeyBind(Key.D, hideWidget)
+
+
+
