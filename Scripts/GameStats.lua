@@ -58,11 +58,11 @@ local function createWidget(alignment)
     
     local border = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("SimpleBorder"))
     border:SetBrushColor(FLinearColor(0, 0, 0, .5))
-    border:SetPadding({Left = 20, Top = 10, Right = 20, Bottom = 10})
+    border:SetPadding({Left = 15, Top = 10, Right = 15, Bottom = 10})
 
     local textBlock = StaticConstructObject(StaticFindObject("/Script/UMG.TextBlock"), border, FName("SimpleText"))
 
-    textBlock.Font.Size = 24
+    textBlock.Font.Size = 16
 
     textBlock:SetText(FText('Hello World!'))
 
@@ -104,8 +104,20 @@ local function toggleWidget()
     if textWidget:GetVisibility()==Visibility_HIDDEN then showWidget() else hideWidget() end
 end
 
+local helpText = [[SupraTools 1.0.3 by Joric
+
+F for Fast Travel (Map)
+MMB for Debug Camera
+LMB to Teleport
+Alt+P to Pickup All
+Alt+I to Equip All
+Alt+F to Fill Suit
+Alt+Z/X/C/V to Edit
+
+Alt+H to Toggle Help]]
+
 local function toggleHelp()
-    setText('SupraTools 1.0.3 by Joric\n\nF for Fast Travel (Map)\nMMB for Debug Camera\nLMB to Teleport\nAlt+F to Fill Suit\nAlt+P for Pickup\nAlt+I for Inventory\n\nAlt+H to Toggle Help')
+    setText(helpText)
     toggleWidget()
 end
 
