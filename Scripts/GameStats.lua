@@ -106,6 +106,7 @@ end
 
 local helpText = [[SupraTools 1.0.3 by Joric
 F for Fast Travel (Map)
+Alt+E for Remote Control
 MMB for Debug Camera
 LMB to Teleport
 Alt+P to Pickup All
