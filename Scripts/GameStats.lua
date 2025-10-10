@@ -90,10 +90,6 @@ local function createWidget(alignment)
     slot:SetAnchors({Minimum = {X = a.anchor[1], Y = a.anchor[2]}, Maximum = {X = a.anchor[1], Y = a.anchor[2]}})
     slot:SetAlignment({X = a.align[1], Y = a.align[2]})
     slot:SetPosition({X = a.pos[1], Y = a.pos[2]})
-    
-    -- canvas.Visibility = 4
-    -- border.Visibility = 4
-    -- textBlock.Visibility = 4
 
     hud:AddToViewport(99)
     textWidget = canvas
