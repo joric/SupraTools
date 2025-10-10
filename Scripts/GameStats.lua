@@ -22,6 +22,8 @@ local Visibility_HITTESTINVISIBLE = 3
 local Visibility_SELFHITTESTINVISIBLE = 4
 local Visibility_ALL = 5
 
+local visibilityMode = Visibility_HITTESTINVISIBLE
+
 local textWidget = nil
 local textControl = nil
 
@@ -34,12 +36,15 @@ local function hasFTextConstructor()
     return f ~= nil
 end
 
-local function createTextWidget(text, alignment)
+local function createWidget(alignment)
+    if textWidget and textWidget:IsValid() then return end
 
     if not UnrealVersion:IsBelow(5, 4) and not hasFTextConstructor() then
         print("[SupraTools] ERROR!!! ue4ss/UE4SS_Signatures/FText_Constructor.lua is not found! Use this AOB: 40 53 57 48 83 EC 38 48 89 6C 24 ?? 48 8B FA 48 89 74 24 ?? 48 8B D9 33 F6 4C 89 74 24 30 ?? ?? ?? ?? ?? ?? ?? ?? 7F ?? E8 ?? ?? 00 00 48 8B F0")
         return
     end
+
+    print("### CREATING WIDGET ###")
 
     -- alignment: "center", "top", "bottom", "topleft", "topright", "bottomleft", "bottomright"
     alignment = alignment or "center"
@@ -54,11 +59,13 @@ local function createTextWidget(text, alignment)
     local border = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("SimpleBorder"))
     border:SetBrushColor(FLinearColor(0, 0, 0, .5))
     border:SetPadding({Left = 20, Top = 10, Right = 20, Bottom = 10})
-    
+
     local textBlock = StaticConstructObject(StaticFindObject("/Script/UMG.TextBlock"), border, FName("SimpleText"))
 
-    textBlock.Font.Size = 20
-    textBlock:SetText(FText(text))
+    textBlock.Font.Size = 24
+
+    textBlock:SetText(FText('Hello World!'))
+
     textBlock:SetColorAndOpacity(FSlateColor(1,1,1,1))
     textBlock:SetShadowOffset({X = 1, Y = 1})
     textBlock:SetShadowColorAndOpacity(FLinearColor(0, 0, 0, 0.75))
@@ -84,47 +91,44 @@ local function createTextWidget(text, alignment)
     slot:SetAlignment({X = a.align[1], Y = a.align[2]})
     slot:SetPosition({X = a.pos[1], Y = a.pos[2]})
     
-    canvas.Visibility = 4
-    border.Visibility = 4
-    textBlock.Visibility = 4
-    
-    hud:AddToViewport(99)
+    -- canvas.Visibility = 4
+    -- border.Visibility = 4
+    -- textBlock.Visibility = 4
 
+    hud:AddToViewport(99)
     textWidget = canvas
     textControl = textBlock
-
-    print("added text", textWidget and textWidget:IsValid())
 end
 
-
-local function addText()
-    ExecuteInGameThread(function()
-        createTextWidget('SupraTools 1.0.3 by Joric\nF for Fast Travel on the Map\nMMB for Debug Camera\nLMB to Teleport\nAlt+F to Fill Suit\nAlt+P for Pickup\nAlt+I for Inventory\nAlt+H to Toggle Help', 'center')
-    end)
-end
-
-local function setText(text)
-    if not textControl then return end
-    textControl:SetText(FText(text))
-end
-
-local function setTextVisibility(visibility)
+local function setText(text) if textControl then textControl:SetText(FText(text)) end end
+local function showWidget(text) if textControl then textWidget:SetVisibility(visibilityMode) return end end
+local function hideWidget(text) if textControl then textWidget:SetVisibility(Visibility_HIDDEN) end end
+local function toggleWidget()
     if not textWidget or not textWidget:IsValid() then return end
-    textWidget:SetVisibility(visibility)
+    if textWidget:GetVisibility()==Visibility_HIDDEN then showWidget() else hideWidget() end
 end
 
-local function toggleText()
-    if not textWidget or not textWidget:IsValid() then return end
-    local current = textWidget:GetVisibility()
-    setTextVisibility(current == Visibility_SELFHITTESTINVISIBLE and Visibility_HIDDEN or Visibility_SELFHITTESTINVISIBLE)
+local function toggleHelp()
+    setText('SupraTools 1.0.3 by Joric\n\nF for Fast Travel (Map)\nMMB for Debug Camera\nLMB to Teleport\nAlt+F to Fill Suit\nAlt+P for Pickup\nAlt+I for Inventory\n\nAlt+H to Toggle Help')
+    toggleWidget()
+end
+
+local function toggleObjectives()
+    setText("Hello World! This is Objectives:")
+    toggleWidget()
 end
 
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
-    addText()
+    createWidget('topleft')
+    hideWidget()
+    toggleHelp()
 end)
 
-RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleText) -- Onscreen Objectives, thus "O"
-RegisterKeyBind(Key.H, {ModifierKey.ALT}, toggleText)
-RegisterKeyBind(Key.D, {ModifierKey.ALT}, function() setText("Hello World!") end )
+RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleObjectives ) -- Onscreen Objectives, thus "O"
+RegisterKeyBind(Key.H, {ModifierKey.ALT}, toggleHelp)
 
-RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, function() setTextVisibility(Visibility_HIDDEN) end )
+-- RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, hideWidget) -- fires too early
+RegisterKeyBind(Key.W, hideWidget)
+RegisterKeyBind(Key.A, hideWidget)
+RegisterKeyBind(Key.S, hideWidget)
+RegisterKeyBind(Key.D, hideWidget)
