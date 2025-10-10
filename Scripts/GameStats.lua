@@ -105,7 +105,6 @@ local function toggleWidget()
 end
 
 local helpText = [[SupraTools 1.0.3 by Joric
-
 F for Fast Travel (Map)
 MMB for Debug Camera
 LMB to Teleport
@@ -113,7 +112,6 @@ Alt+P to Pickup All
 Alt+I to Equip All
 Alt+F to Fill Suit
 Alt+Z/X/C/V to Edit
-
 Alt+H to Toggle Help]]
 
 local function toggleHelp()
