@@ -6,6 +6,7 @@ local HIDDEN = 2
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
+local minimapDots = {}
 local defaultVisibility = HIDDEN
 local mapSize = {X=300, Y=300}
 local dotSize = 6
@@ -57,9 +58,6 @@ local function setAlignment(slot, alignment)
 end
 
 ------------------------------------
-
-local minimapDots = {}
-local playerSlot = nil
 
 -- helper: return table of all valid secrets with current coordinates and found state
 local function getSecretsData()
@@ -115,9 +113,10 @@ end
 
 -- main update function
 local function updateMinimap()
-
     local widget = getMinimapWidget()
-    if not widget then return end
+    if not widget then
+        return
+    end
 
     if widget:GetVisibility()==HIDDEN then
         return -- do not update if invisible
@@ -139,6 +138,7 @@ local function updateMinimap()
     local rot = cam:GetCameraRotation()
 
     local secretsData = getSecretsData()
+
 
     -- create dot widgets if needed
     if #minimapDots < #secretsData then
@@ -170,11 +170,12 @@ local function updateMinimap()
     end
 
     ExecuteAsync(updateMinimap)
+
 end
 
 local function toggleMinimap()
     local obj = getMinimapWidget()
-    if obj then
+    if obj and obj:IsValid() then
         defaultVisibility = obj:GetVisibility()==VISIBLE and HIDDEN or VISIBLE
         obj:SetVisibility(defaultVisibility)
         updateMinimap()
@@ -194,6 +195,8 @@ end
 
 local function createMinimapWidget()
     if getMinimapWidget() then return end
+
+    minimapDots = {}
 
     local gi = UEHelpers.GetGameInstance()
     local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("MinimapWidget"))
@@ -227,10 +230,6 @@ local function createMinimapWidget()
     addDot(dotLayer, mapSize.X/2 - dotSize/2, mapSize.Y/2 - dotSize/2, FLinearColor(0,1,0,1));
 
     print("### CREATED MINIMAP ###")
-
-    minimapDots = {}
-    cachedWidget = nil
-    cachedLayer = nil
 
     ExecuteWithDelay(250, function()
         ExecuteInGameThread(function()
