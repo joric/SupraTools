@@ -22,13 +22,50 @@ local Visibility_HITTESTINVISIBLE = 3
 local Visibility_SELFHITTESTINVISIBLE = 4
 local Visibility_ALL = 5
 
-local visibilityMode = Visibility_HITTESTINVISIBLE
-
-local textWidget = nil
-local textControl = nil
+local widgetVisibilityMode = 4
 
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
+
+local function getBlock()
+    local obj = FindObject("TextBlock", "SimpleText")
+    if obj and obj:IsValid() then
+        return obj
+    end
+end
+
+local function getWidget()
+    local obj = FindObject("UserWidget", "SimpleWidget")
+    if obj and obj:IsValid() then
+        return obj
+    end
+end
+
+local function setText(text)
+    local block = getBlock()
+    if block then
+        block:SetText(FText(text))
+    end
+end
+
+local function getVisibility()
+    local widget = getWidget()
+    if widget then
+        return widget:GetVisibility()~=Visibility_HIDDEN
+    end
+end
+
+local function setVisibility(visible)
+    local widget = getWidget()
+    if widget then
+        print("setting visibility", visible)
+        widget:SetVisibility(visible and widgetVisibilityMode or Visibility_HIDDEN)
+    end
+end
+
+local function showWidget() setVisibility(true) end
+local function hideWidget() setVisibility(false) end
+local function toggleWidget() setVisibility(not getVisibility()) end
 
 local function hasFTextConstructor()
     local f = io.open("ue4ss/UE4SS_Signatures/FText_Constructor.lua", "r")
@@ -36,45 +73,41 @@ local function hasFTextConstructor()
     return f ~= nil
 end
 
+local textWidget = nil
+
 local function createWidget(alignment)
-    if textWidget and textWidget:IsValid() then return end
+    if getWidget() then return end
 
     if not UnrealVersion:IsBelow(5, 4) and not hasFTextConstructor() then
-        print("[SupraTools] ERROR!!! ue4ss/UE4SS_Signatures/FText_Constructor.lua is not found! Use this AOB: 40 53 57 48 83 EC 38 48 89 6C 24 ?? 48 8B FA 48 89 74 24 ?? 48 8B D9 33 F6 4C 89 74 24 30 ?? ?? ?? ?? ?? ?? ?? ?? 7F ?? E8 ?? ?? 00 00 48 8B F0")
+        print("ERROR!!! ue4ss/UE4SS_Signatures/FText_Constructor.lua is not found! Use this AOB: 40 53 57 48 83 EC 38 48 89 6C 24 ?? 48 8B FA 48 89 74 24 ?? 48 8B D9 33 F6 4C 89 74 24 30 ?? ?? ?? ?? ?? ?? ?? ?? 7F ?? E8 ?? ?? 00 00 48 8B F0")
         return
     end
 
-    print("### CREATING WIDGET ###")
+    alignment = alignment or "center" -- "center", "top", "bottom", "topleft", "topright", "bottomleft", "bottomright"
 
-    -- alignment: "center", "top", "bottom", "topleft", "topright", "bottomleft", "bottomright"
-    alignment = alignment or "center"
-    
     local gi = UEHelpers.GetGameInstance()
-    hud = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("SimpleHUD"))
-    hud.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), hud, FName("SimpleTree"))
-    
-    local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), hud.WidgetTree, FName("SimpleCanvas"))
-    hud.WidgetTree.RootWidget = canvas
-    
+    widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("SimpleWidget"))
+    widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("SimpleTree"))
+
+    local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("SimpleCanvas"))
+    widget.WidgetTree.RootWidget = canvas
+
     local border = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("SimpleBorder"))
     border:SetBrushColor(FLinearColor(0, 0, 0, .5))
     border:SetPadding({Left = 15, Top = 10, Right = 15, Bottom = 10})
 
-    local textBlock = StaticConstructObject(StaticFindObject("/Script/UMG.TextBlock"), border, FName("SimpleText"))
+    local block = StaticConstructObject(StaticFindObject("/Script/UMG.TextBlock"), border, FName("SimpleText"))
+    block.Font.Size = 24
+    block:SetColorAndOpacity(FSlateColor(1,1,1,1))
+    block:SetShadowOffset({X = 1, Y = 1})
+    block:SetShadowColorAndOpacity(FLinearColor(0, 0, 0, 0.75))
+    block:SetText(FText('Hello World!'))
 
-    textBlock.Font.Size = 16
-
-    textBlock:SetText(FText('Hello World!'))
-
-    textBlock:SetColorAndOpacity(FSlateColor(1,1,1,1))
-    textBlock:SetShadowOffset({X = 1, Y = 1})
-    textBlock:SetShadowColorAndOpacity(FLinearColor(0, 0, 0, 0.75))
-
-    border:SetContent(textBlock)
+    border:SetContent(block)
 
     local slot = canvas:AddChildToCanvas(border)
     slot:SetAutoSize(true)
-    
+
     -- Alignment presets
     local alignments = {
         center = {anchor = {0.5, 0.5}, align = {0.5, 0.5}, pos = {0, 0}},
@@ -91,17 +124,9 @@ local function createWidget(alignment)
     slot:SetAlignment({X = a.align[1], Y = a.align[2]})
     slot:SetPosition({X = a.pos[1], Y = a.pos[2]})
 
-    hud:AddToViewport(99)
-    textWidget = canvas
-    textControl = textBlock
-end
+    widget:AddToViewport(99)
 
-local function setText(text) if textControl then textControl:SetText(FText(text)) end end
-local function showWidget(text) if textControl then textWidget:SetVisibility(visibilityMode) return end end
-local function hideWidget(text) if textControl then textWidget:SetVisibility(Visibility_HIDDEN) end end
-local function toggleWidget()
-    if not textWidget or not textWidget:IsValid() then return end
-    if textWidget:GetVisibility()==Visibility_HIDDEN then showWidget() else hideWidget() end
+    widget:SetVisibility(widgetVisibilityMode)
 end
 
 local helpText = [[SupraTools 1.0.3 by Joric
@@ -120,8 +145,23 @@ local function toggleHelp()
     toggleWidget()
 end
 
-local function toggleObjectives()
-    setText("Hello World! This is Objectives:")
+local function getStats()
+    local total = 0
+    local found = 0
+
+    for _, actor in ipairs(FindAllOf("SecretVolume_C") or {}) do
+        if actor:IsValid() then
+            total = total + 1
+            if actor.bFound then
+                found = found + 1
+            end
+        end
+    end
+    return(string.format("Secrets found: %d of %d", found, total))
+end
+
+local function toggleStats()
+    setText(getStats())
     toggleWidget()
 end
 
@@ -133,8 +173,8 @@ end
 
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     createWidget('topleft')
-    hideWidget()
-    toggleHelp()
+    setText(helpText)
+
     ExecuteWithDelay(250, function()
         ExecuteInGameThread(function()
             -- LoopAsync(250, checkObject)
@@ -142,7 +182,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     end)
 end)
 
-RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleObjectives ) -- Onscreen Objectives, thus "O"
+RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleStats ) -- Onscreen Objectives, thus "O"
 RegisterKeyBind(Key.H, {ModifierKey.ALT}, toggleHelp)
 
 -- RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, hideWidget) -- fires too early
@@ -151,5 +191,44 @@ RegisterKeyBind(Key.H, {ModifierKey.ALT}, toggleHelp)
 -- RegisterKeyBind(Key.S, hideWidget)
 -- RegisterKeyBind(Key.D, hideWidget)
 
+
+--/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu Self: W_SupraPauseMenu_C_2147469280
+--/Script/LyraGame.LyraHUDLayout:HandleEscapeAction Self:
+
+
+-- search functions/scripts in Live View substring, e.g. W_SupraPauseMenu_C:CloseMenu
+
+local function onMenuClose(self, ...)
+    hideWidget()
+end
+
+local function onEscape(self, ...)
+    setText(getStats())
+    showWidget()
+    -- hook to closemenu here
+    pcall(function()RegisterHook("/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu", onMenuClose)end)
+end
+
+-- Hooks table: hook path + optional call function, use LiveView search :FunctionName to find hooks
+local hooks = {
+    { hook = "/Script/LyraGame.LyraHUDLayout:HandleEscapeAction", call = onEscape },
+    { hook = "/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu", call = onMenuClose }, -- only fires when hooked later?
+    { hook = "/Script/Engine.Controller:Possess" },
+}
+
+for _, entry in ipairs(hooks) do
+    local ok, err = pcall(function()
+        RegisterHook(entry.hook, function(self, ...)
+            local fname = self:get():GetFName():ToString()
+            print("Hook fired:", entry.hook, "Self:", fname)
+            if entry.call then
+                entry.call(self, ...)
+            end
+        end)
+    end)
+    if not ok then
+        print("Warning: Could not register hook for", entry.hook)
+    end
+end
 
 
