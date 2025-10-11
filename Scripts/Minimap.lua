@@ -6,9 +6,9 @@ local HIDDEN = 2
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
-local defaultVisibility = VISIBLE
-local dotSize = 8
+local defaultVisibility = HIDDEN
 local mapSize = {X=300, Y=300}
+local dotSize = 8
 local cachedWidget = nil
 local cachedLayer = nil
 
