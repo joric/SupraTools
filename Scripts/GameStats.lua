@@ -259,13 +259,13 @@ local function onMenuOpen(self, ...)
     --showStats = true
     --showWidget()
     -- hook to closemenu here
-    pcall(function()RegisterHook("/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu", onMenuClose)end)
+--    pcall(function()RegisterHook("/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu", onMenuClose)end)
 end
 
 -- Hooks table: hook path + optional call function, use LiveView search :FunctionName to find hooks
 local hooks = {
     { hook = "/Script/LyraGame.LyraHUDLayout:HandleEscapeAction", call = onMenuOpen },
-    { hook = "/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu", call = onMenuClose }, -- only fires when hooked later?
+--    { hook = "/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu", call = onMenuClose }, -- only fires when hooked later?
     { hook = "/Script/Engine.Controller:Possess" }, -- not firing
 }
 

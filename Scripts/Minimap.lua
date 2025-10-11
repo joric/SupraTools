@@ -8,7 +8,7 @@ local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A)
 
 local defaultVisibility = HIDDEN
 local mapSize = {X=300, Y=300}
-local dotSize = 8
+local dotSize = 6
 local cachedWidget = nil
 local cachedLayer = nil
 
@@ -27,15 +27,6 @@ local function getDotLayer()
     if obj and obj:IsValid() then
         cachedLayer = obj
         return obj
-    end
-end
-
-local function toggleMinimap()
-    local obj = getMinimapWidget()
-    if obj then
-        defaultVisibility = obj:GetVisibility()==VISIBLE and HIDDEN or VISIBLE
-        obj:SetVisibility(defaultVisibility)
-        updateMinimap()
     end
 end
 
@@ -179,6 +170,15 @@ local function updateMinimap()
     end
 
     ExecuteAsync(updateMinimap)
+end
+
+local function toggleMinimap()
+    local obj = getMinimapWidget()
+    if obj then
+        defaultVisibility = obj:GetVisibility()==VISIBLE and HIDDEN or VISIBLE
+        obj:SetVisibility(defaultVisibility)
+        updateMinimap()
+    end
 end
 
 ------------------------------------
