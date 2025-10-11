@@ -128,6 +128,10 @@ local function createWidget(alignment)
     widget:SetVisibility(widgetVisibilityMode)
 end
 
+-- either show stats or help because we only have 1 widget
+-- set to false on help because callback function overrides stats
+showStats = false
+
 local helpText = [[SupraTools 1.0.3 by Joric
 F for Fast Travel (Map)
 Alt+E for Remote Control
@@ -140,6 +144,7 @@ Alt+Z/X/C/V to Edit
 Alt+H to Toggle Help]]
 
 local function toggleHelp()
+    showStats = false
     setText(helpText)
     toggleWidget()
 end
@@ -187,6 +192,12 @@ end
 local function toggleStats()
     setText(getStats())
     toggleWidget()
+    showStats = true
+end
+
+local function updateStats()
+    if not showStats then return end
+    setText(getStats())
 end
 
 function checkObject()
@@ -202,6 +213,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     ExecuteWithDelay(250, function()
         ExecuteInGameThread(function()
             -- LoopAsync(250, checkObject)
+            LoopAsync(1000, updateStats)
         end)
     end)
 end)
@@ -228,6 +240,7 @@ end
 
 local function onMenuOpen(self, ...)
     setText(getStats())
+    showStats = true
     showWidget()
     -- hook to closemenu here
     pcall(function()RegisterHook("/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu", onMenuClose)end)
