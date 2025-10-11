@@ -299,3 +299,5 @@ for _, entry in ipairs(hooks) do
         print("Warning: Could not register hook for", entry.hook)
     end
 end
+
+-- getStats() -- debug supraland
