@@ -141,6 +141,7 @@ Alt+P to Pickup All
 Alt+I to Equip All
 Alt+F to Fill Suit
 Alt+Z/X/C/V to Edit
+Alt+O to Toggle Stats
 Alt+H to Toggle Help]]
 
 local function toggleHelp()
@@ -170,6 +171,7 @@ local function getStats()
     for _, actor in ipairs(FindAllOf("SecretVolume_C") or {}) do
         if actor:IsValid() then
             total = total + 1
+
             if actor.bFound then
                 found = found + 1
             else
@@ -179,6 +181,7 @@ local function getStats()
                     minDist = dist
                 end
             end
+
         end
     end
 
@@ -212,10 +215,11 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
 
     ExecuteWithDelay(250, function()
         ExecuteInGameThread(function()
-            -- LoopAsync(250, checkObject)
+            -- LoopAsync(250, checkObject) -- crashes!
             LoopAsync(1000, updateStats)
         end)
     end)
+
 end)
 
 RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleStats ) -- Onscreen Objectives, thus "O"
@@ -267,5 +271,29 @@ for _, entry in ipairs(hooks) do
         print("Warning: Could not register hook for", entry.hook)
     end
 end
+
+-- supraland volumes don't seen to work.
+-- SecretFound_C has "Active?" field but they are all true
+-- investigate why it doesn't work, e.g.
+-- SecretFound5_2279 -- activated
+-- SecretFound4_1232 -- not activated
+-- probably supraland uses global log called ThingsToActivate
+--[[
+local total=0
+local found=0
+for _, actor in ipairs(FindAllOf("SecretFound_C") or {}) do
+    if actor:IsValid() then
+        total = total + 1
+        
+        print("actor", actor:GetPropertyValue("Active?"))
+
+        -- local active = actor["Active?"]
+        --if actor:GetPropertyValue("Active") then
+        --    found = found + 1
+        --end
+    end
+end
+]]
+
 
 
