@@ -130,7 +130,7 @@ end
 
 -- either show stats or help because we only have 1 widget
 -- set to false on help because callback function overrides stats
-showStats = false
+showStats = true
 
 local helpText = [[SupraTools 1.0.3 by Joric
 F for Fast Travel (Map)
@@ -163,61 +163,50 @@ local function getStats()
 
     local minDist = 1000000
 
-    local pc = UEHelpers.GetPlayerController()
-    if not pc or not pc:IsValid() or not pc.Pawn or not pc.Pawn:IsValid() then return end
+    local pc = getCameraController()
+    if not pc or not pc:IsValid() then return end
 
-    local ploc = pc.Pawn:K2_GetActorLocation()
+    local ploc = pc.PlayerCameraManager:GetCameraLocation()
 
-    for _, actor in ipairs(FindAllOf("SecretVolume_C") or {}) do
-        if actor:IsValid() then
-            total = total + 1
+    local entries = {"SecretVolume_C", "SecretFound_C"};
 
-            if actor.bFound then
-                found = found + 1
-            else
-                local loc = actor:K2_GetActorLocation()
-                local dist = distance(ploc, loc)
-                if dist<minDist then
-                    minDist = dist
+    -- print("--- updating stats ---")
+
+    for _, entry in ipairs(entries) do
+
+        for _, actor in ipairs(FindAllOf(entry) or {}) do
+            if actor:IsValid() then
+                total = total + 1
+
+                -- local name = actor:GetFName():ToString()
+                -- print(actor.StartClosed, name)
+
+                if actor.bFound==true or actor.StartClosed==true then
+                    found = found + 1
+                else
+
+                    -- not found, check coordinates
+                    local loc = actor:K2_GetActorLocation()
+                    local dist = distance(ploc, loc)
+                    if dist<minDist then
+                        minDist = dist
+                    end
                 end
-            end
 
-        end
-    end
-
-    -- supraland volumes don't seen to work.
-    -- SecretFound_C has "Active?" field but they are all true
-    -- investigate why it doesn't work, e.g.
-    -- SecretFound5_2279 -- activated
-    -- SecretFound4_1232 -- not activated
-    -- probably supraland uses global log called ThingsToActivate
-    -- maybe it's on the collision box
-    --[[
-    local total=0
-    local found=0
-    for _, actor in ipairs(FindAllOf("SecretFound_C") or {}) do
-        if actor:IsValid() then
-            total = total + 1
-
-            if actor:GetPropertyValue("Active?") then -- always true 
-                found = found + 1
-            end
-
-            local name = actor:GetFName():ToString()
-            if name=='SecretFound5_2279' or name=='SecretFound4_1232' then
-                -- investigated actor.Box:GetCollisionEnabled() -- nope
-                -- probably internal game variable, that sucks
             end
         end
     end
-    ]]
-
 
     if total==found then
         minDist = 0
     end
 
-    return(string.format("Secrets found: %d of %d\nClosest: %.1f m", found, total, minDist/1000))
+    local res = string.format("Secrets found: %d of %d\nClosest: %.1f m", found, total, minDist/1000)
+
+    -- print(res)
+
+
+    return(res)
 end
 
 local function toggleStats()
@@ -240,14 +229,7 @@ end
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     createWidget('topleft')
     setText(helpText)
-
-    ExecuteWithDelay(250, function()
-        ExecuteInGameThread(function()
-            -- LoopAsync(250, checkObject) -- crashes!
-            LoopAsync(1000, updateStats)
-        end)
-    end)
-
+    showStats = false
 end)
 
 RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleStats ) -- Onscreen Objectives, thus "O"
@@ -282,7 +264,7 @@ end
 local hooks = {
     { hook = "/Script/LyraGame.LyraHUDLayout:HandleEscapeAction", call = onMenuOpen },
     { hook = "/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu", call = onMenuClose }, -- only fires when hooked later?
-    { hook = "/Script/Engine.Controller:Possess" },
+    { hook = "/Script/Engine.Controller:Possess" }, -- not firing
 }
 
 for _, entry in ipairs(hooks) do
@@ -300,4 +282,13 @@ for _, entry in ipairs(hooks) do
     end
 end
 
--- getStats() -- debug supraland
+ExecuteWithDelay(250, function()
+    ExecuteInGameThread(function()
+        -- LoopAsync(250, checkObject) -- crashes!
+        LoopAsync(1000, updateStats)
+    end)
+end)
+
+-- updateStats()
+
+
