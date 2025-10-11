@@ -141,6 +141,7 @@ Alt+P to Pickup All
 Alt+I to Equip All
 Alt+F to Fill Suit
 Alt+Z/X/C/V to Edit
+Alt+M to Toggle Minimap
 Alt+O to Toggle Stats
 Alt+H to Toggle Help]]
 
