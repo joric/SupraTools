@@ -150,7 +150,9 @@ local function updateMinimap()
 
             local px, py = project(w,h, scaling, loc, rot, s.loc)
 
-            if px >= 0 and px <= w and py >= 0 and py <= h then
+            local r = dotSize/2
+
+            if px >= r and px <= w-r and py >= r and py <= h-r then
                 d.slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
                 d.dot:SetColorAndOpacity(s.found and FLinearColor(0.5, 0.5, 0.5, 0.9) or FLinearColor(1, 0, 0, 0.95))
                 d.dot:SetVisibility(VISIBLE)
