@@ -83,17 +83,40 @@ local function getSecretsData()
     return data
 end
 
-local function project(w, h, scaling, camLoc, camRot, point)
+local function project(w, h, scaling, camLoc, camRot, point, dotSize)
+    dotSize = dotSize or 0
+    local halfDot = dotSize / 2
+
     local yaw = math.rad(camRot.Yaw or 0)
     local cosY = math.cos(-yaw)
     local sinY = math.sin(-yaw)
+
+    -- relative position to camera
     local dx = point.X - camLoc.X
     local dy = point.Y - camLoc.Y
+
+    -- rotate around Z (yaw)
     local rx = dx * cosY - dy * sinY
     local ry = dx * sinY + dy * cosY
-    local widgetX = w/2 + ry * scaling  -- UE Y to widget X, flipped
-    local widgetY = h/2 - rx * scaling  -- UE X to widget Y, flipped
-    return widgetX, widgetY
+
+    -- map to widget coordinates
+    local widgetX = w/2 + ry * scaling  -- UE Y → widget X
+    local widgetY = h/2 - rx * scaling  -- UE X → widget Y
+
+    -- circular clamp accounting for dot size
+    local cx, cy = w/2, h/2
+    local relX, relY = widgetX - cx, widgetY - cy
+    local dist = math.sqrt(relX*relX + relY*relY)
+    local radius = math.min(w, h) / 2 - halfDot  -- subtract half dot size
+    if dist > radius then
+        local scale = radius / dist
+        relX = relX * scale
+        relY = relY * scale
+        widgetX = cx + relX
+        widgetY = cy + relY
+    end
+
+    return widgetX-5, widgetY-5 --account for slot border
 end
 
 -- main update function
@@ -110,6 +133,7 @@ local function updateMinimap()
     if not dotLayer then return end
 
     local w, h = 400, 400
+
     local scaling = 0.01
     local dotSize = 6
 
@@ -148,11 +172,9 @@ local function updateMinimap()
         local d = minimapDots[i]
         if d and d.dot and d.slot then
 
-            local px, py = project(w,h, scaling, loc, rot, s.loc)
+            local px, py = project(w,h, scaling, loc, rot, s.loc, dotSize)
 
-            local r = dotSize/2
-
-            if px >= r and px <= w-r and py >= r and py <= h-r then
+            if px >= 0 and px <= w and py >= 0 and py <= h then
                 d.slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
                 d.dot:SetColorAndOpacity(s.found and FLinearColor(0.5, 0.5, 0.5, 0.9) or FLinearColor(1, 0, 0, 0.95))
                 d.dot:SetVisibility(VISIBLE)
