@@ -6,31 +6,43 @@ local HIDDEN = 2
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
+local defaultVisibility = VISIBLE
+local dotSize = 8
+local mapSize = {X=300, Y=300}
+local cachedWidget = nil
+local cachedLayer = nil
+
 local function getMinimapWidget()
+    if cachedWidget and cachedWidget:IsValid() then return cachedWidget end
     local obj = FindObject("UserWidget", "MinimapWidget")
     if obj and obj:IsValid() then
+        cachedWidget = obj
         return obj
     end
 end
 
 local function getDotLayer()
+    if cachedLayer and cachedLayer:IsValid() then return cachedLayer end
     local obj = FindObject("CanvasPanel", "DotLayer")
     if obj and obj:IsValid() then
+        cachedLayer = obj
         return obj
     end
 end
 
 local function toggleMinimap()
-    local widget = getMinimapWidget()
-    if widget then
-        widget:SetVisibility(widget:GetVisibility()==VISIBLE and HIDDEN or VISIBLE)
+    local obj = getMinimapWidget()
+    if obj then
+        defaultVisibility = obj:GetVisibility()==VISIBLE and HIDDEN or VISIBLE
+        obj:SetVisibility(defaultVisibility)
     end
 end
 
 local function hideMinimap()
-    local widget = getMinimapWidget()
-    if widget then
-        widget:SetVisibility(HIDDEN)
+    local obj = getMinimapWidget()
+    if obj then
+        defaultVisibility = HIDDEN
+        obj:SetVisibility(defaultVisibility)
     end
 end
 
@@ -50,16 +62,6 @@ local function setAlignment(slot, alignment)
     slot:SetAnchors({Minimum = {X = a.anchor[1], Y = a.anchor[2]}, Maximum = {X = a.anchor[1], Y = a.anchor[2]}})
     slot:SetAlignment({X = a.align[1], Y = a.align[2]})
     slot:SetPosition({X = a.pos[1], Y = a.pos[2]})
-end
-
-local function addDot(dotLayer, x, y, color)
-    local dot = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), dotLayer, FName("Dot"))
-    dot:SetColorAndOpacity(FLinearColor(color.r or 1, color.g or 0, color.b or 0, 1))
-    -- dot:SetBrushFromTexture(nil, false) -- plain color
-    local slot = dotLayer:AddChildToCanvas(dot)
-    slot:SetSize({X=8, Y=8})
-    slot:SetPosition({X=x, Y=y})
-    return dot
 end
 
 ------------------------------------
@@ -132,10 +134,9 @@ local function updateMinimap()
     local dotLayer = getDotLayer()
     if not dotLayer then return end
 
-    local w, h = 400, 400
+    local w, h = mapSize.X, mapSize.Y
 
     local scaling = 0.01
-    local dotSize = 6
 
     local pc = getCameraController()
     if not pc or not pc:IsValid() then return end
@@ -156,15 +157,6 @@ local function updateMinimap()
             slot:SetSize({X = dotSize, Y = dotSize})
             minimapDots[i] = {dot = dot, slot = slot}
         end
-
-        local dot = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), dotLayer, FName("PlayerDot"))
-        dot:SetBrushFromTexture(nil, false)
-        local slot = dotLayer:AddChildToCanvas(dot)
-        slot:SetSize({X = dotSize, Y = dotSize})
-        dot:SetColorAndOpacity(FLinearColor(0, 1, 0, 0.95))
-        local px = w/2
-        local py = h/2
-        slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
     end
 
     -- update each dot
@@ -177,17 +169,27 @@ local function updateMinimap()
             if px >= 0 and px <= w and py >= 0 and py <= h then
                 d.slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
                 d.dot:SetColorAndOpacity(s.found and FLinearColor(0.5, 0.5, 0.5, 0.9) or FLinearColor(1, 0, 0, 0.95))
-                d.dot:SetVisibility(VISIBLE)
+                -- d.dot:SetVisibility(VISIBLE)
             else
-                d.dot:SetVisibility(HIDDEN)
+                -- d.dot:SetVisibility(HIDDEN)
             end
 
-            -- print(px,py,s.found)
         end
     end
+
+    ExecuteAsync(updateMinimap)
 end
 
 ------------------------------------
+
+local function addDot(dotLayer, x, y, color)
+    local dotSize = 6
+    local dot = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), dotLayer, FName("PlayerDot"))
+    dot:SetColorAndOpacity(color)
+    local slot = dotLayer:AddChildToCanvas(dot)
+    slot:SetSize({X = dotSize, Y = dotSize})
+    slot:SetPosition({X=x, Y=y})
+end
 
 local function createMinimapWidget()
     if getMinimapWidget() then return end
@@ -205,7 +207,7 @@ local function createMinimapWidget()
 
     local slot = canvas:AddChildToCanvas(bg)
     slot:SetAnchors({Minimum={X=0.85,Y=0.05},Maximum={X=0.85,Y=0.05}})
-    slot:SetSize({X=400,Y=400})
+    slot:SetSize(mapSize)
     slot:SetAlignment({X=0.5,Y=0})
     slot:SetPosition({X=0,Y=0})
 
@@ -217,20 +219,27 @@ local function createMinimapWidget()
 
     bg:SetVisibility(VISIBLE)
     dotLayer:SetVisibility(VISIBLE)
-    widget:SetVisibility(VISIBLE)
+    widget:SetVisibility(defaultVisibility)
 
     widget:AddToViewport(99)
+
+    addDot(dotLayer, mapSize.X/2 - dotSize/2, mapSize.Y/2 - dotSize/2, FLinearColor(0,1,0,1));
+
+    print("### CREATED MINIMAP ###")
+
+    minimapDots = {}
+    cachedWidget = nil
+    cachedLayer = nil
+
+    ExecuteWithDelay(250, function()
+        ExecuteInGameThread(function()
+            updateMinimap()
+        end)
+    end)
 end
 
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     createMinimapWidget()
-    hideMinimap()
-end)
-
-ExecuteWithDelay(250, function()
-    ExecuteInGameThread(function()
-        LoopAsync(250, updateMinimap)
-    end)
 end)
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)

@@ -392,7 +392,7 @@ local function checkVolumes()
 end
 
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
-    print("-- initialize checkVolumes loop --")
+    -- print("-- initialize checkVolumes loop --")
     ExecuteWithDelay(250, function()
         ExecuteInGameThread(function()
             -- LoopAsync(100, checkVolumes)
