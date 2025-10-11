@@ -98,6 +98,14 @@ end
 
 -- main update function
 local function updateMinimap()
+
+    local widget = getMinimapWidget()
+    if not widget then return end
+
+    if widget:GetVisibility()==HIDDEN then
+        return -- do not update if invisible
+    end
+
     local dotLayer = getDotLayer()
     if not dotLayer then return end
 
