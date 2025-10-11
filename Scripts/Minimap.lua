@@ -28,7 +28,10 @@ local function toggleMinimap()
 end
 
 local function hideMinimap()
-    widget:SetVisibility(HIDDEN)
+    local widget = getMinimapWidget()
+    if widget then
+        widget:SetVisibility(HIDDEN)
+    end
 end
 
 local function setAlignment(slot, alignment)
