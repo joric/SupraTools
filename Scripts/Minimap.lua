@@ -83,17 +83,17 @@ local function getSecretsData()
     return data
 end
 
-local function project(w,h, scaling, loc, rot, pt)
-    local yaw = math.rad(rot.Yaw or 0)
-    local cosYaw = math.cos(-yaw)
-    local sinYaw = math.sin(-yaw)
-    local dx = pt.X - loc.X
-    local dy = pt.Y - loc.Y
-    local rx = dx * cosYaw - dy * sinYaw
-    local ry = dx * sinYaw + dy * cosYaw
-    local py = (w / 2) + rx * scaling
-    local px = (h / 2) - ry * scaling
-    return w-px, h-py
+local function project(w, h, scaling, camLoc, camRot, point)
+    local yaw = math.rad(camRot.Yaw or 0)
+    local cosY = math.cos(-yaw)
+    local sinY = math.sin(-yaw)
+    local dx = point.X - camLoc.X
+    local dy = point.Y - camLoc.Y
+    local rx = dx * cosY - dy * sinY
+    local ry = dx * sinY + dy * cosY
+    local widgetX = w/2 + ry * scaling  -- UE Y to widget X, flipped
+    local widgetY = h/2 - rx * scaling  -- UE X to widget Y, flipped
+    return widgetX, widgetY
 end
 
 -- main update function
