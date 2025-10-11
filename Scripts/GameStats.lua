@@ -237,10 +237,11 @@ RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleStats ) -- Onscreen Objectives, 
 RegisterKeyBind(Key.H, {ModifierKey.ALT}, toggleHelp)
 
 -- RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, hideWidget) -- fires too early
--- RegisterKeyBind(Key.W, hideWidget)
--- RegisterKeyBind(Key.A, hideWidget)
--- RegisterKeyBind(Key.S, hideWidget)
--- RegisterKeyBind(Key.D, hideWidget)
+
+RegisterKeyBind(Key.W, hideWidget)
+RegisterKeyBind(Key.A, hideWidget)
+RegisterKeyBind(Key.S, hideWidget)
+RegisterKeyBind(Key.D, hideWidget)
 
 
 --/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu Self: W_SupraPauseMenu_C_2147469280
