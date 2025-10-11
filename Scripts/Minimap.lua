@@ -205,7 +205,7 @@ end)
 
 ExecuteWithDelay(250, function()
     ExecuteInGameThread(function()
-        LoopAsync(50, updateMinimap)
+        LoopAsync(250, updateMinimap)
     end)
 end)
 
