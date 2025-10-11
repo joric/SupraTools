@@ -250,13 +250,13 @@ RegisterKeyBind(Key.H, {ModifierKey.ALT}, toggleHelp)
 -- search functions/scripts in Live View substring, e.g. W_SupraPauseMenu_C:CloseMenu
 
 local function onMenuClose(self, ...)
-    hideWidget()
+    --hideWidget()
 end
 
 local function onMenuOpen(self, ...)
-    setText(getStats())
-    showStats = true
-    showWidget()
+    --setText(getStats())
+    --showStats = true
+    --showWidget()
     -- hook to closemenu here
     pcall(function()RegisterHook("/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu", onMenuClose)end)
 end
