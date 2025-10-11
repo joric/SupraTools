@@ -159,7 +159,7 @@ local function updateMinimap()
 
             if px >= 0 and px <= w and py >= 0 and py <= h then
                 d.slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
-                d.dot:SetColorAndOpacity(s.found and FLinearColor(0.5, 0.5, 0.5, 0.9) or FLinearColor(1, 0, 0, 0.95))
+                d.dot:SetColorAndOpacity(s.found and FLinearColor(0.5, 0.5, 0.5, 0.9) or FLinearColor(1, 0.64, 0, 0.95))
                 -- d.dot:SetVisibility(VISIBLE)
             else
                 -- d.dot:SetVisibility(HIDDEN)
