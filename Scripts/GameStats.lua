@@ -58,7 +58,6 @@ end
 local function setVisibility(visible)
     local widget = getWidget()
     if widget then
-        print("setting visibility", visible)
         widget:SetVisibility(visible and widgetVisibilityMode or Visibility_HIDDEN)
     end
 end
@@ -145,19 +144,44 @@ local function toggleHelp()
     toggleWidget()
 end
 
+function distance(p1, p2)
+    local dx = p2.X - p1.X
+    local dy = p2.Y - p1.Y
+    local dz = p2.Z - p1.Z
+    return math.sqrt(dx*dx + dy*dy + dz*dz)
+end
+
 local function getStats()
     local total = 0
     local found = 0
+
+    local minDist = 1000000
+
+    local pc = UEHelpers.GetPlayerController()
+    if not pc or not pc:IsValid() or not pc.Pawn or not pc.Pawn:IsValid() then return end
+
+    local ploc = pc.Pawn:K2_GetActorLocation()
 
     for _, actor in ipairs(FindAllOf("SecretVolume_C") or {}) do
         if actor:IsValid() then
             total = total + 1
             if actor.bFound then
                 found = found + 1
+            else
+                local loc = actor:K2_GetActorLocation()
+                local dist = distance(ploc, loc)
+                if dist<minDist then
+                    minDist = dist
+                end
             end
         end
     end
-    return(string.format("Secrets found: %d of %d", found, total))
+
+    if total==found then
+        minDist = 0
+    end
+
+    return(string.format("Secrets found: %d of %d\nClosest: %.1f m", found, total, minDist/1000))
 end
 
 local function toggleStats()
