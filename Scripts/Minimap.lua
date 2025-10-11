@@ -7,7 +7,7 @@ local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
 local minimapDots = {}
-local defaultVisibility = VISIBLE
+local defaultVisibility = HIDDEN
 local mapSize = {X=300, Y=300}
 local dotSize = 4
 local cachedWidget = nil
