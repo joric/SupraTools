@@ -113,13 +113,13 @@ end
 
 -- main update function
 local function updateMinimap()
+    if defaultVisibility==HIDDEN then
+        return -- do not update if invisible
+    end
+
     local widget = getMinimapWidget()
     if not widget then
         return
-    end
-
-    if widget:GetVisibility()==HIDDEN then
-        return -- do not update if invisible
     end
 
     local dotLayer = getDotLayer()
