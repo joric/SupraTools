@@ -92,14 +92,14 @@ local function createWidget(alignment)
     widget.WidgetTree.RootWidget = canvas
 
     local border = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("SimpleBorder"))
-    border:SetBrushColor(FLinearColor(0, 0, 0, .5))
+    border:SetBrushColor(FLinearColor(0, 0, 0, 0.25))
     border:SetPadding({Left = 15, Top = 10, Right = 15, Bottom = 10})
 
     local block = StaticConstructObject(StaticFindObject("/Script/UMG.TextBlock"), border, FName("SimpleText"))
     block.Font.Size = 24
     block:SetColorAndOpacity(FSlateColor(1,1,1,1))
     block:SetShadowOffset({X = 1, Y = 1})
-    block:SetShadowColorAndOpacity(FLinearColor(0, 0, 0, 0.75))
+    block:SetShadowColorAndOpacity(FLinearColor(0, 0, 0, 0.5))
     block:SetText(FText('Hello World!'))
 
     border:SetContent(block)

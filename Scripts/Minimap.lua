@@ -224,7 +224,7 @@ end
 
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     createMinimapWidget()
-    hideMinimap()
+    --hideMinimap()
 end)
 
 ExecuteWithDelay(250, function()
