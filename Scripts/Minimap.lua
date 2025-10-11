@@ -35,6 +35,7 @@ local function toggleMinimap()
     if obj then
         defaultVisibility = obj:GetVisibility()==VISIBLE and HIDDEN or VISIBLE
         obj:SetVisibility(defaultVisibility)
+        updateMinimap()
     end
 end
 
