@@ -9,7 +9,7 @@ local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A)
 local minimapDots = {}
 local defaultVisibility = HIDDEN
 local mapSize = {X=300, Y=300}
-local dotSize = 6
+local dotSize = 4
 local cachedWidget = nil
 local cachedLayer = nil
 
@@ -184,13 +184,12 @@ end
 
 ------------------------------------
 
-local function addDot(dotLayer, x, y, color)
-    local dotSize = 6
+local function addDot(dotLayer, x, y, color, dotSize)
     local dot = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), dotLayer, FName("PlayerDot"))
     dot:SetColorAndOpacity(color)
     local slot = dotLayer:AddChildToCanvas(dot)
     slot:SetSize({X = dotSize, Y = dotSize})
-    slot:SetPosition({X=x, Y=y})
+    slot:SetPosition({X=x-dotSize/2-5, Y=y-dotSize/2-5})
 end
 
 local function createMinimapWidget()
@@ -227,7 +226,7 @@ local function createMinimapWidget()
 
     widget:AddToViewport(99)
 
-    addDot(dotLayer, mapSize.X/2 - dotSize/2, mapSize.Y/2 - dotSize/2, FLinearColor(0,1,0,1));
+    addDot(dotLayer, mapSize.X/2, mapSize.Y/2, FLinearColor(0,1,0,1), dotSize+2);
 
     print("### CREATED MINIMAP ###")
 
