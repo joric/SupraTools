@@ -144,7 +144,6 @@ local function updateMinimap()
     if #minimapDots < #secretsData then
         for i = #minimapDots + 1, #secretsData do
             local dot = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), dotLayer, FName("SecretDot"..i))
-            dot:SetBrushFromTexture(nil, false)
             local slot = dotLayer:AddChildToCanvas(dot)
             slot:SetSize({X = dotSize, Y = dotSize})
             minimapDots[i] = {dot = dot, slot = slot}
