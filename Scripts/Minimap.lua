@@ -151,7 +151,7 @@ local function updateMinimap()
 
     if not mapWidget or not mapWidget:IsValid() then return end
 
-    local pc = getCameraController()
+    local pc = getCameraController and getCameraController() or UEHelpers.GetPlayerController()
     if pc and pc:IsValid() then
         local cam = pc.PlayerCameraManager
         if cam and cam:IsValid() then
