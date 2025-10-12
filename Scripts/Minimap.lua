@@ -32,7 +32,7 @@ local pointTypes = {
 
     -- supraland
     SecretFound_C = {FLinearColor(0, 1, 0, 0.75), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    -- Coin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)}, -- why the fuck it crashes so much? too many objects?
+    Coin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)}, -- why the fuck it crashes so much? too many objects?
     PhysicalCoin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
     CoinBig_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
     CoinRed_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
@@ -66,7 +66,7 @@ end
 
 local function updateCachedPoints()
     cachedPoints = cachedPoints or {}
-    local coinLimit = 750
+    local coinLimit = 1000
     for type, color in pairs(pointTypes) do
         for _, actor in ipairs(FindAllOf(type) or {}) do
             if not (type == "Coin_C" and coinLimit == 0) then
@@ -181,7 +181,6 @@ local function updateMinimap()
         if cam and cam:IsValid() then
             local loc = cam:GetCameraLocation()
             local rot = cam:GetCameraRotation()
-
             for name, point in pairs(cachedPoints) do
                 local px, py = projectDot(mapSize.X, mapSize.Y, scaling, loc, rot, point.loc, dotSize)
                 if point.image and point.image:IsValid() then
@@ -195,8 +194,15 @@ local function updateMinimap()
 
     --ExecuteAsync(updateMinimap) -- max fps but not recommended ? async loops leak memory
     --ExecuteWithDelay(16, updateMinimap) -- 60 fps
-    ExecuteWithDelay(33, updateMinimap) -- 30 fps (may be optimal)
+    -- ExecuteWithDelay(33, updateMinimap) -- 30 fps (may be optimal)
     --ExecuteWithDelay(250, updateMinimap) -- 4 fps, allows lua scripts reloading without widget hiding
+
+    ExecuteWithDelay(33, function()
+        ExecuteInGameThread(function()
+            updateMinimap() -- seems much more stable this way!
+        end)
+    end)
+
 end
 
 local function toggleMinimap()
