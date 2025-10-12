@@ -419,6 +419,9 @@ local function copyObject()
     selectedObject = hitObject
     if not selectedObject:IsValid() then return end
     print("Selected", selectedObject:GetFullName())
+    local outer = selectedObject:GetOuter()
+    print("Outer", outer:GetFullName())
+
     local cameraYaw = getCameraController().PlayerCameraManager:GetCameraRotation().Yaw
     return selectedObject
 end

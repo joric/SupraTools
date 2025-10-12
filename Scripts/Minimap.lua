@@ -11,20 +11,32 @@ local VISIBLE = 4
 local HIDDEN = 2
 
 local defaultVisibility = HIDDEN
+
 local defaultAlignment = 'bottomleft'
 local mapSize = {X=320, Y=320}
-local dotSize = 4
+local scaling = 0.02
+local dotSize = 3
+local playerDotSize = 4
+
+local cachedPoints
 
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 
-local function toggleMinimap()
-    if mapWidget then
-        mapWidget:SetVisibility(mapWidget:GetVisibility()==VISIBLE and HIDDEN or VISIBLE)
-    end
-end
+local pointTypes = {
+    -- supraworld
+    SecretVolume_C = {FLinearColor(0, 1, 0, 0.75), FLinearColor(0.5, 0.5, 0.5, 0.5)},
+    -- RealCoinPickup_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0.25)},
+
+    -- supraland
+    SecretFound_C = {FLinearColor(0, 1, 0, 0.75), FLinearColor(0.5, 0.5, 0.5, 0.5)},
+    -- Coin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0,25)},
+    -- CoinBig_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0,25)},
+    -- CoinRed_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0,25)},
+    -- Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0,25)},
+}
 
 local function setAlignment(slot, alignment)
     local alignments = {
@@ -42,7 +54,7 @@ local function setAlignment(slot, alignment)
     slot:SetPosition({X = a.pos[1], Y = a.pos[2]})
 end
 
-local function addDot(layer, x, y, color, size, name)
+local function addPoint(layer, x, y, color, size, name)
     local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), layer)
     local slot = layer:AddChildToCanvas(image)
     image:SetColorAndOpacity(color)
@@ -51,25 +63,20 @@ local function addDot(layer, x, y, color, size, name)
     return image
 end
 
-local function getSecretsData()
-    local data = {}
-    local items = {
-        SecretVolume_C = FLinearColor(0, 1, 0, 0.75),
-        SecretFound_C = FLinearColor(0, 1, 0, 0.75),
-        -- RealCoinPickup_C = FLinearColor(1,0.65,0,1),
-        -- Coin_C = FLinearColor(1,0.65,0,1), -- too many items
-    }
-
-    for name, color in pairs(items) do
-        for _, actor in ipairs(FindAllOf(name) or {}) do
-            if actor and actor:IsValid() then
-                local loc = actor:K2_GetActorLocation()
-                local found = (actor.bFound == true) or (actor.StartClosed == true)
-                table.insert(data, {loc=loc, found=found, color=color})
+local function updateCachedPoints()
+    cachedPoints = cachedPoints or {}
+    for type, color in pairs(pointTypes) do
+        for _, actor in ipairs(FindAllOf(type) or {}) do
+            if actor:IsValid() then
+                local name = actor:GetFullName() -- we may need area/location in SIU
+                local found = (actor.bFound == true) or (actor.StartClosed == true) or (actor.Invisible==true)
+                cachedPoints[name] = cachedPoints[name] or {}
+                cachedPoints[name].loc = actor:K2_GetActorLocation() -- cannot cache, there is lazy loading
+                cachedPoints[name].found = found
+                cachedPoints[name].type = type
             end
         end
     end
-    return data
 end
 
 local function createmapWidget()
@@ -96,13 +103,17 @@ local function createmapWidget()
     local layer = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), bg, FName("DotLayer"))
     bg:SetContent(layer)
 
-    local secretsData = getSecretsData()
+    updateCachedPoints()
 
-    for i, pt in ipairs(secretsData) do
-        addDot(layer, pt.loc.X, pt.loc.Y, FLinearColor(1,1,1,0.75), dotSize)
+    local count = 0
+    for name, point in pairs(cachedPoints) do
+        point.image = addPoint(layer, point.loc.X, point.loc.Y, FLinearColor(1,1,1,0.75), dotSize)
+        count = count + 1
     end
 
-    addDot(layer, mapSize.X/2, mapSize.Y/2, FLinearColor(1,1,1,0.75), dotSize)
+    print("--- loaded", count, "points")
+
+    addPoint(layer, mapSize.X/2, mapSize.Y/2, FLinearColor(1,1,1,0.75), playerDotSize)
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
@@ -148,10 +159,7 @@ local function projectDot(w, h, scaling, camLoc, camRot, point, dotSize)
 end
 
 local function updateMinimap()
-    local w, h = mapSize.X, mapSize.Y
-    local scaling = 0.01
-
-    if not mapWidget or not mapWidget:IsValid() then return end
+    if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
 
     local pc = getCameraController and getCameraController() or UEHelpers.GetPlayerController()
     if pc and pc:IsValid() then
@@ -160,20 +168,39 @@ local function updateMinimap()
             local loc = cam:GetCameraLocation()
             local rot = cam:GetCameraRotation()
 
-            local secretsData = getSecretsData()
-            for i, pt in ipairs(secretsData) do
-                local px, py = projectDot(w,h, scaling, loc, rot, pt.loc, dotSize)
-                local image = mapWidget.WidgetTree.RootWidget:GetChildAt(0):GetContent():GetChildAt(i-1)
-                if image:IsValid() then
-                    -- image:SetColorAndOpacity(FLinearColor(pt.color.R, pt.color.G, pt.color.B, pt.found and 0.25 or 0.95)) -- clusters are too opaque
-                    image:SetColorAndOpacity(pt.found and FLinearColor(0.5,0.5,0.5,0.5) or pt.color)
-                    image.Slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
+            for name, point in pairs(cachedPoints) do
+                local px, py = projectDot(mapSize.X, mapSize.Y, scaling, loc, rot, point.loc, dotSize)
+                if point.image and point.image:IsValid() then
+                    point.image.Slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
+                    point.image:SetColorAndOpacity(pointTypes[point.type][point.found and 2 or 1])
                 end
             end
+
         end
     end
 
-    -- ExecuteAsync(updateMinimap) -- mods cannot be reloaded with that, hang on "stopping for uninstall"
+    --ExecuteAsync(updateMinimap) -- max fps but not recommended ? async loops leak memory
+    --ExecuteWithDelay(16, updateMinimap) -- 60 fps
+    ExecuteWithDelay(33, updateMinimap) -- 30 fps (may be optimal)
+    --ExecuteWithDelay(250, updateMinimap) -- 4 fps, allows lua scripts reloading without widget hiding
+end
+
+local function toggleMinimap()
+    if mapWidget then
+        mapWidget:SetVisibility(mapWidget:GetVisibility()==VISIBLE and HIDDEN or VISIBLE)
+        updateMinimap()
+    end
+end
+
+local function setFound(self, param, ...)
+    --local name = self:get():GetFName():ToString()
+    local name = self:get():GetFullName()
+    local found = param and param:get() or true
+    print("--- setFound", found, name)
+    local point = cachedPoints[name]
+    if point then
+        point.found = found
+    end
 end
 
 RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
@@ -181,13 +208,44 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
         print("--- ignoring default pawn ---")
         return
     end
+
     createmapWidget()
+    updateMinimap()
+
+    -- don't really need hooks if we do updateCached points on a timer
+
+    --[[
+    -- supraworld
+    pcall(function()
+        RegisterHook("/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", setFound)
+        RegisterHook("/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", setFound)
+    end)
+
+    -- supraland
+    pcall(function()
+        RegisterHook("/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate", setFound)
+    end)
+
+    -- nothing fires in this section. i'll deal with it later
+    pcall(function()
+        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Open", setFound)
+        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Open2", setFound)
+        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Activate", setFound)
+        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:ActivateOpenForever", setFound)
+        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Toggle", setFound)
+        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:appear", setFound)
+    end)
+    ]]
+
 end)
 
 if mapWidget and mapWidget:IsValid() then
     updateMinimap()
 end
 
-LoopAsync(250, updateMinimap) -- 250 ms because even 100 ms loop hangs mod reload indefinitely
+LoopAsync(3000, function()
+    if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
+    updateCachedPoints()
+end)
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
