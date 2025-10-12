@@ -72,7 +72,7 @@ end
 
 local function createmapWidget()
     if mapWidget and mapWidget:IsValid() then
-        print("### MINIMAP ALREADY EXISTS ###")
+        print("Minimap already exists.")
         return
     end
 
