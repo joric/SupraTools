@@ -32,9 +32,9 @@ local pointTypes = {
 
     -- supraland
     SecretFound_C = {FLinearColor(0, 1, 0, 0.75), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    -- Coin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
-    -- CoinBig_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
-    -- CoinRed_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
+    -- Coin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)}, -- сrashes on too many coins
+    CoinBig_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
+    CoinRed_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
     -- Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)},
 }
 
