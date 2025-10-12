@@ -28,7 +28,7 @@ local mapWidget = FindObject("UserWidget", "mapWidget")
 local pointTypes = {
     -- supraworld
     SecretVolume_C = {FLinearColor(0, 1, 0, 0.75), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    -- RealCoinPickup_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0.25)},
+    RealCoinPickup_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0.25)},
 
     -- supraland
     SecretFound_C = {FLinearColor(0, 1, 0, 0.75), FLinearColor(0.5, 0.5, 0.5, 0.5)},
