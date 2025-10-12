@@ -15,10 +15,10 @@ local defaultAlignment = 'bottomleft'
 local mapSize = {X=320, Y=320}
 local dotSize = 4
 
-local mapWidget = FindObject("UserWidget", "mapWidget")
-
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
+
+local mapWidget = FindObject("UserWidget", "mapWidget")
 
 local function toggleMinimap()
     if mapWidget then
