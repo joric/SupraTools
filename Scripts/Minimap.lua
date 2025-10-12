@@ -2,7 +2,7 @@ local UEHelpers = require("UEHelpers")
 
 local VISIBLE = 4
 local HIDDEN = 2
-local defaultVisibility = HIDDEN
+local defaultVisibility = VISIBLE
 
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
@@ -179,15 +179,16 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
         return
     end
     createmapWidget()
-    updateMinimap()
 end)
 
 if mapWidget and mapWidget:IsValid() then
     updateMinimap()
 end
 
-ExecuteInGameThread(function()
-    LoopAsync(250, updateMinimap) -- even 100 ms loop hangs mod reload indefinitely
+ExecuteWithDelay(250, function()
+    ExecuteInGameThread(function()
+        LoopAsync(250, updateMinimap) -- even 100 ms loop hangs mod reload indefinitely
+    end)
 end)
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
