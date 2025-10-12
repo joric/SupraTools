@@ -178,8 +178,8 @@ local function updateMinimap()
         end
     end
 
-    ExecuteInGameThread(function() -- seems much more stable this way!
-        ExecuteWithDelay(33, updateMinimap) 
+    ExecuteWithDelay(33,function()
+        ExecuteInGameThread(updateMinimap) -- seems much more stable this way!
     end)
 end
 
