@@ -66,28 +66,21 @@ end
 
 local function updateCachedPoints()
     cachedPoints = cachedPoints or {}
-    local coinLimit = 1000
     for type, color in pairs(pointTypes) do
         for _, actor in ipairs(FindAllOf(type) or {}) do
-            if not (type == "Coin_C" and coinLimit == 0) then
-                if type=="Coin_C" then
-                    coinLimit = coinLimit - 1
+            if actor:IsValid() then
+                local name = actor:GetFName():ToString()
+                local found = (actor.bFound == true) or (actor.StartClosed == true)
+
+                if (type == "Coin_C" or type=="PhysicalCoin_C" or type=="CoinBig_C" or type=="CoinRed_C") 
+                    and not actor.Coin:IsValid() or (actor.Coin:IsValid() and not actor.Coin:IsVisible()) then -- the only reliable way I found
+                    found = true
                 end
 
-                if actor:IsValid() then
-                    local name = actor:GetFName():ToString()
-                    local found = (actor.bFound == true) or (actor.StartClosed == true)
-
-                    if (type == "Coin_C" or type=="PhysicalCoin_C" or type=="CoinBig_C" or type=="CoinRed_C") 
-                        and not actor.Coin:IsValid() or (actor.Coin:IsValid() and not actor.Coin:IsVisible()) then -- the only reliable way I found
-                        found = true
-                    end
-
-                    cachedPoints[name] = cachedPoints[name] or {}
-                    cachedPoints[name].loc = actor:K2_GetActorLocation() -- cannot cache, coordinates may caught up later
-                    cachedPoints[name].found = found
-                    cachedPoints[name].type = type
-                end
+                cachedPoints[name] = cachedPoints[name] or {}
+                cachedPoints[name].loc = actor:K2_GetActorLocation() -- cannot cache, coordinates may caught up later
+                cachedPoints[name].found = found
+                cachedPoints[name].type = type
             end
         end
     end
