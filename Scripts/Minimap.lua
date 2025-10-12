@@ -69,7 +69,7 @@ local function updateCachedPoints()
     for type, color in pairs(pointTypes) do
         for _, actor in ipairs(FindAllOf(type) or {}) do
             if actor:IsValid() then
-                local name = actor:GetFName():ToString()
+                local name = actor:GetFullName()
                 local found = (actor.bFound == true) or (actor.StartClosed == true)
 
                 if (type == "Coin_C" or type=="PhysicalCoin_C" or type=="CoinBig_C" or type=="CoinRed_C") 
@@ -190,10 +190,8 @@ local function updateMinimap()
     -- ExecuteWithDelay(33, updateMinimap) -- 30 fps (may be optimal)
     --ExecuteWithDelay(250, updateMinimap) -- 4 fps, allows lua scripts reloading without widget hiding
 
-    ExecuteWithDelay(33, function()
-        ExecuteInGameThread(function()
-            updateMinimap() -- seems much more stable this way!
-        end)
+    ExecuteInGameThread(function() -- seems much more stable this way!
+        ExecuteWithDelay(33, updateMinimap) 
     end)
 
 end
@@ -206,7 +204,7 @@ local function toggleMinimap()
 end
 
 local function setFound(self, param, ...)
-    local name = self:get():GetFName():ToString()
+    local name = self:get():GetFullName()
     local found = param and param:get() or true
     print("--- setFound", found, name)
     local point = cachedPoints[name]
