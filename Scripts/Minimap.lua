@@ -32,10 +32,11 @@ local pointTypes = {
 
     -- supraland
     SecretFound_C = {FLinearColor(0, 1, 0, 0.75), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    -- Coin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)}, -- сrashes on too many coins
+    --Coin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)}, -- why the fuck it crashes so much? too many objects?
+    PhysicalCoin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
     CoinBig_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
     CoinRed_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
-    -- Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)},
+    -- Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)}, -- same as secret areas
 }
 
 local function setAlignment(slot, alignment)
@@ -69,9 +70,15 @@ local function updateCachedPoints()
         for _, actor in ipairs(FindAllOf(type) or {}) do
             if actor:IsValid() then
                 local name = actor:GetFullName() -- we may need area/location in SIU
-                local found = (actor.bFound == true) or (actor.StartClosed == true) or (actor.Invisible==true)
+                local found = (actor.bFound == true) or (actor.StartClosed == true)
+
+                if (type == "Coin_C" or type=="PhysicalCoin_C" or type=="CoinBig_C" or type=="CoinRed_C") 
+                    and not actor.Coin:IsValid() or (actor.Coin:IsValid() and not actor.Coin:IsVisible()) then -- the only reliable way I found
+                    found = true
+                end
+
                 cachedPoints[name] = cachedPoints[name] or {}
-                cachedPoints[name].loc = actor:K2_GetActorLocation() -- cannot cache, there is lazy loading
+                cachedPoints[name].loc = actor:K2_GetActorLocation() -- cannot cache, coordinates may caught up later
                 cachedPoints[name].found = found
                 cachedPoints[name].type = type
             end
@@ -232,6 +239,7 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
         RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Open2", setFound)
         RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Activate", setFound)
         RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:ActivateOpenForever", setFound)
+        RegisterHook("/Game/Blueprints/Levelobjects/PhysicalCoin.PhysicalCoin_C:ActivateOpenForever", setFound)
         RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Toggle", setFound)
         RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:appear", setFound)
     end)
