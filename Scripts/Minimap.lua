@@ -186,10 +186,6 @@ if mapWidget and mapWidget:IsValid() then
     updateMinimap()
 end
 
-ExecuteWithDelay(250, function()
-    ExecuteInGameThread(function()
-        LoopAsync(250, updateMinimap) -- 250 ms because even 100 ms loop hangs mod reload indefinitely
-    end)
-end)
+LoopAsync(250, updateMinimap) -- 250 ms because even 100 ms loop hangs mod reload indefinitely
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
