@@ -1,12 +1,5 @@
 local UEHelpers = require("UEHelpers")
 
---[[
-The map refreshes MUCH FASTER with the recursive updateMinimap call but it prevents debugging the mods.
-Recursive call wrapped with ExecuteAsync hangs on "stopping mod for uninstall" when you reload UE4SS.
-Scheduled loops apparently cannot be easily stopped too, unless it's like 250ms loops, i.e. 4 FPS.
-Even 100 ms loops also hang indefinitely with "stopping mod for uninstall" when you try to reload mods.
-]]
-
 local VISIBLE = 4
 local HIDDEN = 2
 
@@ -185,31 +178,15 @@ local function updateMinimap()
         end
     end
 
-    --ExecuteAsync(updateMinimap) -- max fps but not recommended ? async loops leak memory
-    --ExecuteWithDelay(16, updateMinimap) -- 60 fps
-    -- ExecuteWithDelay(33, updateMinimap) -- 30 fps (may be optimal)
-    --ExecuteWithDelay(250, updateMinimap) -- 4 fps, allows lua scripts reloading without widget hiding
-
     ExecuteInGameThread(function() -- seems much more stable this way!
         ExecuteWithDelay(33, updateMinimap) 
     end)
-
 end
 
 local function toggleMinimap()
     if mapWidget then
         mapWidget:SetVisibility(mapWidget:GetVisibility()==VISIBLE and HIDDEN or VISIBLE)
         updateMinimap()
-    end
-end
-
-local function setFound(self, param, ...)
-    local name = self:get():GetFullName()
-    local found = param and param:get() or true
-    print("--- setFound", found, name)
-    local point = cachedPoints[name]
-    if point then
-        point.found = found
     end
 end
 
@@ -221,32 +198,6 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
 
     createmapWidget()
     updateMinimap()
-
-    -- don't really need hooks if we do updateCached points on a timer
-
-    --[[
-    -- supraworld
-    pcall(function()
-        RegisterHook("/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", setFound)
-        RegisterHook("/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", setFound)
-    end)
-
-    -- supraland
-    pcall(function()
-        RegisterHook("/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate", setFound)
-    end)
-
-    -- nothing fires in this section. i'll deal with it later
-    pcall(function()
-        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Open", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Open2", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Activate", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:ActivateOpenForever", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/PhysicalCoin.PhysicalCoin_C:ActivateOpenForever", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Toggle", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:appear", setFound)
-    end)
-    ]]
 
 end)
 
