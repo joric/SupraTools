@@ -32,7 +32,7 @@ local pointTypes = {
 
     -- supraland
     SecretFound_C = {FLinearColor(0, 1, 0, 0.75), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    Coin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)}, -- why the fuck it crashes so much? too many objects?
+    -- Coin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)}, -- why the fuck it crashes so much? too many objects?
     PhysicalCoin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
     CoinBig_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
     CoinRed_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
@@ -66,7 +66,7 @@ end
 
 local function updateCachedPoints()
     cachedPoints = cachedPoints or {}
-    local coinLimit = 500
+    local coinLimit = 750
     for type, color in pairs(pointTypes) do
         for _, actor in ipairs(FindAllOf(type) or {}) do
             if not (type == "Coin_C" and coinLimit == 0) then
@@ -75,7 +75,7 @@ local function updateCachedPoints()
                 end
 
                 if actor:IsValid() then
-                    local name = actor:GetFullName() -- we may need area/location in SIU
+                    local name = actor:GetFName():ToString()
                     local found = (actor.bFound == true) or (actor.StartClosed == true)
 
                     if (type == "Coin_C" or type=="PhysicalCoin_C" or type=="CoinBig_C" or type=="CoinRed_C") 
@@ -207,8 +207,7 @@ local function toggleMinimap()
 end
 
 local function setFound(self, param, ...)
-    --local name = self:get():GetFName():ToString()
-    local name = self:get():GetFullName()
+    local name = self:get():GetFName():ToString()
     local found = param and param:get() or true
     print("--- setFound", found, name)
     local point = cachedPoints[name]
