@@ -73,14 +73,8 @@ end
 local function createmapWidget()
     if mapWidget and mapWidget:IsValid() then
         print("### MINIMAP ALREADY EXISTS ###")
-
-        print("tree", mapWidget.WidgetTree:IsValid())
-        print("root", mapWidget.WidgetTree.RootWidget:IsValid())
-
         return
     end
-
-    -- print("### MINIMAP IS NOT VALID, RECREATING ###", mapWidget and mapWidget:IsValid())
 
     local gi = UEHelpers.GetGameInstance()
     local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("mapWidget"))
