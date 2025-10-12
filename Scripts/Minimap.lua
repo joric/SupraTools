@@ -251,7 +251,7 @@ if mapWidget and mapWidget:IsValid() then
     updateMinimap()
 end
 
-LoopAsync(3000, function()
+LoopAsync(2500, function()
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
     updateCachedPoints()
 end)
