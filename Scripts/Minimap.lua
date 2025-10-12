@@ -2,45 +2,22 @@ local UEHelpers = require("UEHelpers")
 
 local VISIBLE = 4
 local HIDDEN = 2
+local defaultVisibility = HIDDEN
 
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
-local minimapDots = {}
-local defaultVisibility = HIDDEN
-local mapSize = {X=300, Y=300}
+local mapSize = {X=320, Y=320}
 local dotSize = 4
-local cachedWidget = nil
-local cachedLayer = nil
+local mapWidget = FindObject("UserWidget", "mapWidget")
 
-local function getMinimapWidget()
-    if cachedWidget and cachedWidget:IsValid() then return cachedWidget end
-    local obj = FindObject("UserWidget", "MinimapWidget")
-    if obj and obj:IsValid() then
-        cachedWidget = obj
-        return obj
-    end
-end
-
-local function getDotLayer()
-    if cachedLayer and cachedLayer:IsValid() then return cachedLayer end
-    local obj = FindObject("CanvasPanel", "DotLayer")
-    if obj and obj:IsValid() then
-        cachedLayer = obj
-        return obj
-    end
-end
-
-local function hideMinimap()
-    local obj = getMinimapWidget()
-    if obj then
-        defaultVisibility = HIDDEN
-        obj:SetVisibility(defaultVisibility)
+local function toggleMinimap()
+    if mapWidget then
+        mapWidget:SetVisibility(mapWidget:GetVisibility()==VISIBLE and HIDDEN or VISIBLE)
     end
 end
 
 local function setAlignment(slot, alignment)
-    -- Alignment presets
     local alignments = {
         center = {anchor = {0.5, 0.5}, align = {0.5, 0.5}, pos = {0, 0}},
         top = {anchor = {0.5, 0}, align = {0.5, 0}, pos = {0, 10}},
@@ -50,32 +27,88 @@ local function setAlignment(slot, alignment)
         bottomleft = {anchor = {0, 1}, align = {0, 1}, pos = {10, -10}},
         bottomright = {anchor = {1, 1}, align = {1, 1}, pos = {-10, -10}}
     }
-    
     local a = alignments[alignment] or alignments.center
     slot:SetAnchors({Minimum = {X = a.anchor[1], Y = a.anchor[2]}, Maximum = {X = a.anchor[1], Y = a.anchor[2]}})
     slot:SetAlignment({X = a.align[1], Y = a.align[2]})
     slot:SetPosition({X = a.pos[1], Y = a.pos[2]})
 end
 
-------------------------------------
+local function addDot(layer, x, y, color, size, name)
+    local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), layer)
+    local slot = layer:AddChildToCanvas(image)
+    image:SetColorAndOpacity(color)
+    image.Slot:SetPosition({X = x - size / 2, Y = y - size / 2})
+    image.Slot:SetSize({X = size, Y = size})
+    return image
+end
 
--- helper: return table of all valid secrets with current coordinates and found state
 local function getSecretsData()
     local data = {}
-    local entries = {"SecretVolume_C", "SecretFound_C"}
-    for _, entry in ipairs(entries) do
-        for _, actor in ipairs(FindAllOf(entry) or {}) do
+    local items = {
+        SecretVolume_C = FLinearColor(0, 1, 0, 0.75),
+        SecretFound_C = FLinearColor(0, 1, 0, 0.75),
+        -- RealCoinPickup_C = FLinearColor(1,0.65,0,1),
+        -- Coin_C = FLinearColor(1,0.65,0,1), -- too many items
+    }
+
+    for name, color in pairs(items) do
+        for _, actor in ipairs(FindAllOf(name) or {}) do
             if actor and actor:IsValid() then
                 local loc = actor:K2_GetActorLocation()
                 local found = (actor.bFound == true) or (actor.StartClosed == true)
-                table.insert(data, {loc = loc, found = found})
+                table.insert(data, {loc=loc, found=found, color=color})
             end
         end
     end
     return data
 end
 
-local function project(w, h, scaling, camLoc, camRot, point, dotSize)
+local function createmapWidget()
+    if mapWidget and mapWidget:IsValid() then
+        print("### MINIMAP ALREADY EXISTS ###")
+
+        print("tree", mapWidget.WidgetTree:IsValid())
+        print("root", mapWidget.WidgetTree.RootWidget:IsValid())
+
+        return
+    end
+
+    -- print("### MINIMAP IS NOT VALID, RECREATING ###", mapWidget and mapWidget:IsValid())
+
+    local gi = UEHelpers.GetGameInstance()
+    local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("mapWidget"))
+    widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("MinimapTree"))
+
+    local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("MinimapCanvas"))
+    widget.WidgetTree.RootWidget = canvas
+
+    local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("MinimapBG"))
+    bg:SetBrushColor(FLinearColor(0, 0, 0, 0))
+
+    local slot = canvas:AddChildToCanvas(bg)
+    slot:SetSize(mapSize)
+
+    setAlignment(slot, 'bottomleft')
+
+    local layer = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), bg, FName("DotLayer"))
+    bg:SetContent(layer)
+
+    local secretsData = getSecretsData()
+
+    for i, pt in ipairs(secretsData) do
+        addDot(layer, pt.loc.X, pt.loc.Y, FLinearColor(1,1,1,0.75), dotSize)
+    end
+
+    addDot(layer, mapSize.X/2, mapSize.Y/2, FLinearColor(1,1,1,0.75), dotSize)
+
+    bg:SetVisibility(defaultVisibility)
+    widget:SetVisibility(defaultVisibility)
+    widget:AddToViewport(99)
+
+    mapWidget = widget
+end
+
+local function projectDot(w, h, scaling, camLoc, camRot, point, dotSize)
     dotSize = dotSize or 0
     local halfDot = dotSize / 2
 
@@ -92,8 +125,8 @@ local function project(w, h, scaling, camLoc, camRot, point, dotSize)
     local ry = dx * sinY + dy * cosY
 
     -- map to widget coordinates
-    local widgetX = w/2 + ry * scaling  -- UE Y → widget X
-    local widgetY = h/2 - rx * scaling  -- UE X → widget Y
+    local widgetX = w/2 + ry * scaling  -- UE Y = -widget X
+    local widgetY = h/2 - rx * scaling  -- UE X = -widget Y
 
     -- circular clamp accounting for dot size
     local cx, cy = w/2, h/2
@@ -108,137 +141,53 @@ local function project(w, h, scaling, camLoc, camRot, point, dotSize)
         widgetY = cy + relY
     end
 
-    return widgetX-5, widgetY-5 --account for slot border
+    return widgetX, widgetY
 end
 
--- main update function
 local function updateMinimap()
-    if defaultVisibility==HIDDEN then
-        return -- do not update if invisible
-    end
-
-    local widget = getMinimapWidget()
-    if not widget then
-        return
-    end
-
-    local dotLayer = getDotLayer()
-    if not dotLayer then return end
-
     local w, h = mapSize.X, mapSize.Y
-
     local scaling = 0.01
 
+    if not mapWidget or not mapWidget:IsValid() then return end
+
     local pc = getCameraController()
-    if not pc or not pc:IsValid() then return end
-    local cam = pc.PlayerCameraManager
-    if not cam or not cam:IsValid() then return end
+    if pc and pc:IsValid() then
+        local cam = pc.PlayerCameraManager
+        if cam and cam:IsValid() then
+            local loc = cam:GetCameraLocation()
+            local rot = cam:GetCameraRotation()
 
-    local loc = cam:GetCameraLocation()
-    local rot = cam:GetCameraRotation()
-
-    local secretsData = getSecretsData()
-
-
-    -- create dot widgets if needed
-    if #minimapDots < #secretsData then
-        for i = #minimapDots + 1, #secretsData do
-            local dot = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), dotLayer, FName("SecretDot"..i))
-            local slot = dotLayer:AddChildToCanvas(dot)
-            slot:SetSize({X = dotSize, Y = dotSize})
-            minimapDots[i] = {dot = dot, slot = slot}
-        end
-    end
-
-    -- update each dot
-    for i, s in ipairs(secretsData) do
-        local d = minimapDots[i]
-        if d and d.dot and d.slot then
-
-            local px, py = project(w,h, scaling, loc, rot, s.loc, dotSize)
-
-            if px >= 0 and px <= w and py >= 0 and py <= h then
-                d.slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
-                d.dot:SetColorAndOpacity(s.found and FLinearColor(0.5, 0.5, 0.5, 0.9) or FLinearColor(1, 0.5, 0, 0.95))
-                -- d.dot:SetVisibility(VISIBLE)
-            else
-                -- d.dot:SetVisibility(HIDDEN)
+            local secretsData = getSecretsData()
+            for i, pt in ipairs(secretsData) do
+                local px, py = projectDot(w,h, scaling, loc, rot, pt.loc, dotSize)
+                local image = mapWidget.WidgetTree.RootWidget:GetChildAt(0):GetContent():GetChildAt(i-1)
+                if image:IsValid() then
+                    -- image:SetColorAndOpacity(FLinearColor(pt.color.R, pt.color.G, pt.color.B, pt.found and 0.25 or 0.95)) -- clusters are too opaque
+                    image:SetColorAndOpacity(pt.found and FLinearColor(0.5,0.5,0.5,0.5) or pt.color)
+                    image.Slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
+                end
             end
-
         end
     end
 
-    ExecuteAsync(updateMinimap)
-
+    -- ExecuteAsync(updateMinimap) -- mods cannot be reloaded with that, hang on "stopping for uninstall"
 end
 
-local function toggleMinimap()
-    local obj = getMinimapWidget()
-    if obj and obj:IsValid() then
-        defaultVisibility = obj:GetVisibility()==VISIBLE and HIDDEN or VISIBLE
-        obj:SetVisibility(defaultVisibility)
-        updateMinimap()
+RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
+    if pawn:get():GetFullName():find("DefaultPawn") then
+        print("--- ignoring default pawn ---")
+        return
     end
+    createmapWidget()
+    updateMinimap()
+end)
+
+if mapWidget and mapWidget:IsValid() then
+    updateMinimap()
 end
 
-------------------------------------
-
-local function addDot(dotLayer, x, y, color, dotSize)
-    local dot = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), dotLayer, FName("PlayerDot"))
-    dot:SetColorAndOpacity(color)
-    local slot = dotLayer:AddChildToCanvas(dot)
-    slot:SetSize({X = dotSize, Y = dotSize})
-    slot:SetPosition({X=x-dotSize/2-5, Y=y-dotSize/2-5})
-end
-
-local function createMinimapWidget()
-    if getMinimapWidget() then return end
-
-    minimapDots = {}
-
-    local gi = UEHelpers.GetGameInstance()
-    local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("MinimapWidget"))
-    widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("MinimapTree"))
-
-    local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("MinimapCanvas"))
-    widget.WidgetTree.RootWidget = canvas
-
-    -- background
-    local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("MinimapBG"))
-    bg:SetBrushColor(FLinearColor(0, 0, 0, 0.25))
-
-    local slot = canvas:AddChildToCanvas(bg)
-    slot:SetAnchors({Minimum={X=0.85,Y=0.05},Maximum={X=0.85,Y=0.05}})
-    slot:SetSize(mapSize)
-    slot:SetAlignment({X=0.5,Y=0})
-    slot:SetPosition({X=0,Y=0})
-
-    setAlignment(slot, 'bottomleft')
-
-    -- container for dots
-    local dotLayer = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), bg, FName("DotLayer"))
-    bg:SetContent(dotLayer)
-
-    bg:SetVisibility(VISIBLE)
-    dotLayer:SetVisibility(VISIBLE)
-    widget:SetVisibility(defaultVisibility)
-
-    widget:AddToViewport(99)
-
-    addDot(dotLayer, mapSize.X/2, mapSize.Y/2, FLinearColor(0,1,0,1), dotSize+2);
-
-    print("### CREATED MINIMAP ###")
-
-    ExecuteWithDelay(250, function()
-        ExecuteInGameThread(function()
-            updateMinimap()
-        end)
-    end)
-end
-
-RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
-    createMinimapWidget()
+ExecuteInGameThread(function()
+    LoopAsync(250, updateMinimap) -- even 100 ms loop hangs mod reload indefinitely
 end)
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
-
