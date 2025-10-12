@@ -9,14 +9,16 @@ Even 100 ms loops also hang indefinitely with "stopping mod for uninstall" when 
 
 local VISIBLE = 4
 local HIDDEN = 2
+
 local defaultVisibility = HIDDEN
+local defaultAlignment = 'bottomleft'
+local mapSize = {X=320, Y=320}
+local dotSize = 4
+
+local mapWidget = FindObject("UserWidget", "mapWidget")
 
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
-
-local mapSize = {X=320, Y=320}
-local dotSize = 4
-local mapWidget = FindObject("UserWidget", "mapWidget")
 
 local function toggleMinimap()
     if mapWidget then
@@ -89,7 +91,7 @@ local function createmapWidget()
     local slot = canvas:AddChildToCanvas(bg)
     slot:SetSize(mapSize)
 
-    setAlignment(slot, 'bottomleft')
+    setAlignment(slot, defaultAlignment)
 
     local layer = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), bg, FName("DotLayer"))
     bg:SetContent(layer)
