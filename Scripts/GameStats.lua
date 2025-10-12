@@ -133,7 +133,7 @@ end
 showStats = true
 
 local helpText = [[SupraTools 1.0.3 by Joric
-F for Fast Travel (Map)
+F for Fast Travel
 Alt+E for Remote Control
 MMB for Debug Camera
 LMB to Teleport
