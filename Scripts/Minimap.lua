@@ -2,7 +2,7 @@ local UEHelpers = require("UEHelpers")
 
 --[[
 The map can be refreshed much faster with recursive calls but there is an issue with stopping the mods.
-Recursive call wrapped with ExecuteAsync prevents restart mods, hangs on "stopping mod for uninstall".
+Recursive call wrapped with ExecuteAsync prevents mod restart, hangs on "stopping mod for uninstall".
 Scheduled loops apparently cannot be easily stopped too unless it's like 250ms loops.
 Even 100 ms loops also hang indefinitely with "stopping mod for uninstall" when you try to reload mods.
 ]]
