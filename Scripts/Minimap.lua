@@ -21,16 +21,46 @@ local mapWidget = FindObject("UserWidget", "mapWidget")
 local pointTypes = {
     -- supraworld
     SecretVolume_C = {FLinearColor(0, 1, 0, 0.75), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    RealCoinPickup_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
+    RealCoinPickup_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
+    PresentBox_Lootpools_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
+    ItemSpawner_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
+    PresentBox_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
+    PickupSpawner_C = {FLinearColor(0,0,1,1),FLinearColor(0,0,0,0)},
 
     -- supraland
     SecretFound_C = {FLinearColor(0, 1, 0, 0.75), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    Coin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)}, -- why the fuck it crashes so much? too many objects?
-    PhysicalCoin_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
-    CoinBig_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
-    CoinRed_C = {FLinearColor(1,0.65,0,1),FLinearColor(1,0.65,0,0)},
+    Coin_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)}, -- why the fuck it crashes so much? too many objects?
+    PhysicalCoin_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
+    CoinBig_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
+    CoinRed_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
     -- Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)}, -- same as secret areas
 }
+
+local function updateCachedPoints()
+    cachedPoints = cachedPoints or {}
+    for type, color in pairs(pointTypes) do
+        for _, actor in ipairs(FindAllOf(type) or {}) do
+            if actor:IsValid() then
+                local name = actor:GetFullName()
+
+                local found = (actor.bFound == true)  -- SecretVolume_C
+                    or (actor.StartClosed == true) -- SecretFound_C
+                    or (actor.bItemIsTaken == true)
+                    or (actor['Pickup has been collected'] == true)
+
+                if (type == "Coin_C" or type=="PhysicalCoin_C" or type=="CoinBig_C" or type=="CoinRed_C") 
+                    and not actor.Coin:IsValid() or (actor.Coin:IsValid() and not actor.Coin:IsVisible()) then -- the only reliable way I found
+                    found = true
+                end
+
+                cachedPoints[name] = cachedPoints[name] or {}
+                cachedPoints[name].loc = actor:K2_GetActorLocation() -- cannot cache, coordinates may caught up later
+                cachedPoints[name].found = found
+                cachedPoints[name].type = type
+            end
+        end
+    end
+end
 
 local function setAlignment(slot, alignment)
     local alignments = {
@@ -55,28 +85,6 @@ local function addPoint(layer, x, y, color, size, name)
     image.Slot:SetPosition({X = x - size / 2, Y = y - size / 2})
     image.Slot:SetSize({X = size, Y = size})
     return image
-end
-
-local function updateCachedPoints()
-    cachedPoints = cachedPoints or {}
-    for type, color in pairs(pointTypes) do
-        for _, actor in ipairs(FindAllOf(type) or {}) do
-            if actor:IsValid() then
-                local name = actor:GetFullName()
-                local found = (actor.bFound == true) or (actor.StartClosed == true)
-
-                if (type == "Coin_C" or type=="PhysicalCoin_C" or type=="CoinBig_C" or type=="CoinRed_C") 
-                    and not actor.Coin:IsValid() or (actor.Coin:IsValid() and not actor.Coin:IsVisible()) then -- the only reliable way I found
-                    found = true
-                end
-
-                cachedPoints[name] = cachedPoints[name] or {}
-                cachedPoints[name].loc = actor:K2_GetActorLocation() -- cannot cache, coordinates may caught up later
-                cachedPoints[name].found = found
-                cachedPoints[name].type = type
-            end
-        end
-    end
 end
 
 local function createmapWidget()
