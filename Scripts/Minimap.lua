@@ -194,7 +194,7 @@ end
 
 ExecuteWithDelay(250, function()
     ExecuteInGameThread(function()
-        LoopAsync(250, updateMinimap) -- even 100 ms loop hangs mod reload indefinitely
+        LoopAsync(250, updateMinimap) -- 250 ms because even 100 ms loop hangs mod reload indefinitely
     end)
 end)
 
