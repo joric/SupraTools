@@ -9,7 +9,7 @@ Even 100 ms loops also hang indefinitely with "stopping mod for uninstall" when 
 
 local VISIBLE = 4
 local HIDDEN = 2
-local defaultVisibility = VISIBLE
+local defaultVisibility = HIDDEN
 
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
