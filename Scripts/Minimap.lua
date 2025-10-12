@@ -108,7 +108,7 @@ local function createmapWidget()
 
     addDot(layer, mapSize.X/2, mapSize.Y/2, FLinearColor(1,1,1,0.75), dotSize)
 
-    bg:SetVisibility(defaultVisibility)
+    bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
     widget:AddToViewport(99)
 
