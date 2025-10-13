@@ -11,7 +11,7 @@ local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A)
 local defaultAlignment = 'bottomleft'
 local mapSize = {X=320, Y=320}
 local scaling = 0.02
-local dotSize = 3
+local dotSize = 4
 local playerDotSize = 5
 local cachedPoints
 local playerImage
