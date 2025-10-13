@@ -32,7 +32,7 @@ local function teleportToTrace(PlayerPawn)
     local loc = getImpactPoint(PlayerPawn, cam:GetCameraLocation(), rot)
     loc.Z = loc.Z + 100 -- above the ground
     -- PlayerPawn:K2_SetActorLocation(loc, false, {}, true)
-    PlayerPawn:K2_TeleportTo(loc, rot) -- also updates physics
+    PlayerPawn:K2_TeleportTo(loc, { Pitch = 0, Yaw = rot.Yaw, Roll = 0 }) -- also updates physics
 end
 
 local function teleportPlayer()
