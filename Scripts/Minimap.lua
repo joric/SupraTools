@@ -91,7 +91,7 @@ local function addPoint(layer, loc, color, size, name)
     return image
 end
 
-local function createmapWidget()
+local function createMapWidget()
     if mapWidget and mapWidget:IsValid() then
         print("Minimap already exists.")
         return
@@ -200,13 +200,15 @@ local function updateMinimap()
 end
 
 local function toggleMinimap()
-    if mapWidget then
-        local visible = mapWidget:GetVisibility()==VISIBLE
-        mapWidget:SetVisibility(visible and HIDDEN or VISIBLE)
-        if not visible then
-            updateCachedPoints()
-            updateMinimap()
-        end
+    if not mapWidget or not mapWidget:IsValid() then
+        createMapWidget()
+    end
+
+    local visible = mapWidget:GetVisibility()==VISIBLE
+    mapWidget:SetVisibility(visible and HIDDEN or VISIBLE)
+    if not visible then
+        updateCachedPoints()
+        updateMinimap()
     end
 end
 
@@ -226,7 +228,7 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
         return
     end
 
-    createmapWidget()
+    createMapWidget()
     updateMinimap()
 
     -- don't really need hooks if we do updateCached points on a timer but nice to have for realtime
@@ -235,6 +237,7 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
     pcall(function()
         RegisterHook("/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", setFound)
         RegisterHook("/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", setFound)
+        RegisterHook("/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken", setFound)
     end)
 
     -- supraland
