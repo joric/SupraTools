@@ -12,10 +12,10 @@ local defaultAlignment = 'bottomleft'
 local mapSize = {X=320, Y=320}
 local scaling = 0.02
 local dotSize = 3
-local playerDotSize = 6
+local playerDotSize = 5
 local cachedPoints = nil
 local playerImage = nil
-local playerColor = FLinearColor(0,0,0,1) -- must be visible despite z-order
+local playerColor = FLinearColor(1,1,1,1) -- must be visible despite z-order
 
 -- Map background configuration
 local mapTextureSize = 2048 -- actual texture size per tile (adjust if needed)
