@@ -5,34 +5,35 @@ local HIDDEN = 2
 
 local defaultVisibility = HIDDEN
 
+local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
+local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
+
 local defaultAlignment = 'bottomleft'
 local mapSize = {X=320, Y=320}
 local scaling = 0.02
-local dotSize = 3
-local playerDotSize = 4
-
+local dotSize = 4
+local playerDotSize = 6
 local cachedPoints
-
-local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
-local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
+local playerImage
+local playerColor = FLinearColor(0,0,0,1) -- must be visible despite z-order
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 
 local pointTypes = {
     -- supraworld
-    SecretVolume_C = {FLinearColor(0, 1, 0, 0.75), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    RealCoinPickup_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
+    SecretVolume_C = {FLinearColor(0,1,0, 1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
+    RealCoinPickup_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
     PresentBox_Lootpools_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
     ItemSpawner_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
     PresentBox_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
     PickupSpawner_C = {FLinearColor(0,0,1,1),FLinearColor(0,0,0,0)},
 
     -- supraland
-    SecretFound_C = {FLinearColor(0, 1, 0, 0.75), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    Coin_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
+    SecretFound_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
+    Coin_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
     PhysicalCoin_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
-    CoinBig_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
-    CoinRed_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
+    CoinBig_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
+    CoinRed_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
     -- Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)}, -- same as secret areas
 }
 
@@ -46,6 +47,7 @@ local function updateCachedPoints()
                 local found = (actor.bFound == true)  -- SecretVolume_C
                     or (actor.StartClosed == true) -- SecretFound_C
                     or (actor.bItemIsTaken == true)
+                    or (actor.bPickedUp == true)
                     or (actor['Pickup has been collected'] == true)
 
                 if (type == "Coin_C" or type=="PhysicalCoin_C" or type=="CoinBig_C" or type=="CoinRed_C") 
@@ -115,13 +117,13 @@ local function createmapWidget()
 
     local count = 0
     for name, point in pairs(cachedPoints) do
-        point.image = addPoint(layer, point.loc.X, point.loc.Y, FLinearColor(1,1,1,0.75), dotSize)
+        point.image = addPoint(layer, point.loc.X, point.loc.Y, FLinearColor(1,1,1,1), dotSize)
         count = count + 1
     end
 
     print("--- loaded", count, "points")
 
-    addPoint(layer, mapSize.X/2, mapSize.Y/2, FLinearColor(1,1,1,0.75), playerDotSize)
+    playerImage = addPoint(layer, mapSize.X/2, mapSize.Y/2, playerColor, playerDotSize)
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
@@ -180,9 +182,12 @@ local function updateMinimap()
                 if point.image and point.image:IsValid() then
                     point.image.Slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
                     point.image:SetColorAndOpacity(pointTypes[point.type][point.found and 2 or 1])
+                    point.image.Slot:SetZOrder(math.floor(point.loc.Z))
                 end
             end
-
+            if playerImage and playerImage:IsValid() then
+                playerImage.Slot:SetZOrder(math.floor(loc.Z))
+            end
         end
     end
 
