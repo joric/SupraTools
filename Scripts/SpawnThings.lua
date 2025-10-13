@@ -69,6 +69,12 @@ function getActorScale(actor)
     return actor.GetActorScale3D:IsValid() and actor:GetActorScale3D() or scale
 end
 
+local function getLastTag(actor)
+    if actor.Tags:IsValid() and #actor.Tags>0 then
+        return actor.Tags[#actor.Tags]:ToString()
+    end
+end
+
 local function getActorByTag(tag)
     local world = UEHelpers.GetWorld()
     if not world:IsValid() then return nil end
@@ -77,7 +83,6 @@ local function getActorByTag(tag)
     if actors and #actors>0 then
         return actors[1]:Get()
     end
-    return nil
 end
 
 local function getActorByName(name)
@@ -561,9 +566,31 @@ end
 -- Hooks & Keybinds
 -- ==============================================================
 
-RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
+RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
+    if pawn:get():GetFullName():find("DefaultPawn") then
+        return
+    end
     loadSaves()
+
+    -- custom overlapping volumes test, use spawn|SupraVolumeBase_C|0,0,0;0,0,0;15,15,15 to test at 0,0,0. Supraworld-specific, so pcall
+    pcall(function()
+        RegisterHook("/SupraCore/Systems/Volumes/SupraVolumeBase.SupraVolumeBase_C:On Player Character Begin Overlap", function(self, PlayerCharacter)
+            local tag = getLastTag(self:get())
+            if tag then
+                print("beginOverlap", tag, self:get():GetFullName())
+            end
+        end)
+
+        RegisterHook("/SupraCore/Systems/Volumes/SupraVolumeBase.SupraVolumeBase_C:On Player Character End Overlap", function(self, PlayerCharacter)
+            local tag = getLastTag(self:get())
+            if tag then
+                print("endOverlap", tag, self:get():GetFullName())
+            end
+        end)
+    end)
+
 end)
+
 
 RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings)
 
