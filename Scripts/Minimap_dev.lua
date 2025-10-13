@@ -192,8 +192,8 @@ local function createMinimap()
 
     print("--- loaded", count, "points")
 
-    playerImage = addPoint(layer, {X=cx, Y=cy, Z=0}, FLinearColor(0,0,0,1), playerDotSize+6)
-    playerImage2 = addPoint(layer, {X=cx, Y=cy, Z=1}, FLinearColor(1,1,1,1), playerDotSize)
+    playerImage = addPoint(layer, {X=cx, Y=cy, Z=0}, FLinearColor(1,1,1,1), playerDotSize+2)
+    playerImage2 = addPoint(layer, {X=cx, Y=cy, Z=1}, FLinearColor(0,0,0,1), playerDotSize)
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
