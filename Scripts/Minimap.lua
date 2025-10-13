@@ -240,7 +240,7 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
     -- supraland
     pcall(function()
         RegisterHook("/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc", setFound) -- only hook i found for coins
+        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc", setFound)
         RegisterHook("/Game/Blueprints/Levelobjects/CoinBig.CoinBig_C:Timeline_0__FinishedFunc", setFound)
         RegisterHook("/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc", setFound)
     end)
