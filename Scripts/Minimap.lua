@@ -85,7 +85,7 @@ local function addPoint(layer, loc, color, size, name)
     local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), layer)
     local slot = layer:AddChildToCanvas(image)
     image:SetColorAndOpacity(color)
-    image.Slot:SetPosition({X = loc.X, Y = loc.Y})
+    image.Slot:SetPosition({X = loc-size/2.X, Y = loc.Y-size/2})
     image.Slot:SetSize({X = size, Y = size})
     image.Slot:SetZOrder(math.floor(loc.Z))
     return image
@@ -188,6 +188,11 @@ local function updateMinimap()
                     point.image:SetColorAndOpacity(pointTypes[point.type][point.found and 2 or 1])
                 end
             end
+
+            if playerImage and playerImage:IsValid() then
+                playerImage.Slot:SetZOrder(math.floor(loc.Z))
+            end
+
         end
     end
 

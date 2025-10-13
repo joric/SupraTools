@@ -9,13 +9,12 @@ local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
 local defaultAlignment = 'bottomleft'
-local mapSize = {X=320, Y=320}
-local scaling = 0.02
+local mapSize = {X=512, Y=512}
+local scaling = 0.03
 local dotSize = 3
 local playerDotSize = 5
 local cachedPoints = nil
-local playerImage = nil
-local playerColor = FLinearColor(1,1,1,1) -- must be visible despite z-order
+local playerColor = FLinearColor(0,0,0,1) -- must be visible despite z-order
 
 -- Map background configuration
 local mapTextureSize = 2048 -- actual texture size per tile (adjust if needed)
@@ -24,41 +23,8 @@ local mapScale = mapSize.X / (mapWorldSize * scaling) -- scale factor for map vs
 
 local mapWidget = nil -- FindObject("UserWidget", "mapWidget")
 local bgLayer = nil
-
--- Map tile configuration (2x2 grid)
-local mapTiles = {
-    {path = "/Game/Blueprints/PlayerMap/Textures/T_Downscale0.T_Downscale0", pos = {0, 0}}, -- top-left
-    {path = "/Game/Blueprints/PlayerMap/Textures/T_Downscale1.T_Downscale1", pos = {1, 0}}, -- top-right
-    {path = "/Game/Blueprints/PlayerMap/Textures/T_Downscale2.T_Downscale2", pos = {0, 1}}, -- bottom-left
-    {path = "/Game/Blueprints/PlayerMap/Textures/T_Downscale3.T_Downscale3", pos = {1, 1}}, -- bottom-right
-
-    -- {path = "/PlayerMap/Textures/T_SupraworldMapV4Q0.T_SupraworldMapV4Q0", pos = {0, 0}}, -- top-left
-    -- {path = "/PlayerMap/Textures/T_SupraworldMapV4Q1.T_SupraworldMapV4Q1", pos = {1, 0}}, -- top-right
-    -- {path = "/PlayerMap/Textures/T_SupraworldMapV4Q2.T_SupraworldMapV4Q2", pos = {0, 1}}, -- bottom-left
-    -- {path = "/PlayerMap/Textures/T_SupraworldMapV4Q3.T_SupraworldMapV4Q3", pos = {1, 1}}, -- bottom-right
-
-    -- {path = "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q0.T_SIUMapV7Q0", pos = {0, 0}}, -- top-left
-    -- {path = "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q1.T_SIUMapV7Q1", pos = {1, 0}}, -- top-right
-    -- {path = "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q2.T_SIUMapV7Q2", pos = {0, 1}}, -- bottom-left
-    -- {path = "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q3.T_SIUMapV7Q3", pos = {1, 1}}, -- bottom-right
-}
-
---[[
-local mapBounds = {
-    MapWorldCenter = {X = 13000.0, Y = -2000.0, Z = 0.0},
-    MapWorldSize = 175000.0,
-    MapWorldUpperLeft = {X = -74500.0, Y = -89500.0, Z = 0.0},
-    MapWorldLowerRight = {X = 100500.0, Y = 85500.0, Z = 0.0}
-}
-]]
-
-
-local mapBounds = {
-    MapWorldCenter = { X = 0.0, Y = -19000.0, Z = 10000.0 },
-    MapWorldSize = 147456.0,
-    MapWorldUpperLeft = { X = -73728.0, Y = -92728.0, Z = 10000.0 },
-    MapWorldLowerRight = { X = 73728.0, Y = 54728.0, Z = 10000.0 },
-}
+local playerImage = nil
+local playerImage2 = nil
 
 local pointTypes = {
     -- supraworld
@@ -125,7 +91,7 @@ local function addPoint(layer, loc, color, size, name)
     local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), layer)
     local slot = layer:AddChildToCanvas(image)
     image:SetColorAndOpacity(color)
-    image.Slot:SetPosition({X = loc.X, Y = loc.Y})
+    image.Slot:SetPosition({X = loc.X - size/2, Y = loc.Y-size/2})
     image.Slot:SetSize({X = size, Y = size})
     image.Slot:SetZOrder(math.floor(loc.Z))
     return image
@@ -156,27 +122,35 @@ local function createBackgroundLayer(canvas)
 
     -- Calculate tile size based on container
     local tileSize = mapSize.X / 2
-    
-    for i, tile in ipairs(mapTiles) do
-        local texture = StaticFindObject(tile.path)
-        if texture then
-            print("--- Loaded map tile: " .. tile.path)
-            local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer)
-            local slot = bgContainer:AddChildToCanvas(image)
-            
-            image:SetBrushFromTexture(texture, false)
 
-            -- image:SetColorAndOpacity({R = 0.05, G = 0.05, B = 0.05, A = 1.0})
+    local pos = {{0,0},{1,0},{0,1},{1,1}}
 
-            -- Position tile in grid (centered in the larger container)
-            slot:SetPosition({X = tile.pos[1] * tileSize, Y = tile.pos[2] * tileSize})
-            slot:SetSize({X = tileSize, Y = tileSize})
-            slot:SetZOrder(-1000 + i)
-        else
-            print("--- Warning: Could not load map tile: " .. tile.path)
+    local templates = {
+        "/Game/Blueprints/PlayerMap/Textures/T_Downscale%d.T_Downscale%d",
+        "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q%d.T_SIUMapV7Q%d",
+        "/PlayerMap/Textures/T_SupraworldMapV4Q%d.T_SupraworldMapV4Q%d",
+    }
+
+    for i = 1, 4 do
+        for _,template in ipairs(templates) do
+            local path = string.format(template, i-1, i-1)
+            local texture = StaticFindObject(path)
+            if texture and texture:IsValid() then
+                print("Loaded map tile: " .. path)
+                local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer)
+                local slot = bgContainer:AddChildToCanvas(image)
+                image:SetBrushFromTexture(texture, false)
+
+                -- image:SetColorAndOpacity({R = 0.05, G = 0.05, B = 0.05, A = 1.0})
+                -- Position tile in grid (centered in the larger container)
+
+                slot:SetPosition({X = pos[i][1] * tileSize, Y = pos[i][2] * tileSize})
+                slot:SetSize({X = tileSize, Y = tileSize})
+                slot:SetZOrder(-1000 + i)
+                break
+            end
         end
     end
-    
     return bgContainer, clipBox
 end
 
@@ -218,7 +192,8 @@ local function createMinimap()
 
     print("--- loaded", count, "points")
 
-    playerImage = addPoint(layer, {X=cx, Y=cy, Z=0}, playerColor, playerDotSize)
+    playerImage = addPoint(layer, {X=cx, Y=cy, Z=0}, FLinearColor(0,0,0,1), playerDotSize+6)
+    playerImage2 = addPoint(layer, {X=cx, Y=cy, Z=1}, FLinearColor(1,1,1,1), playerDotSize)
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
@@ -315,6 +290,14 @@ local function updateMinimap(force)
                 end
             end
 
+            if playerImage and playerImage:IsValid() then
+                playerImage.Slot:SetZOrder(math.floor(loc.Z))
+            end
+
+            if playerImage2 and playerImage:IsValid() then
+                playerImage2.Slot:SetZOrder(math.floor(loc.Z)+1)
+            end
+
         end
     end
 
@@ -379,5 +362,4 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
 end)
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
-
 
