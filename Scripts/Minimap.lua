@@ -203,6 +203,16 @@ local function toggleMinimap()
     end
 end
 
+local function setFound(self, param, ...)
+    local name = self:get():GetFullName()
+    local found = param and param:get() or true
+    local point = cachedPoints and cachedPoints[name]
+    if point then
+        -- print("--- setFound", found, name)
+        point.found = found
+    end
+end
+
 RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
     if pawn:get():GetFullName():find("DefaultPawn") then
         print("--- ignoring default pawn ---")
@@ -212,13 +222,29 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
     createmapWidget()
     updateMinimap()
 
+    -- don't really need hooks if we do updateCached points on a timer but nice to have for realtime
+
+    -- supraworld
+    pcall(function()
+        RegisterHook("/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", setFound)
+        RegisterHook("/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", setFound)
+    end)
+
+    -- supraland
+    pcall(function()
+        RegisterHook("/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate", setFound)
+        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc", setFound) -- only hook i found for coins
+        RegisterHook("/Game/Blueprints/Levelobjects/CoinBig.CoinBig_C:Timeline_0__FinishedFunc", setFound)
+        RegisterHook("/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc", setFound)
+    end)
+
 end)
 
 if mapWidget and mapWidget:IsValid() then
     updateMinimap()
 end
 
-LoopAsync(2500, function()
+LoopAsync(5000, function()
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
     updateCachedPoints()
 end)
