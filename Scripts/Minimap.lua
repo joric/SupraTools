@@ -12,7 +12,7 @@ local defaultAlignment = 'bottomleft'
 local mapSize = {X=320, Y=320}
 local scaling = 0.02
 local dotSize = 4
-local playerDotSize = 5
+local playerDotSize = 6
 local cachedPoints
 local playerImage
 local playerColor = FLinearColor(0,0,0,1) -- must be visible despite z-order
