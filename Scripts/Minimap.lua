@@ -201,8 +201,12 @@ end
 
 local function toggleMinimap()
     if mapWidget then
-        mapWidget:SetVisibility(mapWidget:GetVisibility()==VISIBLE and HIDDEN or VISIBLE)
-        updateMinimap()
+        local visible = mapWidget:GetVisibility()==VISIBLE
+        mapWidget:SetVisibility(visible and HIDDEN or VISIBLE)
+        if not visible then
+            updateCachedPoints()
+            updateMinimap()
+        end
     end
 end
 
