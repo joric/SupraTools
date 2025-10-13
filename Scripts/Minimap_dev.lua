@@ -136,14 +136,14 @@ local function createBackgroundLayer(canvas)
             local path = string.format(template, i-1, i-1)
             local texture = StaticFindObject(path)
             if texture and texture:IsValid() then
-                print("Loaded map tile: " .. path)
+                print("Loaded " .. path)
                 local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer)
                 local slot = bgContainer:AddChildToCanvas(image)
                 image:SetBrushFromTexture(texture, false)
 
                 -- image:SetColorAndOpacity({R = 0.05, G = 0.05, B = 0.05, A = 1.0})
-                -- Position tile in grid (centered in the larger container)
 
+                -- Position tile in grid (centered in the larger container)
                 slot:SetPosition({X = pos[i][1] * tileSize, Y = pos[i][2] * tileSize})
                 slot:SetSize({X = tileSize, Y = tileSize})
                 slot:SetZOrder(-1000 + i)
