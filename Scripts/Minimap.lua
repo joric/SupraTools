@@ -188,9 +188,6 @@ local function updateMinimap()
                     point.image:SetColorAndOpacity(pointTypes[point.type][point.found and 2 or 1])
                 end
             end
-            if playerImage and playerImage:IsValid() then
-                playerImage.Slot:SetZOrder(math.floor(loc.Z))
-            end
         end
     end
 

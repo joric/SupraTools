@@ -27,21 +27,20 @@ local bgLayer = nil
 
 -- Map tile configuration (2x2 grid)
 local mapTiles = {
-    -- {path = "/Game/Blueprints/PlayerMap/Textures/T_Downscale0.T_Downscale0", pos = {0, 0}}, -- top-left
-    -- {path = "/Game/Blueprints/PlayerMap/Textures/T_Downscale1.T_Downscale1", pos = {1, 0}}, -- top-right
-    -- {path = "/Game/Blueprints/PlayerMap/Textures/T_Downscale2.T_Downscale2", pos = {0, 1}}, -- bottom-left
-    -- {path = "/Game/Blueprints/PlayerMap/Textures/T_Downscale3.T_Downscale3", pos = {1, 1}}, -- bottom-right
+    {path = "/Game/Blueprints/PlayerMap/Textures/T_Downscale0.T_Downscale0", pos = {0, 0}}, -- top-left
+    {path = "/Game/Blueprints/PlayerMap/Textures/T_Downscale1.T_Downscale1", pos = {1, 0}}, -- top-right
+    {path = "/Game/Blueprints/PlayerMap/Textures/T_Downscale2.T_Downscale2", pos = {0, 1}}, -- bottom-left
+    {path = "/Game/Blueprints/PlayerMap/Textures/T_Downscale3.T_Downscale3", pos = {1, 1}}, -- bottom-right
 
     -- {path = "/PlayerMap/Textures/T_SupraworldMapV4Q0.T_SupraworldMapV4Q0", pos = {0, 0}}, -- top-left
     -- {path = "/PlayerMap/Textures/T_SupraworldMapV4Q1.T_SupraworldMapV4Q1", pos = {1, 0}}, -- top-right
     -- {path = "/PlayerMap/Textures/T_SupraworldMapV4Q2.T_SupraworldMapV4Q2", pos = {0, 1}}, -- bottom-left
     -- {path = "/PlayerMap/Textures/T_SupraworldMapV4Q3.T_SupraworldMapV4Q3", pos = {1, 1}}, -- bottom-right
 
-    {path = "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q0.T_SIUMapV7Q0", pos = {0, 0}}, -- top-left
-    {path = "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q1.T_SIUMapV7Q1", pos = {1, 0}}, -- top-right
-    {path = "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q2.T_SIUMapV7Q2", pos = {0, 1}}, -- bottom-left
-    {path = "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q3.T_SIUMapV7Q3", pos = {1, 1}}, -- bottom-right
-
+    -- {path = "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q0.T_SIUMapV7Q0", pos = {0, 0}}, -- top-left
+    -- {path = "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q1.T_SIUMapV7Q1", pos = {1, 0}}, -- top-right
+    -- {path = "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q2.T_SIUMapV7Q2", pos = {0, 1}}, -- bottom-left
+    -- {path = "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q3.T_SIUMapV7Q3", pos = {1, 1}}, -- bottom-right
 }
 
 --[[
@@ -265,7 +264,7 @@ local function projectDot(w, h, scaling, camLoc, camRot, point, dotSize)
     return widgetX, widgetY
 end
 
-local function updateMinimap()
+local function updateMinimap(force)
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
 
     local pc = getCameraController and getCameraController() or UEHelpers.GetPlayerController()
@@ -277,34 +276,35 @@ local function updateMinimap()
 
             -- Rotate and scale background map
             if bgLayer and bgLayer:IsValid() then
-                local scale = (scaling * mapBounds.MapWorldSize) / mapSize.X
-                local angle = -rot.Yaw + 270
+                local mapBounds = FindFirstOf("PlayerMapActor_C")
+                if mapBounds:IsValid() then
+                    local scale = (scaling * mapBounds.MapWorldSize) / mapSize.X
+                    local angle = -rot.Yaw + 270
 
-                local center = mapBounds.MapWorldCenter
-                local size = mapBounds.MapWorldSize
-                local dx = loc.X - center.X
-                local dy = loc.Y - center.Y
-                local pivotX = 0.5 + dx / size
-                local pivotY = 0.5 + dy / size
+                    local center = mapBounds.MapWorldCenter
+                    local size = mapBounds.MapWorldSize
+                    local dx = loc.X - center.X
+                    local dy = loc.Y - center.Y
+                    local pivotX = 0.5 + dx / size
+                    local pivotY = 0.5 + dy / size
 
-                bgLayer:SetRenderTransformPivot({X = pivotX, Y = pivotY})
+                    bgLayer:SetRenderTransformPivot({X = pivotX, Y = pivotY})
 
-                -- Calculate translation to center the pivot point in the widget
-                -- The pivot is in normalized coordinates (0-1), so we need to:
-                -- 1. Convert pivot position to pixels: pivotX * mapSize.X, pivotY * mapSize.Y
-                -- 2. Subtract half the widget size to center it: mapSize.X/2, mapSize.Y/2
-                -- 3. Negate because we're moving the map, not the viewport
+                    -- The pivot is in normalized coordinates (0-1), so we need to:
+                    -- 1. Convert pivot position to pixels: pivotX * mapSize.X, pivotY * mapSize.Y
+                    -- 2. Subtract half the widget size to center it: mapSize.X/2, mapSize.Y/2
+                    -- 3. Negate because we're moving the map, not the viewport
 
-                local tx = mapSize.X * (0.5 - pivotX)
-                local ty = mapSize.Y * (0.5 - pivotY)
+                    local tx = mapSize.X * (0.5 - pivotX)
+                    local ty = mapSize.Y * (0.5 - pivotY)
 
-                bgLayer:SetRenderTransform({
-                    Translation = {X = tx, Y = ty}, 
-                    Scale = {X = scale, Y = scale}, 
-                    Shear = {X = 0, Y = 0}, 
-                    Angle = angle
-                })
-
+                    bgLayer:SetRenderTransform({
+                        Translation = {X = tx, Y = ty}, 
+                        Scale = {X = scale, Y = scale}, 
+                        Shear = {X = 0, Y = 0}, 
+                        Angle = angle
+                    })
+                end
             end
 
             for name, point in pairs(cachedPoints) do
@@ -314,9 +314,7 @@ local function updateMinimap()
                     point.image:SetColorAndOpacity(pointTypes[point.type][point.found and 2 or 1])
                 end
             end
-            if playerImage and playerImage:IsValid() then
-                playerImage.Slot:SetZOrder(math.floor(loc.Z))
-            end
+
         end
     end
 
