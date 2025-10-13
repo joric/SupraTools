@@ -11,10 +11,10 @@ local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A)
 local defaultAlignment = 'bottomleft'
 local mapSize = {X=320, Y=320}
 local scaling = 0.02
-local dotSize = 4
-local playerDotSize = 6
-local cachedPoints
-local playerImage
+local dotSize = 3
+local playerDotSize = 5
+local cachedPoints = {}
+local playerImage = nil
 local playerColor = FLinearColor(0,0,0,1) -- must be visible despite z-order
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
@@ -44,10 +44,11 @@ local function updateCachedPoints()
             if actor:IsValid() then
                 local name = actor:GetFullName()
 
-                local found = (actor.bFound == true)  -- SecretVolume_C
-                    or (actor.StartClosed == true) -- SecretFound_C
+                local found = (actor.bFound == true)  -- SecretVolume_C (supraworld)
+                    or (actor.StartClosed == true) -- SecretFound_C (supraland)
                     or (actor.bItemIsTaken == true)
                     or (actor.bPickedUp == true)
+                    or (actor.bHidden == true) -- some coins in Floortown are hidden
                     or (actor['Pickup has been collected'] == true)
 
                 if (type == "Coin_C" or type=="PhysicalCoin_C" or type=="CoinBig_C" or type=="CoinRed_C") 
@@ -80,12 +81,13 @@ local function setAlignment(slot, alignment)
     slot:SetPosition({X = a.pos[1], Y = a.pos[2]})
 end
 
-local function addPoint(layer, x, y, color, size, name)
+local function addPoint(layer, loc, color, size, name)
     local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), layer)
     local slot = layer:AddChildToCanvas(image)
     image:SetColorAndOpacity(color)
-    image.Slot:SetPosition({X = x - size / 2, Y = y - size / 2})
+    image.Slot:SetPosition({X = loc.X, Y = loc.Y})
     image.Slot:SetSize({X = size, Y = size})
+    image.Slot:SetZOrder(math.floor(loc.Z))
     return image
 end
 
@@ -116,14 +118,16 @@ local function createmapWidget()
     updateCachedPoints()
 
     local count = 0
+    local cx,cy = mapSize.X/2, mapSize.Y/2
+
     for name, point in pairs(cachedPoints) do
-        point.image = addPoint(layer, point.loc.X, point.loc.Y, FLinearColor(1,1,1,1), dotSize)
+        point.image = addPoint(layer, {X=cx, Y=cy, Z=point.loc.Z}, FLinearColor(1,1,1,1), dotSize)
         count = count + 1
     end
 
     print("--- loaded", count, "points")
 
-    playerImage = addPoint(layer, mapSize.X/2, mapSize.Y/2, playerColor, playerDotSize)
+    playerImage = addPoint(layer, {X=cx, Y=cy, Z=0}, playerColor, playerDotSize)
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
@@ -182,7 +186,6 @@ local function updateMinimap()
                 if point.image and point.image:IsValid() then
                     point.image.Slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
                     point.image:SetColorAndOpacity(pointTypes[point.type][point.found and 2 or 1])
-                    point.image.Slot:SetZOrder(math.floor(point.loc.Z))
                 end
             end
             if playerImage and playerImage:IsValid() then
