@@ -1,21 +1,5 @@
-local function GetStatus()
-    local obj = FindFirstOf("FirstPersonCharacter_C")
-    if not obj then
-        return
-    end
-
-    local cls = 
-
-    print("cls", cls:GetFName():ToString())
-
-    local prop = obj:GetClass():GetProperties()
-
-    print("prop", prop and prop:IsValid())
-
-    -- for k,v in pairs(obj) do print(k,v) end
-end
-
-
+-- so you basically can set any player variable with poke console command
+-- to give weapons use summon to spawn shop items, e.g. summon BuyTranslocator_C
 
 -- see https://github.com/DrNjitram/SuprAP/
 
@@ -263,10 +247,109 @@ end
     return data
 ]]
 
+-- local cls = obj:GetClass()
+-- print("cls", cls:GetFName():ToString())
+-- local prop = obj:GetClass():GetProperties()
+-- print("prop", prop and prop:IsValid())
+-- for k,v in pairs(obj) do print(k,v) end
+
+
+local function coerceValue(obj, name, value)
+    local prop = obj[name]
+    if prop == nil then
+        return nil
+    end
+
+    local ptype = type(prop)
+    if ptype == "float" or ptype == "double" then
+        return tonumber(value)
+    elseif ptype == "int32" or ptype == "int" then
+        return math.floor(tonumber(value))
+    elseif ptype == "boolean" then
+        return value == "true" or value == "1"
+    elseif ptype == "FVector" then
+        local x, y, z = value:match("([%d%.%-]+),([%d%.%-]+),([%d%.%-]+)")
+        if x then return FVector(tonumber(x), tonumber(y), tonumber(z)) end
+    elseif ptype == "FRotator" then
+        local p, y, r = value:match("([%d%.%-]+),([%d%.%-]+),([%d%.%-]+)")
+        if p then return FRotator(tonumber(p), tonumber(y), tonumber(r)) end
+    elseif ptype:match("FString") then
+        return value
+    else
+        print("Unhandled type:", ptype)
+    end
+    return nil
+end
+
+
+local function GetPlayerProperties()
+    local obj = FindFirstOf("FirstPersonCharacter_C")
+    if not obj or not obj:IsValid() then
+        return {}
+    end
+
+    local data = {}
+    for name, value in pairs(player.Status) do
+        local str = string.format("%s: %s [%s]", name, tostring(obj[name]), type(obj[name]))
+        table.insert(data, str)
+    end
+    table.sort(data)
+    return data
+end
+
+local function SetPlayerProperty(name, stringValue)
+    local obj = FindFirstOf("FirstPersonCharacter_C")
+    if not obj or not obj:IsValid() then
+        return false, "not found"
+    end
+
+    local value = coerceValue(obj, name, stringValue)
+
+    if value~=nil then
+        obj[name] = value -- setting value
+        return true, "all good"
+    end
+
+    return false, "not found or could not find type"
+end
+
+RegisterConsoleCommandHandler("poke", function(FullCommand, Parameters, Ar)
+    local name = Parameters[1]
+    if not name then
+        Ar:Log("Usage: poke <PropertyName> <Value>")
+        -- Ar:Log("Type 'status' to list all properties.")
+
+        local res = GetPlayerProperties()
+        for _, str in ipairs(res) do
+            print(str)
+            Ar:Log(str)
+        end
+
+        return true
+    end
+
+    local stringValue = table.concat(Parameters, " ", 2)
+
+    local ok, err = SetPlayerProperty(name, stringValue)
+
+    if ok then
+        Ar:Log(string.format("Setting %s to %s", name, stringValue))
+    else
+        Ar:Log(err)
+    end
+
+    return true
+end)
+
 RegisterConsoleCommandHandler("status", function(FullCommand, Parameters, Ar)
-    local res = GetStatus()
+    local res = GetPlayerProperties()
     for _, str in ipairs(res) do
         Ar:Log(str)
     end
     return true
 end)
+
+-- ok, err = SetPlayerProperty("Happy?", "true")
+-- print(ok, err)
+
+
