@@ -133,7 +133,7 @@ local function createBackgroundLayer(canvas)
     }
 
 
-    local material = StaticFindObject("/PlayerMap/Materials/TextureBrush/M_TextureBrush.M_TextureBrush----------")
+    local material = StaticFindObject("/PlayerMap/Materials/TextureBrush/M_TextureBrush.M_TextureBrush----------") -- remove -- if
 
     print("-- loaded material", material and material:GetFullName())
 
