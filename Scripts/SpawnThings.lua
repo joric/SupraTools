@@ -328,6 +328,12 @@ local function applyAction(act, temporary)
                 actor:ReceiveBeginPlay()
             end
 
+            if act.name=='PuzzleCloud_C' then
+                print("--- updating cloud ---")
+                actor:CloudAppear()
+                actor:CloudWoobleLoopEnd() -- doesn't help?
+            end
+
             -- each question mark gets its own secret volume (temporary item)
             if assetName == '/SupraAssets/Meshes/Objects/Stuff/Plastic_Question_Mark.Plastic_Question_Mark' then
                 ExecuteWithDelay(250, function()
