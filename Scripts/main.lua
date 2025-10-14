@@ -88,5 +88,5 @@ require("GrabObject")
 require("GrantAbilities")
 require("FindAsset")
 require("GameSettings")
-require("Supraland")
+require("DeployItems")
 require("Minimap" .. (os.getenv("dev") and "_dev" or "")) -- use setx dev 1 / setx dev ""

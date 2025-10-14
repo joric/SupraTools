@@ -1,4 +1,4 @@
--- Supraland only
+-- currently Supraland only
 
 -- adds "poke" and "deploy" commands to the game console (~)
 
