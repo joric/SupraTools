@@ -1,5 +1,7 @@
 -- Supraland only
 
+-- adds "poke" and "deploy" commands to the game console (~)
+
 -- so you basically can set any player variable with "poke" console command
 -- type "poke" in console without parameters to see player properties
 -- player properties are not persistent just yet
