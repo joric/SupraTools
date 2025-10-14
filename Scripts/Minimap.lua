@@ -17,7 +17,7 @@ local cachedPoints = {}
 local playerImage = nil
 local playerImage2 = nil
 
-local mapWidget = nil -- FindObject("UserWidget", "mapWidget")
+local mapWidget = FindObject("UserWidget", "mapWidget")
 
 local pointTypes = {
     -- supraworld
