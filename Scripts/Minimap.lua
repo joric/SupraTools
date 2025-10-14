@@ -37,7 +37,7 @@ local pointTypes = {
     PhysicalCoin_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
     CoinBig_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
     CoinRed_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
-    -- Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)}, -- same as secret areas
+    Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)},
 }
 
 local function updateCachedPoints()
@@ -51,6 +51,7 @@ local function updateCachedPoints()
                     or (actor.StartClosed == true) -- SecretFound_C (supraland)
                     or (actor.bItemIsTaken == true)
                     or (actor.bPickedUp == true)
+                    or (actor.IsOpen == true)
                     or (actor.bHidden == true) -- some coins in Floortown are hidden
                     or (actor['Pickup has been collected'] == true)
 
@@ -245,6 +246,10 @@ local hooks = {
     { hook = "/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc" },
     { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:DestroyAllComponents" },
     { hook = "/Game/Blueprints/Levelobjects/PhysicalCoin.PhysicalCoin_C:DestroyAllComponents" },
+    { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:ActivateOpenForever"},
+    { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Activate"},
+    { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:NPCStealsStuffFromChest"},
+    { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Timeline_0__FinishedFunc" },
 }
 
 RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
