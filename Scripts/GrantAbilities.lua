@@ -2,27 +2,6 @@ local UEHelpers = require("UEHelpers")
 
 -- hardcoded to supraworld, need to find better way to get lyra managers
 
-local AssetRegistryHelpers = nil
-local AssetRegistry = nil
-
-local function CacheAssetRegistry()
-    if AssetRegistryHelpers and AssetRegistry then return end
-
-    AssetRegistryHelpers = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryHelpers")
-    if not AssetRegistryHelpers:IsValid() then Log("AssetRegistryHelpers is not valid\n") end
-
-    if AssetRegistryHelpers then
-        AssetRegistry = AssetRegistryHelpers:GetAssetRegistry()
-        if AssetRegistry:IsValid() then return end
-    end
-
-    AssetRegistry = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryImpl")
-    if AssetRegistry:IsValid() then return end
-
-    error("AssetRegistry is not valid\n")
-end
-
-
 local function getInventoryManager()
     for _, obj in ipairs(FindAllOf("LyraInventoryManagerComponent") or {}) do
         if obj:IsValid() and string.find(obj:GetFullName(), "SupraworldPlayerController_C") then return obj end
@@ -276,121 +255,6 @@ RegisterKeyBind(Key.I, {ModifierKey.ALT, ModifierKey.SHIFT}, revokeAllAbilities)
 RegisterConsoleCommandHandler("grant", inventoryHandler(grantAbilityInternal, "granted", "usage: grant <inventory>, e.g. grant spongesuit", "already have"))
 RegisterConsoleCommandHandler("revoke", inventoryHandler(revokeAbilityInternal, "revoked", "usage: revoke <inventory>", "not carrying"))
 
-
-    --[[
-        local path = fstr:get():ToString()
-        local loweredPath = path:lower()
-        local match = true
-
-        for _, kw in ipairs(keywords) do
-            if not loweredPath:find(kw:lower(), 1, true) then
-                match = false
-                break
-            end
-        end
-
-        if match then
-            table.insert(results, path)
-        end
-     ]]
-
-local function FindAssetsByKeywords(keywords)
-    local results = {}
-    CacheAssetRegistry()
-
-    local assets = {}
-    AssetRegistry:GetAllAssets(assets, false) -- (table in, bool onDiskOnly)
-
-    table.insert(keywords, "/Inventory_")
-    table.insert(keywords, "_C")
-
-    i = 0
-    for _, data in ipairs(assets) do
-        local a_name  = data:get().AssetName:ToString()
-        local a_class = data:get().AssetClass:ToString()
-        local p_name = data:get().PackageName:ToString()
-        local p_path = data:get().PackagePath:ToString()
-
-        local path = p_name .. "." .. a_name
-
-        local loweredPath = path:lower()
-        local match = true
-
-        for _, kw in ipairs(keywords) do
-            if not loweredPath:find(kw:lower(), 1, true) then
-                match = false
-                break
-            end
-        end
-
-        if match then
-            str = a_name
-            str = str:gsub("Inventory_","")
-            str = str:gsub("_C","")
-            str = str:lower()
-
-            table.insert(results, str)
-
-            i = i + 1
-            if i==100 then break end
-        end
-
-    end
-    return results
-end
-
-
-RegisterConsoleCommandHandler("give", function(FullCommand, Parameters, Ar)
-    local results = FindAssetsByKeywords(Parameters)
-        Ar:Log(groupResults(results))
-    -- for i, str in ipairs(results) do
-    --     Ar:Log(str)
-    -- end
-    return true
-end)
-
-
--- check volumes
-
-local function overlaps(loc, box)
-    return math.abs(loc.X - box.Center.X) <= box.Size.X / 2
-       and math.abs(loc.Y - box.Center.Y) <= box.Size.Y / 2
-       and math.abs(loc.Z - box.Center.Z) <= box.Size.Z / 2
-end
-
-local defaultSize = { X = 1000, Y = 1000, Z = 1000 } -- size in mm
-
-local volumes = {
-    {
-        inside = false,
-        Box = {Center={ X = 0, Y = 0, Z = 0 }, Size = defaultSize},
-        onEnter = function() print("entered box1"); end,
-        onLeave = function() print("left box1"); end
-    },
-    {
-        inside = false,
-        Box = {Center={ X = -1000, Y = 0, Z = 0 }, Size = defaultSize},
-        onEnter = function() print("entered box2") end,
-        onLeave = function() print("left box2") end
-    },
-}
-
-local function checkVolumes()
-    local pc = UEHelpers.GetPlayerController()
-    if not pc or not pc:IsValid() or not pc.Pawn or not pc.Pawn:IsValid() then return end
-    local loc = pc.Pawn:K2_GetActorLocation()
-    for _, vol in ipairs(volumes) do
-        local currentlyInside = overlaps(loc, vol.Box)
-        if currentlyInside and not vol.inside then
-            vol.inside = true
-            if vol.onEnter then vol.onEnter() end
-        elseif not currentlyInside and vol.inside then
-            vol.inside = false
-            if vol.onLeave then vol.onLeave() end
-        end
-    end
-end
-
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     -- print("-- initialize checkVolumes loop --")
     ExecuteWithDelay(250, function()
@@ -399,4 +263,3 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
         end)
     end)
 end)
-
