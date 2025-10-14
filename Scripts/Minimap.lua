@@ -24,7 +24,7 @@ local playerImage2 = FindObject("/Script/UMG.Image", "playerImage2")
 
 local pointTypes = {
     -- supraworld
-    SecretVolume_C = {FLinearColor(0,1,0, 1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
+    SecretVolume_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
     RealCoinPickup_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
     PresentBox_Lootpools_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
     ItemSpawner_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
