@@ -2,6 +2,7 @@
 -- I am currently having troubles with HDR textures in Supraworld
 -- SW_PlayerMapWidget displays them somehow (probably uses HDR material)
 -- I cannot find the way to display HDR images in widgets just yet
+-- May be Package /PlayerMap/Materials/TextureBrush/M_TextureBrush
 
 local UEHelpers = require("UEHelpers")
 
@@ -131,18 +132,47 @@ local function createBackgroundLayer(canvas)
         "/PlayerMap/Textures/T_SupraworldMapV4Q%d.T_SupraworldMapV4Q%d",
     }
 
+
+    local material = StaticFindObject("/PlayerMap/Materials/TextureBrush/M_TextureBrush.M_TextureBrush----------")
+
+    print("-- loaded material", material and material:GetFullName())
+
+    local lib = StaticFindObject("/Script/Engine.Default__KismetMaterialLibrary")
+
+    print("-- loaded library", lib:GetFullName(), lib.CreateDynamicMaterialInstance)
+
+    local world = UEHelpers.GetWorld()
+
+    local dmaterial = lib:CreateDynamicMaterialInstance(world, material, FName("MyMaterial"), 0)
+    if dmaterial and dmaterial:IsValid() then
+        print("-- loaded dynamic material", dmaterial:GetFullName())
+
+        local params = dmaterial:GetAllTextureParameterInfo()
+        for i, p in ipairs(params) do
+            print(string.format("[%d] Texture param: %s", i, p.Name:ToString()))
+        end
+    end
+
+
     for i = 1, 4 do
         for _,template in ipairs(templates) do
             local path = string.format(template, i-1, i-1)
             local texture = StaticFindObject(path)
             if texture and texture:IsValid() then
                 print("Loaded " .. path, 'SRGB', texture.SRGB, 'Compression', texture.CompressionSettings)
-
-                -- I am having troubles with displaying HDR images (Supraworld) in a widget. Maybe use render target here?
-
                 local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer)
                 local slot = bgContainer:AddChildToCanvas(image)
-                image:SetBrushFromTexture(texture, false)
+
+
+                if dmaterial and dmaterial:IsValid() then
+                    print("Setting texture to material (crashes here)")
+                    dmaterial:SetTextureParameterValue("Texture", texture) -- crashes here
+
+                    print("Getting brush from material")
+                    image:SetBrushFromMaterial(dmaterial)
+                else
+                    image:SetBrushFromTexture(texture, false)
+                end
 
                 -- Position tile in grid (centered in the larger container)
                 slot:SetPosition({X = pos[i][1] * tileSize, Y = pos[i][2] * tileSize})
