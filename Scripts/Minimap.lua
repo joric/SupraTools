@@ -282,6 +282,8 @@ end)
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
 
 RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
+    Ar:Log(supraToolsAttribution)
+    Ar:Log("toggling minimap")
     toggleMinimap()
     return true
 end)

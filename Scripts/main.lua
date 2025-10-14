@@ -1,5 +1,8 @@
 local UEHelpers = require("UEHelpers")
 
+supraToolsVersion = "1.0.3"
+supraToolsAttribution = string.format("SupraTools version %s", supraToolsVersion)
+
 local function getHitResult(WorldObject, StartVector, Rotation)
     local AddValue = UEHelpers.GetKismetMathLibrary():Multiply_VectorInt(UEHelpers.GetKismetMathLibrary():GetForwardVector(Rotation), 90000.0)
     local EndVector = UEHelpers.GetKismetMathLibrary():Add_VectorVector(StartVector, AddValue)
