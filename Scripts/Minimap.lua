@@ -12,7 +12,7 @@ local defaultAlignment = 'bottomleft'
 local mapSize = {X=320, Y=320}
 local scaling = 0.02
 local dotSize = 3
-local playerDotSize = 6
+local playerDotSize = 5
 local cachedPoints = {}
 local playerImage = nil
 local playerImage2 = nil
@@ -127,7 +127,7 @@ local function createMapWidget()
 
     print("--- loaded", count, "points")
 
-    playerImage = addPoint(layer, {X=cx, Y=cy, Z=0}, FLinearColor(1,1,1,1), playerDotSize+2)
+    playerImage = addPoint(layer, {X=cx, Y=cy, Z=0}, FLinearColor(1,1,1,.5), playerDotSize+2)
     playerImage2 = addPoint(layer, {X=cx, Y=cy, Z=1}, FLinearColor(0,0,0,1), playerDotSize)
 
     bg:SetVisibility(VISIBLE)
@@ -240,9 +240,11 @@ local function setFound(hook, name, found)
 end
 
 local hooks = {
-    { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", call = function(hook, name,found) setFound(hook,name,found) end },
-    { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", call = function(hook, name,found) setFound(hook,name,found) end },
-    { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken" },
+    -- supraworld
+    { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", call = function(hook,name,param) setFound(hook,name,param) end },
+    { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
+    { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken", call = function(hook,name,param) setFound(hook,name,param) end },
+    -- supraland
     { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" },
     { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc" },
     { hook = "/Game/Blueprints/Levelobjects/CoinBig.CoinBig_C:Timeline_0__FinishedFunc" },
@@ -263,12 +265,12 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
     for _, hook in ipairs(hooks) do
         ok, err = pcall(function()
             RegisterHook(hook.hook, function(self, param, ...)
-                local fname = self:get():GetFName():ToString()
-                -- print("Hook fired:", hook.hook, "Self:", fname, "param", param and param:get())
+                local name = self:get():GetFullName()
+                -- print("Hook fired:", hook.hook, "Self:", self:get():GetFName():ToString(), "param", param and param:get())
                 if hook.call then
-                    hook.call(hook.hook, self:get():GetFullName(), param and param:get())
+                    hook.call(hook.hook, name, param and param:get())
                 else
-                    setFound(hook.hook, self:get():GetFullName(), true)
+                    setFound(hook.hook, name, true)
                 end
             end)
         end)
