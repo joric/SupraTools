@@ -225,7 +225,7 @@ local function setFound(hook, name, found)
     if point then
         point.found = found
         if found then
-            print("setFound", name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+            print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
         end
     end
 end
@@ -280,3 +280,8 @@ LoopAsync(60000, function()  -- let's see if hooks work
 end)
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
+
+RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
+    toggleMinimap()
+    return true
+end)
