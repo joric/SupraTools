@@ -3,7 +3,7 @@ local UEHelpers = require("UEHelpers")
 local VISIBLE = 4
 local HIDDEN = 2
 
-local defaultVisibility = HIDDEN
+local defaultVisibility = VISIBLE
 
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
@@ -15,7 +15,7 @@ local dotSize = 3
 local playerDotSize = 6
 local cachedPoints = {}
 local playerImage = nil
-local playerColor = FLinearColor(0,0,0,1) -- must be visible despite z-order
+local playerImage2 = nil
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 
@@ -127,7 +127,8 @@ local function createMapWidget()
 
     print("--- loaded", count, "points")
 
-    playerImage = addPoint(layer, {X=cx, Y=cy, Z=0}, playerColor, playerDotSize)
+    playerImage = addPoint(layer, {X=cx, Y=cy, Z=0}, FLinearColor(1,1,1,1), playerDotSize+2)
+    playerImage2 = addPoint(layer, {X=cx, Y=cy, Z=1}, FLinearColor(0,0,0,1), playerDotSize)
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
@@ -193,6 +194,10 @@ local function updateMinimap()
                 playerImage.Slot:SetZOrder(math.floor(loc.Z))
             end
 
+            if playerImage2 and playerImage:IsValid() then
+                playerImage2.Slot:SetZOrder(math.floor(loc.Z)+1)
+            end
+
         end
     end
 
@@ -224,6 +229,28 @@ local function setFound(self, param, ...)
     end
 end
 
+local function setFound(hook, name, found)
+    local point = cachedPoints and cachedPoints[name]
+    if point then
+        point.found = found
+        if found then
+            print("setFound", name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+        end
+    end
+end
+
+local hooks = {
+    { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", call = function(hook, name,found) setFound(hook,name,found) end },
+    { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", call = function(hook, name,found) setFound(hook,name,found) end },
+    { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken" },
+    { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" },
+    { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc" },
+    { hook = "/Game/Blueprints/Levelobjects/CoinBig.CoinBig_C:Timeline_0__FinishedFunc" },
+    { hook = "/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc" },
+    { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:DestroyAllComponents" },
+    { hook = "/Game/Blueprints/Levelobjects/PhysicalCoin.PhysicalCoin_C:DestroyAllComponents" },
+}
+
 RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
     if pawn:get():GetFullName():find("DefaultPawn") then
         print("--- ignoring default pawn ---")
@@ -233,22 +260,20 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
     createMapWidget()
     updateMinimap()
 
-    -- don't really need hooks if we do updateCached points on a timer but nice to have for realtime
-
-    -- supraworld
-    pcall(function()
-        RegisterHook("/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", setFound)
-        RegisterHook("/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", setFound)
-        RegisterHook("/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken", setFound)
-    end)
-
-    -- supraland
-    pcall(function()
-        RegisterHook("/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/CoinBig.CoinBig_C:Timeline_0__FinishedFunc", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc", setFound)
-    end)
+    for _, hook in ipairs(hooks) do
+        ok, err = pcall(function()
+            RegisterHook(hook.hook, function(self, param, ...)
+                local fname = self:get():GetFName():ToString()
+                -- print("Hook fired:", hook.hook, "Self:", fname, "param", param and param:get())
+                if hook.call then
+                    hook.call(hook.hook, self:get():GetFullName(), param and param:get())
+                else
+                    setFound(hook.hook, self:get():GetFullName(), true)
+                end
+            end)
+        end)
+        print(ok and "REGISTERED" or "NOT FOUND", hook.hook)
+    end
 
 end)
 
@@ -256,7 +281,7 @@ if mapWidget and mapWidget:IsValid() then
     updateMinimap()
 end
 
-LoopAsync(5000, function()
+LoopAsync(60000, function()  -- let's see if hooks work
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
     updateCachedPoints()
 end)
