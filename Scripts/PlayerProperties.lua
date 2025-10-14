@@ -8,6 +8,8 @@
 -- type "poke" in console without parameters to see player properties
 -- player properties are not persistent just yet
 
+player = {}
+
 player.Status = {
     -- Health
     MaxHealth = 25,
