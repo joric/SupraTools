@@ -133,7 +133,7 @@ local function createBackgroundLayer(canvas)
     }
 
 
-    local material = StaticFindObject("/PlayerMap/Materials/TextureBrush/M_TextureBrush.M_TextureBrush----------") -- remove -- if
+    local material = StaticFindObject("/PlayerMap/Materials/TextureBrush/M_TextureBrush.M_TextureBrush") -- remove -- if
 
     print("-- loaded material", material and material:GetFullName())
 
@@ -143,14 +143,9 @@ local function createBackgroundLayer(canvas)
 
     local world = UEHelpers.GetWorld()
 
-    local dmaterial = lib:CreateDynamicMaterialInstance(world, material, FName("MyMaterial"), 0)
-    if dmaterial and dmaterial:IsValid() then
-        print("-- loaded dynamic material", dmaterial:GetFullName())
-
-        local params = dmaterial:GetAllTextureParameterInfo()
-        for i, p in ipairs(params) do
-            print(string.format("[%d] Texture param: %s", i, p.Name:ToString()))
-        end
+    local dmi = lib:CreateDynamicMaterialInstance(world, material, FName("MyMaterial"), 0)
+    if dmi and dmi:IsValid() then
+        print("-- loaded dynamic material", dmi:GetFullName())
     end
 
 
@@ -163,13 +158,14 @@ local function createBackgroundLayer(canvas)
                 local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer)
                 local slot = bgContainer:AddChildToCanvas(image)
 
+                if not texture.SRGB and dmi and dmi:IsValid() then
 
-                if dmaterial and dmaterial:IsValid() then
                     print("Setting texture to material (crashes here)")
-                    dmaterial:SetTextureParameterValue("Texture", texture) -- crashes here
+                    -- dmi:SetTextureParameterValue("Texture", texture) -- crashes here
 
                     print("Getting brush from material")
-                    image:SetBrushFromMaterial(dmaterial)
+                    image:SetBrushFromMaterial(dmi)
+
                 else
                     image:SetBrushFromTexture(texture, false)
                 end
@@ -180,7 +176,7 @@ local function createBackgroundLayer(canvas)
                 slot:SetZOrder(-1000 + i)
 
                 image:SetVisibility(VISIBLE)
-                image:SetColorAndOpacity({R = 1, G = 1, B = 1, A = 0.85})
+                -- image:SetColorAndOpacity({R = 1, G = 1, B = 1, A = 0.5})
                 break
             end
         end
@@ -354,14 +350,27 @@ local function toggleMinimap()
     end
 end
 
-local function setFound(self, param, ...)
-    local name = self:get():GetFullName()
-    local found = param and param:get() or true
+local function setFound(hook, name, found)
     local point = cachedPoints and cachedPoints[name]
     if point then
         point.found = found
+        if found then
+            print("found", name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+        end
     end
 end
+
+local hooks = {
+    { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", call = function(hook, name,found) setFound(hook,name,found) end },
+    { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", call = function(hook, name,found) setFound(hook,name,found) end },
+    { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken" },
+    { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" },
+    { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc" },
+    { hook = "/Game/Blueprints/Levelobjects/CoinBig.CoinBig_C:Timeline_0__FinishedFunc" },
+    { hook = "/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc" },
+    { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:DestroyAllComponents" },
+    { hook = "/Game/Blueprints/Levelobjects/PhysicalCoin.PhysicalCoin_C:DestroyAllComponents" },
+}
 
 RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
     if pawn:get():GetFullName():find("DefaultPawn") then
@@ -372,22 +381,20 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
     createMinimap()
     updateMinimap()
 
-    -- supraworld
-    pcall(function()
-        RegisterHook("/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", setFound)
-        RegisterHook("/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", setFound)
-        RegisterHook("/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken", setFound)
-    end)
-
-    -- supraland
-    pcall(function()
-        RegisterHook("/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/CoinBig.CoinBig_C:Timeline_0__FinishedFunc", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/Coin.Coin_C:DestroyAllComponents", setFound)
-        RegisterHook("/Game/Blueprints/Levelobjects/PhysicalCoin.PhysicalCoin_C:DestroyAllComponents", setFound)
-    end)
+    for _, hook in ipairs(hooks) do
+        ok, err = pcall(function()
+            RegisterHook(hook.hook, function(self, param, ...)
+                local fname = self:get():GetFName():ToString()
+                -- print("Hook fired:", hook.hook, "Self:", fname, "param", param and param:get())
+                if hook.call then
+                    hook.call(hook.hook, self:get():GetFullName(), param and param:get())
+                else
+                    setFound(hook.hook, self:get():GetFullName(), true)
+                end
+            end)
+        end)
+        print(ok and "REGISTERED" or "NOT FOUND", hook.hook)
+    end
 
     LoopAsync(60000, function()
         if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
@@ -397,4 +404,6 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
 end)
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
+
+RegisterKeyBind(Key.R, {}, updateCachedPoints)
 
