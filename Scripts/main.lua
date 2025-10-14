@@ -85,4 +85,4 @@ require("GrabObject")
 require("GrantAbilities")
 require("FindAsset")
 require("GameSettings")
-require("Minimap" .. (os.getenv("dev") and "_dev" or ""))
+require("Minimap" .. (os.getenv("dev") and "_dev" or "")) -- use setx dev 1 / setx dev "" in windows
