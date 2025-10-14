@@ -63,7 +63,7 @@ local function setVisibility(visible)
 end
 
 local function showWidget() setVisibility(true) end
-local function hideWidget() setVisibility(false) end
+local function hideWidget() if not showStats then setVisibility(false) end end
 local function toggleWidget() setVisibility(not getVisibility()) end
 
 local function hasFTextConstructor()
