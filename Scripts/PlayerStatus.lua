@@ -1,5 +1,5 @@
 -- Supraland only
--- so you basically can set any player variable with poke console command
+-- so you basically can set any player variable with "poke" console command
 -- to give weapons use summon to spawn shop items, e.g. summon BuyTranslocator_C
 
 -- see https://github.com/DrNjitram/SuprAP/
@@ -339,14 +339,6 @@ RegisterConsoleCommandHandler("poke", function(FullCommand, Parameters, Ar)
         Ar:Log(err)
     end
 
-    return true
-end)
-
-RegisterConsoleCommandHandler("status", function(FullCommand, Parameters, Ar)
-    local res = GetPlayerProperties()
-    for _, str in ipairs(res) do
-        Ar:Log(str)
-    end
     return true
 end)
 

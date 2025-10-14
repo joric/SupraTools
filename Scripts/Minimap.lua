@@ -13,11 +13,14 @@ local mapSize = {X=320, Y=320}
 local scaling = 0.02
 local dotSize = 3
 local playerDotSize = 5
-local cachedPoints = {}
-local playerImage = nil
-local playerImage2 = nil
+
+local cachedPoints -- should still persist on reloading
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
+
+local playerImage = FindObject("/Script/UMG.Image", "playerImage")
+local playerImage2 = FindObject("/Script/UMG.Image", "playerImage2")
+
 
 local pointTypes = {
     -- supraworld
@@ -82,7 +85,7 @@ local function setAlignment(slot, alignment)
 end
 
 local function addPoint(layer, loc, color, size, name)
-    local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), layer)
+    local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), layer, FName(name))
     local slot = layer:AddChildToCanvas(image)
     image:SetColorAndOpacity(color)
     image.Slot:SetPosition({X = loc.X-size/2, Y = loc.Y-size/2})
@@ -121,14 +124,14 @@ local function createMapWidget()
     local cx,cy = mapSize.X/2, mapSize.Y/2
 
     for name, point in pairs(cachedPoints) do
-        point.image = addPoint(layer, {X=cx, Y=cy, Z=point.loc.Z}, FLinearColor(1,1,1,1), dotSize)
+        point.image = addPoint(layer, {X=cx, Y=cy, Z=point.loc.Z}, FLinearColor(1,1,1,1), dotSize, "minimapDot"..count)
         count = count + 1
     end
 
     print("--- loaded", count, "points")
 
-    playerImage = addPoint(layer, {X=cx, Y=cy, Z=0}, FLinearColor(1,1,1,.5), playerDotSize+2)
-    playerImage2 = addPoint(layer, {X=cx, Y=cy, Z=1}, FLinearColor(0,0,0,1), playerDotSize)
+    playerImage = addPoint(layer, {X=cx, Y=cy, Z=0}, FLinearColor(1,1,1,.5), playerDotSize+2, "playerImage")
+    playerImage2 = addPoint(layer, {X=cx, Y=cy, Z=1}, FLinearColor(0,0,0,1), playerDotSize, "playerImage2")
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
