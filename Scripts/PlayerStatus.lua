@@ -1,5 +1,6 @@
 -- Supraland only
 -- so you basically can set any player variable with "poke" console command
+-- type "poke" in console without parameters to see player properties
 -- to give weapons use summon to spawn shop items, e.g. summon BuyTranslocator_C
 
 -- see https://github.com/DrNjitram/SuprAP/
