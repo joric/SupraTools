@@ -147,10 +147,15 @@ local function createBackgroundLayer(canvas)
                 slot:SetPosition({X = pos[i][1] * tileSize, Y = pos[i][2] * tileSize})
                 slot:SetSize({X = tileSize, Y = tileSize})
                 slot:SetZOrder(-1000 + i)
+
+
+                image:SetVisibility(VISIBLE)
+
                 break
             end
         end
     end
+
     return bgContainer, clipBox
 end
 

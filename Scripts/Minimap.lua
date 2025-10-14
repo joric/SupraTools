@@ -85,7 +85,7 @@ local function addPoint(layer, loc, color, size, name)
     local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), layer)
     local slot = layer:AddChildToCanvas(image)
     image:SetColorAndOpacity(color)
-    image.Slot:SetPosition({X = loc-size/2.X, Y = loc.Y-size/2})
+    image.Slot:SetPosition({X = loc-size/2, Y = loc.Y-size/2})
     image.Slot:SetSize({X = size, Y = size})
     image.Slot:SetZOrder(math.floor(loc.Z))
     return image
