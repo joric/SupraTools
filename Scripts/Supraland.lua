@@ -2,6 +2,8 @@
 -- so you basically can set any player variable with "poke" console command
 -- type "poke" in console without parameters to see player properties
 -- to give weapons use summon to spawn shop items, e.g. summon BuyTranslocator_C
+-- you can also use "deploy" shortcut to summon items using aliases
+-- type "deploy" to list aliases
 
 -- see https://github.com/DrNjitram/SuprAP/
 
@@ -256,6 +258,54 @@ end
 -- for k,v in pairs(obj) do print(k,v) end
 
 
+local function GetDeployAliases()
+    local data = {}
+    for name, value in pairs(Blueprints) do
+        local str = string.format("%s (%s)", name,value)
+        table.insert(data, str)
+    end
+
+    for name, values in pairs(Progressives) do
+        for _, value in ipairs(values) do
+            local str = string.format("%s (%s)", value, name)
+            table.insert(data, str)
+        end
+    end
+
+    local unique = {}
+
+    for _, v in ipairs(data) do
+        unique[v] = true
+    end
+
+    res = {}
+    for k,v in pairs(unique) do table.insert(res, k) end
+
+    table.sort(res)
+    return res
+end
+
+local function GetItemName(alias)
+    local key = alias:lower()
+
+    for name, value in pairs(Blueprints) do
+        if key==name:lower() or key==value:lower() then
+            return value
+        end
+    end
+
+    for name, values in pairs(Progressives) do
+        for _, value in ipairs(values) do
+            if key==name:lower() or key==value:lower() then
+                return value
+            end
+        end
+    end
+
+    return false, string.format("%s not found", alias)
+end
+
+
 local function coerceValue(obj, name, value)
     local prop = obj[name]
     if prop == nil then
@@ -309,7 +359,7 @@ local function SetPlayerProperty(name, stringValue)
 
     if value~=nil then
         obj[name] = value -- setting value
-        return true, "all good"
+        return true
     end
 
     return false, "not found or could not find type"
@@ -318,24 +368,53 @@ end
 RegisterConsoleCommandHandler("poke", function(FullCommand, Parameters, Ar)
     local name = Parameters[1]
     if not name then
-        Ar:Log("Usage: poke <PropertyName> <Value>")
-        -- Ar:Log("Type 'status' to list all properties.")
-
         local res = GetPlayerProperties()
         for _, str in ipairs(res) do
             print(str)
             Ar:Log(str)
         end
-
+        Ar:Log("Usage: poke <PropertyName> <Value>")
         return true
     end
 
     local stringValue = table.concat(Parameters, " ", 2)
-
     local ok, err = SetPlayerProperty(name, stringValue)
 
     if ok then
         Ar:Log(string.format("Setting %s to %s", name, stringValue))
+    else
+        Ar:Log(err)
+    end
+
+    return true
+end)
+
+RegisterConsoleCommandHandler("deploy", function(FullCommand, Parameters, Ar)
+    local name = Parameters[1]
+    if not name then
+        local res = GetDeployAliases()
+        for _, str in ipairs(res) do
+            Ar:Log(str)
+        end
+        Ar:Log("Usage: deploy <alias or name>")
+        return true
+    end
+
+    local name, err = GetItemName(name)
+
+    if name then
+
+        LoadAsset(name)
+
+        local pc = UEHelpers.GetPlayerController()
+        if pc and pc:IsValid() and pc.CheatManager and pc.CheatManager:IsValid() then
+            print("summoning via cheat manager")
+            pc.CheatManager["summon"](name)
+        else
+            print("cheat manager not found")
+        end
+
+        Ar:Log(string.format("%s deployed.", name))
     else
         Ar:Log(err)
     end
