@@ -9,17 +9,12 @@ local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
 local defaultAlignment = 'bottomleft'
-local mapSize = {X=512, Y=512}
+local mapSize = {X=400, Y=400}
 local scaling = 0.03
 local dotSize = 3
 local playerDotSize = 5
 local cachedPoints = nil
 local playerColor = FLinearColor(0,0,0,1) -- must be visible despite z-order
-
--- Map background configuration
-local mapTextureSize = 2048 -- actual texture size per tile (adjust if needed)
-local mapWorldSize = 100000 -- world units covered by the entire map (adjust based on game world)
-local mapScale = mapSize.X / (mapWorldSize * scaling) -- scale factor for map vs world
 
 local mapWidget = nil -- FindObject("UserWidget", "mapWidget")
 local bgLayer = nil
@@ -141,8 +136,6 @@ local function createBackgroundLayer(canvas)
                 local slot = bgContainer:AddChildToCanvas(image)
                 image:SetBrushFromTexture(texture, false)
 
-                -- image:SetColorAndOpacity({R = 0.05, G = 0.05, B = 0.05, A = 1.0})
-
                 -- Position tile in grid (centered in the larger container)
                 slot:SetPosition({X = pos[i][1] * tileSize, Y = pos[i][2] * tileSize})
                 slot:SetSize({X = tileSize, Y = tileSize})
@@ -150,6 +143,7 @@ local function createBackgroundLayer(canvas)
 
 
                 image:SetVisibility(VISIBLE)
+                image:SetColorAndOpacity({R = 1, G = 1, B = 1, A = 0.75})
 
                 break
             end

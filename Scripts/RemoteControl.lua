@@ -9,7 +9,7 @@ local ACTIONS = { -- ordered by priority
     { name = "ApplyPurchase" },
     { name = "ButtonPress" },
     { name = "Set_Active",  call = function(actor) actor:Set_Active(true, false, false, false) end }, -- enables jumppads
-    -- { name = "Activate" }, -- supraland jumppads, needs 0 paremeters in supraland and 1 parameter in supraworld
+    { name = "Activate" }, -- supraland jumppads, needs 0 paremeters in supraland and 1 parameter in supraworld
     { name = "Open", call = function(actor, ctx) if actor.bOpen then actor:Close() else actor:Open() end end },
     { name = "Heat", call = function(actor, ctx) actor:Heat(ctx.pc.Pawn, true) end }, -- melts chocolate eggs
     { name = "Pickup", call = function(actor, ctx) actor:Pickup(ctx.pc.Pawn) end },
