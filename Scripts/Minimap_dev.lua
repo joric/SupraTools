@@ -1,3 +1,8 @@
+-- Minimap version that actually displays textures
+-- I am currently having troubles with HDR textures in Supraworld
+-- SW_PlayerMapWidget displays them somehow (probably uses HDR material)
+-- I cannot find the way to display HDR images in widgets just yet
+
 local UEHelpers = require("UEHelpers")
 
 local VISIBLE = 4
@@ -131,7 +136,10 @@ local function createBackgroundLayer(canvas)
             local path = string.format(template, i-1, i-1)
             local texture = StaticFindObject(path)
             if texture and texture:IsValid() then
-                print("Loaded " .. path)
+                print("Loaded " .. path, 'SRGB', texture.SRGB, 'Compression', texture.CompressionSettings)
+
+                -- I am having troubles with displaying HDR images (Supraworld) in a widget. Maybe use render target here?
+
                 local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer)
                 local slot = bgContainer:AddChildToCanvas(image)
                 image:SetBrushFromTexture(texture, false)
@@ -141,10 +149,8 @@ local function createBackgroundLayer(canvas)
                 slot:SetSize({X = tileSize, Y = tileSize})
                 slot:SetZOrder(-1000 + i)
 
-
                 image:SetVisibility(VISIBLE)
-                image:SetColorAndOpacity({R = 1, G = 1, B = 1, A = 0.75})
-
+                image:SetColorAndOpacity({R = 1, G = 1, B = 1, A = 0.85})
                 break
             end
         end
