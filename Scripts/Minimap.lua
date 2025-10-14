@@ -211,21 +211,12 @@ local function toggleMinimap()
         createMapWidget()
     end
 
-    local visible = mapWidget:GetVisibility()==VISIBLE
-    mapWidget:SetVisibility(visible and HIDDEN or VISIBLE)
-    if not visible then
+    local visible = mapWidget:GetVisibility()~=VISIBLE
+
+    mapWidget:SetVisibility(visible and VISIBLE or HIDDEN)
+    if visible then
         updateCachedPoints()
         updateMinimap()
-    end
-end
-
-local function setFound(self, param, ...)
-    local name = self:get():GetFullName()
-    local found = param and param:get() or true
-    local point = cachedPoints and cachedPoints[name]
-    if point then
-        -- print("--- setFound", found, name)
-        point.found = found
     end
 end
 
