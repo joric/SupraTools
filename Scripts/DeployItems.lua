@@ -150,6 +150,70 @@ local function GetItemName(alias)
     return false, string.format("%s not found", alias)
 end
 
+local function DeployItem(name)
+    local pc = UEHelpers.GetPlayerController()
+    if not pc or not pc:IsValid() or not pc.CheatManager or not pc.CheatManager:IsValid() then return end
+
+    print("summoning via cheat manager", name)
+
+    LoadAsset(name) -- need to preload item before cheat manager
+    pc.CheatManager["summon"](name)
+
+    -- try picking up the item right away
+    ExecuteWithDelay(100, function()
+        local obj = FindFirstOf("FirstPersonCharacter_C")
+        if obj and obj:IsValid() then
+
+            -- those don't work
+            -- obj:Using()
+            -- obj:Interact()
+            -- obj:PickupObjectIfReachable_Event(nil, obj['Pick Up Distance'])
+        end
+    end)
+
+    --[[
+    -- to pick up automatically I probably should use one of those
+    ---@field LookedAt_TraceActor AActor           -- The actor being looked at
+    ---@field LookedAt_TraceComponent UPrimitiveComponent  -- The specific component
+    ---@field HighlitComponent UPrimitiveComponent         -- Currently highlighted component
+    -- These delegates fire when objects are targeted/untargeted
+    ---@field NewObjectHighlight FFirstPersonCharacter_CNewObjectHighlight
+    ---@field StopObjectHighlight FFirstPersonCharacter_CStopObjectHighlight
+    -- Step 1: Object must be detected via trace/raycast
+    -- This happens automatically in Tick based on where player is looking
+    -- Step 2: Object gets highlighted (HighlitComponent gets set)
+    -- Step 3: THEN Using() can work on the highlighted object
+
+    -- Manually set what the player is looking at
+    self.LookedAt_TraceActor = TargetActor
+    self.HighlitComponent = TargetComponent
+
+    -- Then trigger highlight
+    if self.NewObjectHighlight then
+        self:NewObjectHighlight(TargetActor, TargetComponent)
+    end
+
+    -- Now Using() should work
+    self:Using()
+
+    -- This function does the trace and pickup in one call
+    self:PickupObjectIfReachable_Event(nil, self['Pick Up Distance'])
+
+    -- See what's currently detected
+    if self.LookedAt_TraceActor and self.HighlitComponent then
+        print("Object detected:", self.LookedAt_TraceActor)
+        self:Using()  -- This should now work
+    else
+        print("No object detected - need to look at something first")
+    end
+
+    The key insight is that Using() and Interact() expect there to already be a detected
+    and highlighted object from the automatic tracing system. The object selection happens
+    through the continuous trace detection, not just by calling the use functions directly.
+
+    ]]
+end
+
 RegisterConsoleCommandHandler("deploy", function(FullCommand, Parameters, Ar)
     local name = Parameters[1]
     if not name then
@@ -164,17 +228,7 @@ RegisterConsoleCommandHandler("deploy", function(FullCommand, Parameters, Ar)
     local name, err = GetItemName(name)
 
     if name then
-
-        LoadAsset(name) -- need to preload item before cheat manager
-
-        local pc = UEHelpers.GetPlayerController()
-        if pc and pc:IsValid() and pc.CheatManager and pc.CheatManager:IsValid() then
-            print("summoning via cheat manager")
-            pc.CheatManager["summon"](name)
-        else
-            print("cheat manager not found")
-        end
-
+        DeployItem(name)
         Ar:Log(string.format("%s deployed.", name))
     else
         Ar:Log(err)
