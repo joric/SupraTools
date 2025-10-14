@@ -1,3 +1,4 @@
+-- Supraland only
 -- so you basically can set any player variable with poke console command
 -- to give weapons use summon to spawn shop items, e.g. summon BuyTranslocator_C
 
