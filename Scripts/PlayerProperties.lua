@@ -145,10 +145,10 @@ local function coerceValue(obj, name, value)
         return value == "true" or value == "1"
     elseif ptype == "FVector" then
         local x, y, z = value:match("([%d%.%-]+),([%d%.%-]+),([%d%.%-]+)")
-        if x then return FVector(tonumber(x), tonumber(y), tonumber(z)) end
+        if x then return {X=tonumber(x), Y=tonumber(y), Z=tonumber(z)} end
     elseif ptype == "FRotator" then
         local p, y, r = value:match("([%d%.%-]+),([%d%.%-]+),([%d%.%-]+)")
-        if p then return FRotator(tonumber(p), tonumber(y), tonumber(r)) end
+        if p then return {Pitch=tonumber(p), Yaw=tonumber(y), Roll=tonumber(r)} end
     elseif ptype:match("FString") then
         return value
     else
