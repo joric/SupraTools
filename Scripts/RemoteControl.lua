@@ -9,12 +9,14 @@ local ACTIONS = { -- ordered by priority
     { name = "ApplyPurchase" },
     { name = "ButtonPress" },
     { name = "Set_Active",  call = function(actor) actor:Set_Active(true, false, false, false) end }, -- enables jumppads
-    { name = "Activate" }, -- supraland jumppads, needs 0 paremeters in supraland and 1 parameter in supraworld
     { name = "Open", call = function(actor, ctx) if actor.bOpen then actor:Close() else actor:Open() end end },
     { name = "Heat", call = function(actor, ctx) actor:Heat(ctx.pc.Pawn, true) end }, -- melts chocolate eggs
     { name = "Pickup", call = function(actor, ctx) actor:Pickup(ctx.pc.Pawn) end },
     { name = "SetUnlocked", call = function(actor) actor:SetUnlocked(true, true, true, true) end },
     { name = "SetIsOpen",  call = function(actor) actor:SetIsOpen(true, true, true, true) end },
+
+    -- activate is BAD (called on static meshes. figure out what to do with that)
+    -- { name = "Activate", call = function(actor,ctx) if actor:GetClass():GetFName():ToString()=='Jumppad_C' then actor:Activate() else actor:Activate(true) end end }, -- supraland jumppads, needs 0 paremeters in supraland and 1 parameter in supraworld
 }
 
 local function runFirstAvailableAction(actor, ctx)

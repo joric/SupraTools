@@ -186,14 +186,18 @@ local function updateMinimap()
         if cam and cam:IsValid() then
             local loc = cam:GetCameraLocation()
             local rot = cam:GetCameraRotation()
+
             for name, point in pairs(cachedPoints) do
-                local color = pointTypes[point.type][point.found and 2 or 1]
-                if color[4]~=0 then
-                    local px, py = projectDot(mapSize.X, mapSize.Y, scaling, loc, rot, point.loc, dotSize)
-                    if point.image and point.image:IsValid() then
+                if point.image and point.image:IsValid() then
+
+                    local color = pointTypes[point.type][point.found and 2 or 1]
+                    point.image:SetColorAndOpacity(color)
+
+                    if color[4]~=0 then
+                        local px, py = projectDot(mapSize.X, mapSize.Y, scaling, loc, rot, point.loc, dotSize)
                         point.image.Slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
-                        point.image:SetColorAndOpacity(color)
                     end
+
                 end
             end
 
@@ -201,7 +205,7 @@ local function updateMinimap()
                 playerImage.Slot:SetZOrder(math.floor(loc.Z))
             end
 
-            if playerImage2 and playerImage:IsValid() then
+            if playerImage2 and playerImage2:IsValid() then
                 playerImage2.Slot:SetZOrder(math.floor(loc.Z)+1)
             end
 
