@@ -6,7 +6,7 @@
 
 -- so you basically can set any player variable with "poke" console command
 -- type "poke" in console without parameters to see player properties
--- player properties persistent for example poke Happy? true works but not writes in saves
+-- poke is not persistent for example poke Happy? true works but not writes in saves
 
 player = {}
 
