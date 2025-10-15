@@ -150,68 +150,65 @@ local function GetItemName(alias)
     return false, string.format("%s not found", alias)
 end
 
+
+local function GiveItem(name)
+    local pc = UEHelpers.GetPlayerController()
+    if not pc:IsValid() or not pc.CheatManager or not pc.CheatManager:IsValid() or not pc.Pawn or not pc.Pawn:IsValid() then
+        return false, "could not find valid player controller"
+    end
+
+    local obj = FindFirstOf("FirstPersonCharacter_C")
+    if not obj:IsValid() then
+        return false, "could not find character"
+    end
+
+    local object = FindObject('BlueprintGeneratedClass', name)
+    if not object:IsValid() then
+        return false, "could not find object"
+    end
+
+    local assetName = object:GetFullName():match("^%S+%s+(.+)")
+
+    print("assetName", assetName)
+
+    local class = StaticFindObject(assetName)
+    if not class:IsValid() then
+        class = LoadAsset(assetName)
+    end
+
+    print("class", class:GetFullName())
+
+    --local loc = {X=0,Y=0,Z=0}
+    local loc = pc.Pawn:K2_GetActorLocation()
+    local rot = {Pitch=0,Yaw=0,Roll=0}
+
+    local world = UEHelpers.GetWorld()
+    actor = world:SpawnActor(class, loc, rot)
+
+    print("actor", actor:GetFullName())
+
+    actor:SetActorScale3D({X=3,Y=3,Z=3}) -- make it BIG so it highlights (shells are too small to pick up)
+    obj:Using() -- and pick up item! this is super unreliable but sometimes works
+
+    return true
+end
+
 local function DeployItem(name)
     local pc = UEHelpers.GetPlayerController()
     if not pc or not pc:IsValid() or not pc.CheatManager or not pc.CheatManager:IsValid() then return end
 
-    print("summoning via cheat manager", name)
+    print("Deploying", name)
 
-    LoadAsset(name) -- need to preload item before cheat manager
-    pc.CheatManager["summon"](name)
+    local tryGiveItem = false
 
-    -- try picking up the item right away
-    ExecuteWithDelay(100, function()
-        local obj = FindFirstOf("FirstPersonCharacter_C")
-        if obj and obj:IsValid() then
-
-            -- those don't work
-            -- obj:Using()
-            -- obj:Interact()
-            -- obj:PickupObjectIfReachable_Event(nil, obj['Pick Up Distance'])
-        end
-    end)
-
-    --[[
-    -- to pick up automatically I probably should use one of those
-    ---@field LookedAt_TraceActor AActor           -- The actor being looked at
-    ---@field LookedAt_TraceComponent UPrimitiveComponent  -- The specific component
-    ---@field HighlitComponent UPrimitiveComponent         -- Currently highlighted component
-    -- These delegates fire when objects are targeted/untargeted
-    ---@field NewObjectHighlight FFirstPersonCharacter_CNewObjectHighlight
-    ---@field StopObjectHighlight FFirstPersonCharacter_CStopObjectHighlight
-    -- Step 1: Object must be detected via trace/raycast
-    -- This happens automatically in Tick based on where player is looking
-    -- Step 2: Object gets highlighted (HighlitComponent gets set)
-    -- Step 3: THEN Using() can work on the highlighted object
-
-    -- Manually set what the player is looking at
-    self.LookedAt_TraceActor = TargetActor
-    self.HighlitComponent = TargetComponent
-
-    -- Then trigger highlight
-    if self.NewObjectHighlight then
-        self:NewObjectHighlight(TargetActor, TargetComponent)
-    end
-
-    -- Now Using() should work
-    self:Using()
-
-    -- This function does the trace and pickup in one call
-    self:PickupObjectIfReachable_Event(nil, self['Pick Up Distance'])
-
-    -- See what's currently detected
-    if self.LookedAt_TraceActor and self.HighlitComponent then
-        print("Object detected:", self.LookedAt_TraceActor)
-        self:Using()  -- This should now work
+    if tryGiveItem then
+        return GiveItem(name)
     else
-        print("No object detected - need to look at something first")
+        LoadAsset(name) -- need to preload item before cheat manager
+        pc.CheatManager["summon"](name)
     end
 
-    The key insight is that Using() and Interact() expect there to already be a detected
-    and highlighted object from the automatic tracing system. The object selection happens
-    through the continuous trace detection, not just by calling the use functions directly.
-
-    ]]
+    return true
 end
 
 RegisterConsoleCommandHandler("deploy", function(FullCommand, Parameters, Ar)
@@ -228,13 +225,15 @@ RegisterConsoleCommandHandler("deploy", function(FullCommand, Parameters, Ar)
     local name, err = GetItemName(name)
 
     if name then
-        DeployItem(name)
-        Ar:Log(string.format("%s deployed.", name))
+        ok, err = DeployItem(name)
+        if ok then
+            Ar:Log(string.format("%s deployed.", name))
+        else
+            Ar:Log(err)
+        end
     else
         Ar:Log(err)
     end
 
     return true
 end)
-
-
