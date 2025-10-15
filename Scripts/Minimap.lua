@@ -231,7 +231,9 @@ local function setFound(hook, name, found)
     local point = cachedPoints and cachedPoints[name]
     if point then
         point.found = found
-        print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+        if found then
+            print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+        end
     end
 end
 
