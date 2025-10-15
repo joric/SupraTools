@@ -188,7 +188,7 @@ local function GiveItem(name)
     print("actor", actor:GetFullName())
 
     actor:SetActorScale3D({X=3,Y=3,Z=3}) -- make it BIG so it highlights (shells are too small to pick up)
-    obj:Using() -- and pick up item! this is very unreliable but sometimes works
+    obj:Using() -- and pick up item! this is very unreliable (object shapes are very different) but sometimes works
 
     return true
 end
