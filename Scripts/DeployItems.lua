@@ -162,32 +162,24 @@ local function GiveItem(name)
         return false, "could not find character"
     end
 
+    LoadAsset(name)
+
     local object = FindObject('BlueprintGeneratedClass', name)
     if not object:IsValid() then
         return false, "could not find object"
     end
 
-    local assetName = object:GetFullName():match("^%S+%s+(.+)")
-
-    print("assetName", assetName)
-
-    local class = StaticFindObject(assetName)
-    if not class:IsValid() then
-        class = LoadAsset(assetName)
-    end
-
-    print("class", class:GetFullName())
-
+    local world = UEHelpers.GetWorld()
     --local loc = {X=0,Y=0,Z=0}
     local loc = pc.Pawn:K2_GetActorLocation()
     local rot = {Pitch=0,Yaw=0,Roll=0}
 
-    local world = UEHelpers.GetWorld()
-    actor = world:SpawnActor(class, loc, rot)
+    local actor = world:SpawnActor(object, loc, rot)
 
     print("actor", actor:GetFullName())
 
-    actor:SetActorScale3D({X=3,Y=3,Z=3}) -- make it BIG so it highlights (shells are too small to pick up)
+    actor:SetActorScale3D({X=3,Y=3,Z=3}) -- make it BIG so it highlights for use (e.g. shells are too small)
+
     obj:Using() -- and pick up item! this is very unreliable (object shapes are very different) but sometimes works
 
     return true
