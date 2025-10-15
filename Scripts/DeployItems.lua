@@ -190,10 +190,10 @@ local function DeployItem(name)
 
     print("Deploying", name)
 
-    local tryGiveItem = false
+    local tryGiveItem = true
 
     if tryGiveItem then
-        return GiveItem(name) -- super-unreliable for now
+        return GiveItem(name)
     else
         LoadAsset(name) -- need to preload item before cheat manager
         pc.CheatManager["summon"](name)
