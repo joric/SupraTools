@@ -187,10 +187,13 @@ local function updateMinimap()
             local loc = cam:GetCameraLocation()
             local rot = cam:GetCameraRotation()
             for name, point in pairs(cachedPoints) do
-                local px, py = projectDot(mapSize.X, mapSize.Y, scaling, loc, rot, point.loc, dotSize)
-                if point.image and point.image:IsValid() then
-                    point.image.Slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
-                    point.image:SetColorAndOpacity(pointTypes[point.type][point.found and 2 or 1])
+                local color = pointTypes[point.type][point.found and 2 or 1]
+                if color[4]~=0 then
+                    local px, py = projectDot(mapSize.X, mapSize.Y, scaling, loc, rot, point.loc, dotSize)
+                    if point.image and point.image:IsValid() then
+                        point.image.Slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
+                        point.image:SetColorAndOpacity(color)
+                    end
                 end
             end
 
@@ -228,9 +231,7 @@ local function setFound(hook, name, found)
     local point = cachedPoints and cachedPoints[name]
     if point then
         point.found = found
-        if found then
-            print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
-        end
+        print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
     end
 end
 
@@ -238,7 +239,12 @@ local hooks = {
     -- supraworld
     { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", call = function(hook,name,param) setFound(hook,name,param) end },
     { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
+    { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:ItemPickedup", call = function(hook,name,param) setFound(hook,name,param) end },
+    { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
+    { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:OnSpawnedItemPickedUp", call = function(hook,name,param) setFound(hook,name,param) end }, -- works for hay
+    { hook = "/Supraworld/Levelobjects/RespawnablePickupSpawner.RespawnablePickupSpawner_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
     { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken", call = function(hook,name,param) setFound(hook,name,param) end },
+
     -- supraland
     { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" },
     { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc" },
