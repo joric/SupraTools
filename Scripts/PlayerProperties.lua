@@ -189,6 +189,7 @@ end
 
 RegisterConsoleCommandHandler("poke", function(FullCommand, Parameters, Ar)
     local name = Parameters[1]
+
     if not name then
         local res = GetPlayerProperties()
         for _, str in ipairs(res) do
@@ -203,9 +204,37 @@ RegisterConsoleCommandHandler("poke", function(FullCommand, Parameters, Ar)
     local ok, err = SetPlayerProperty(name, stringValue)
 
     if ok then
-        Ar:Log(string.format("Setting %s to %s", name, stringValue))
+        Ar:Log(string.format("%s set to %s", name, stringValue))
     else
         Ar:Log(err)
+    end
+
+    return true
+end)
+
+RegisterConsoleCommandHandler("peek", function(FullCommand, Parameters, Ar)
+    local name = Parameters[1]
+
+    if not name then
+        local res = GetPlayerProperties()
+        for _, str in ipairs(res) do
+            print(str)
+            Ar:Log(str)
+        end
+        Ar:Log("Usage: peek <PropertyName>")
+        return true
+    end
+
+    local obj = FindFirstOf("FirstPersonCharacter_C")
+    if not obj or not obj:IsValid() then
+        Ar:Log("Character not found")
+        return true
+    end
+
+    if obj[name] ~= nil then
+        Ar:Log(string.format("%s is %s", name, obj[name]))
+    else
+        Ar:Log(string.format("Property %s not found.", name))
     end
 
     return true
