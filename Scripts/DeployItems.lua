@@ -188,7 +188,7 @@ local function GiveItem(name)
     print("actor", actor:GetFullName())
 
     actor:SetActorScale3D({X=3,Y=3,Z=3}) -- make it BIG so it highlights (shells are too small to pick up)
-    obj:Using() -- and pick up item! this is super unreliable but sometimes works
+    obj:Using() -- and pick up item! this is very unreliable but sometimes works
 
     return true
 end
@@ -202,7 +202,7 @@ local function DeployItem(name)
     local tryGiveItem = false
 
     if tryGiveItem then
-        return GiveItem(name)
+        return GiveItem(name) -- super-unreliable for now
     else
         LoadAsset(name) -- need to preload item before cheat manager
         pc.CheatManager["summon"](name)
