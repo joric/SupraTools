@@ -157,16 +157,16 @@ local function GiveItem(name)
         return false, "could not find valid player controller"
     end
 
-    local obj = FindFirstOf("FirstPersonCharacter_C")
-    if not obj:IsValid() then
-        return false, "could not find character"
-    end
-
     LoadAsset(name)
 
     local object = FindObject('BlueprintGeneratedClass', name)
     if not object:IsValid() then
         return false, "could not find object"
+    end
+
+    local self = FindFirstOf("FirstPersonCharacter_C")
+    if not self:IsValid() then
+        return false, "could not find character"
     end
 
     local world = UEHelpers.GetWorld()
@@ -175,12 +175,11 @@ local function GiveItem(name)
     local rot = {Pitch=0,Yaw=0,Roll=0}
 
     local actor = world:SpawnActor(object, loc, rot)
+    actor:SetActorScale3D({X=3,Y=3,Z=3}) -- make actor BIG so it highlights for use (e.g. shells are too small)
 
-    print("actor", actor:GetFullName())
+    print("Spawned actor:", actor:GetFullName())
 
-    actor:SetActorScale3D({X=3,Y=3,Z=3}) -- make it BIG so it highlights for use (e.g. shells are too small)
-
-    obj:Using() -- and pick up item! this is very unreliable (object shapes are very different) but sometimes works
+    self:Using() -- and pick up item! this is very unreliable (object shapes are very different) but sometimes works
 
     return true
 end
