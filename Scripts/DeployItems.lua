@@ -157,16 +157,16 @@ local function GiveItem(name)
         return false, "could not find valid player controller"
     end
 
+    local self = FindFirstOf("FirstPersonCharacter_C")
+    if not self:IsValid() then
+        return false, "could not find character"
+    end
+
     LoadAsset(name)
 
     local object = FindObject('BlueprintGeneratedClass', name)
     if not object:IsValid() then
         return false, "could not find object"
-    end
-
-    local self = FindFirstOf("FirstPersonCharacter_C")
-    if not self:IsValid() then
-        return false, "could not find character"
     end
 
     local world = UEHelpers.GetWorld()
