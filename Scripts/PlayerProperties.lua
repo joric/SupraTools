@@ -137,10 +137,8 @@ local function coerceValue(obj, name, value)
     end
 
     local ptype = type(prop)
-    if ptype == "float" or ptype == "double" then
+    if ptype == "number" then
         return tonumber(value)
-    elseif ptype == "int32" or ptype == "int" then
-        return math.floor(tonumber(value))
     elseif ptype == "boolean" then
         return value == "true" or value == "1"
     elseif ptype == "FVector" then
