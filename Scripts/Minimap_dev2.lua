@@ -12,13 +12,27 @@ local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A)
 
 local defaultAlignment = 'center'
 local mapSize = {X=200000, Y=200000}
-local widgetSize = {X=512, Y=512}
-local scaling = 1
-local dotSize = 1000 * scaling
-local playerDotSize = 1000 * scaling
+local widgetSize = {X=768, Y=768}
+local scaling = 0.05
+local dotSize = 500
+local playerDotSize = 500
 local cachedPoints = nil
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
+
+--[[
+Function /Script/UMG.UserWidget:Tick
+Function /Game/FirstPersonBP/Blueprints/HealthAndStuff.HealthAndStuff_C:Tick
+Function /Script/GeometryCache.GeometryCacheComponent:TickAtThisTime
+Function /Game/Blueprints/PlayerMap/PlayerMapWidget.PlayerMapWidget_C:Tick
+/Script/UMG.UserWidget:OnPaint
+]]
+
+-- local tickHook = '/Game/FirstPersonBP/Blueprints/CharacterTextHUD.CharacterTextHUD_C:Tick'--works when you talk to characters
+local tickHook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick'  -- works when there's a hint text on screen
+-- local tickHook = '/Script/UMG.UserWidget:Tick' -- never fires
+-- local tickHook = '/Script/UMG.UserWidget:OnPaint'
+-- local tickHook = '/Script/UMG.UserWidget:OnKeyDown'
 
 local pointTypes = {
     -- supraworld
@@ -30,11 +44,11 @@ local pointTypes = {
     PickupSpawner_C = {FLinearColor(0,0,1,1),FLinearColor(0,0,0,0)},
 
     -- supraland
-    -- SecretFound_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    -- Coin_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
-    -- PhysicalCoin_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
-    -- CoinBig_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
-    -- CoinRed_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
+    SecretFound_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
+    Coin_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
+    PhysicalCoin_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
+    CoinBig_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
+    CoinRed_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
     Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)},
 }
 
@@ -90,7 +104,7 @@ local function addPoint(layer, loc, color, size, name)
     local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), layer, FName(name))
     local slot = layer:AddChildToCanvas(image)
     image:SetColorAndOpacity(color)
-    image.Slot:SetPosition({X = loc.X*scaling  -size/2, Y = loc.Y*scaling - size/2})
+    image.Slot:SetPosition({X = loc.X  -size/2, Y = loc.Y - size/2})
     image.Slot:SetSize({X = size, Y = size})
     image.Slot:SetZOrder(math.floor(loc.Z))
     return image
@@ -106,6 +120,12 @@ local function createMinimap()
 
     local gi = UEHelpers.GetGameInstance()
     local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("mapWidget"))
+
+-- widget:Initialize()
+-- widget.bCanEverTick = true
+-- widget:SetVisibility(0) -- Visible
+
+
     widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("MinimapTree"))
 
     local canvas0 = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("MinimapCanvas"))
@@ -172,10 +192,42 @@ local function createMinimap()
     widget:AddToViewport(99)
 
     mapWidget = widget
+
+    local widgetCompClass = StaticFindObject("/Script/UMG.WidgetComponent")
+    local widgetComp = StaticConstructObject(widgetCompClass, gi, FName("MapWidgetComp"))
+
+
+    -- widget:SetTickMode(2)  -- Try different values: 0=Disabled, 1=Enabled, 2=Automatic?
+
+widgetComp:SetDrawSize({X=512,Y=512})
+widgetComp:SetWidgetSpace(1)     -- 1 = screen space, 0 = world space
+widgetComp:SetTickMode(1)        -- ETickMode::Automatic (if exposed)
+widgetComp:SetTwoSided(true)
+
+-- 4. Assign your manually created widget
+
+
+-- 5. Register and attach
+-- gi:AddInstanceComponent(widgetComp)
+-- widgetComp:RegisterComponent()
+
+widgetComp:SetTickWhenOffscreen(true)
+
+widgetComp:SetWidget(widget)
+
+    for _, comp in ipairs(FindAllOf("WidgetComponent")or{}) do
+        --if comp:GetWidget() == widget then
+            print("Found component", comp:GetFullName(), comp:GetWidget():GetFullName())
+        --end
+    end
+
+
 end
 
 local function updateMinimap()
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
+
+    -- print("tick!")
 
     local bgLayer = FindObject("CanvasPanel", "DotLayer")
 
@@ -198,11 +250,11 @@ if pc and pc:IsValid() then
 
         local size = mapSize.X
 
-        local scale = 0.01
+        local scale = scaling
         local angle = -rot.Yaw + 270
 
-        local cx = loc.X*scaling
-        local cy = loc.Y*scaling
+        local cx = loc.X
+        local cy = loc.Y
 
         local u = cx / size
         local v = cy / size
@@ -225,7 +277,7 @@ if pc and pc:IsValid() then
 
         local playerImage = FindObject("Image", "playerImage")
         if playerImage and playerImage:IsValid() then
-            playerImage.Slot:SetPosition({X = loc.X*scaling - playerDotSize/2, Y = loc.Y*scaling - playerDotSize/2})
+            playerImage.Slot:SetPosition({X = loc.X - playerDotSize/2, Y = loc.Y - playerDotSize/2})
             playerImage.Slot:SetZOrder(math.floor(loc.Z))
         end
 
@@ -277,37 +329,33 @@ local function setFound(hook, name, found)
     end
 end
 
-local hooks = {
-    -- supraworld
-    { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", call = function(hook,name,param) setFound(hook,name,param) end },
-    { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
-    { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:ItemPickedup", call = function(hook,name,param) setFound(hook,name,param) end },
-    { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
-    { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:OnSpawnedItemPickedUp", call = function(hook,name,param) setFound(hook,name,param) end }, -- works for hay
-    { hook = "/Supraworld/Levelobjects/RespawnablePickupSpawner.RespawnablePickupSpawner_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
-    { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken", call = function(hook,name,param) setFound(hook,name,param) end },
+local function registerHooks()
+    local hooks = {
+        -- supraworld
+        { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", call = function(hook,name,param) setFound(hook,name,param) end },
+        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
+        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:ItemPickedup", call = function(hook,name,param) setFound(hook,name,param) end },
+        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
+        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:OnSpawnedItemPickedUp", call = function(hook,name,param) setFound(hook,name,param) end }, -- works for hay
+        { hook = "/Supraworld/Levelobjects/RespawnablePickupSpawner.RespawnablePickupSpawner_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
+        { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken", call = function(hook,name,param) setFound(hook,name,param) end },
 
-    -- supraland
-    { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" },
-    { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc" },
-    { hook = "/Game/Blueprints/Levelobjects/CoinBig.CoinBig_C:Timeline_0__FinishedFunc" },
-    { hook = "/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc" },
-    { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:DestroyAllComponents" },
-    { hook = "/Game/Blueprints/Levelobjects/PhysicalCoin.PhysicalCoin_C:DestroyAllComponents" },
-    { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:ActivateOpenForever"},
-    { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Activate"},
-    { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:NPCStealsStuffFromChest"},
-    { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Timeline_0__FinishedFunc" },
-}
+        -- supraland
+        { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" },
+        { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc" },
+        { hook = "/Game/Blueprints/Levelobjects/CoinBig.CoinBig_C:Timeline_0__FinishedFunc" },
+        { hook = "/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc" },
+        { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:DestroyAllComponents" },
+        { hook = "/Game/Blueprints/Levelobjects/PhysicalCoin.PhysicalCoin_C:DestroyAllComponents" },
+        { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:ActivateOpenForever"},
+        { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Activate"},
+        { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:NPCStealsStuffFromChest"},
+        { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Timeline_0__FinishedFunc" },
 
-RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
-    if pawn:get():GetFullName():find("DefaultPawn") then
-        print("--- ignoring default pawn ---")
-        return
-    end
 
-    createMinimap()
-    updateMinimap()
+        { hook = tickHook, call=updateMinimap },
+
+    }
 
     for _, hook in ipairs(hooks) do
         ok, err = pcall(function()
@@ -324,14 +372,20 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
         print(ok and "REGISTERED" or "NOT FOUND", hook.hook)
     end
 
-    --RegisterHook("/Game/FirstPersonBP/Blueprints/CharacterTextHUD.CharacterTextHUD_C:Tick", function() --works when you talk to characters
-    RegisterHook("/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick", function() -- works when there's a hint text on screen
-        updateMinimap()
-        return true
-    end)
+end
 
+RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
+    if pawn:get():GetFullName():find("DefaultPawn") then
+        print("--- ignoring default pawn ---")
+        return
+    end
+
+    createMinimap()
+    updateMinimap()
+    registerHooks()
 
 end)
+
 
 LoopAsync(60000, function()  -- let's see if hooks work
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
@@ -348,10 +402,4 @@ RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
     return true
 end)
 
-pcall(function()
-    --RegisterHook("/Game/FirstPersonBP/Blueprints/CharacterTextHUD.CharacterTextHUD_C:Tick", function() --works when you talk to characters
-    RegisterHook("/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick", function() -- works when there's a hint text on screen
-        updateMinimap()
-        return true
-    end)
-end)
+registerHooks()
