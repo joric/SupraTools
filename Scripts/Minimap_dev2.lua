@@ -314,7 +314,7 @@ local function setFound(hook, name, found)
     if point then
         point.found = found
         if found then
-            -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+            print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
 
             if name ~= nil then
                 local image = FindObject("Image", name .. ".Dot")
@@ -369,7 +369,7 @@ local function registerHooks()
                 end
             end)
         end)
-        print(ok and "REGISTERED" or "NOT FOUND", hook.hook)
+        -- print(ok and "REGISTERED" or "NOT FOUND", hook.hook)
     end
 
 end
