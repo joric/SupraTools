@@ -7,6 +7,7 @@
 -- so you basically can set any player variable with "poke" console command
 -- type "poke" in console without parameters to see player properties
 -- poke is not persistent for example poke Happy? true works but not writes in saves
+-- (doesn't save even if you call SaveSTuff())
 
 player = {}
 
@@ -181,6 +182,7 @@ local function SetPlayerProperty(name, stringValue)
 
     if value~=nil then
         obj[name] = value -- setting value
+        obj:SaveSTuff()
         return true
     end
 
