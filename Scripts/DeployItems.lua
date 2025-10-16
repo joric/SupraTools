@@ -160,17 +160,9 @@ local function GiveItem(name)
         return false, "could not find character"
     end
 
-    LoadAsset(name)
-
-    local object = FindObject('BlueprintGeneratedClass', name)
-    if not object:IsValid() then
-        return false, "could not find object"
-    end
-
     --local loc = {X=0,Y=0,Z=0}
     --local loc = pc.Pawn:K2_GetActorLocation()
     --local rot = {Pitch=0,Yaw=0,Roll=0}
-
 
     local delta = {X=15,Y=50,Z=-30} -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
 
@@ -181,6 +173,13 @@ local function GiveItem(name)
 
     loc.X = loc.X + delta.X
     loc.Z = loc.Z + delta.Z
+
+    LoadAsset(name)
+
+    local object = FindObject('BlueprintGeneratedClass', name)
+    if not object:IsValid() then
+        return false, "could not find object"
+    end
 
     local actor = UEHelpers.GetWorld():SpawnActor(object, loc, rot)
     actor:SetActorScale3D({X=1,Y=1,Z=1}) -- optionally make actor BIG so it has more surface to autoselect
