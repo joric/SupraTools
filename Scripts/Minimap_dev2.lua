@@ -11,10 +11,10 @@ local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
 local defaultAlignment = 'center'
-local mapSize = {X=320, Y=320}
-local scaling = 0.02
-local dotSize = 1000
-local playerDotSize = 1000
+local mapSize = {X=400, Y=400}
+local scaling = 0.01
+local dotSize = 1000 * scaling
+local playerDotSize = 1000 * scaling
 local cachedPoints = nil
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
@@ -29,11 +29,11 @@ local pointTypes = {
     PickupSpawner_C = {FLinearColor(0,0,1,1),FLinearColor(0,0,0,0)},
 
     -- supraland
-    SecretFound_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    Coin_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
-    PhysicalCoin_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
-    CoinBig_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
-    CoinRed_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
+    -- SecretFound_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
+    -- Coin_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
+    -- PhysicalCoin_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
+    -- CoinBig_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
+    -- CoinRed_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
     Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)},
 }
 
@@ -89,7 +89,7 @@ local function addPoint(layer, loc, color, size, name)
     local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), layer, FName(name))
     local slot = layer:AddChildToCanvas(image)
     image:SetColorAndOpacity(color)
-    image.Slot:SetPosition({X = loc.X-size/2, Y = loc.Y-size/2})
+    image.Slot:SetPosition({X = loc.X*scaling  -size/2, Y = loc.Y*scaling - size/2})
     image.Slot:SetSize({X = size, Y = size})
     image.Slot:SetZOrder(math.floor(loc.Z))
     return image
@@ -107,21 +107,42 @@ local function createMinimap()
     local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("mapWidget"))
     widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("MinimapTree"))
 
-    local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("MinimapCanvas"))
-    widget.WidgetTree.RootWidget = canvas
+    local canvas0 = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("MinimapCanvas"))
+    widget.WidgetTree.RootWidget = canvas0
 
-    local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("MinimapBG"))
-    bg:SetBrushColor(FLinearColor(0, 0, 0, 0))
+    local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas0, FName("MinimapBG"))
+    bg:SetBrushColor(FLinearColor(0, 0, 0, 0.1))
 
-    local slot = canvas:AddChildToCanvas(bg)
-
+    local slot = canvas0:AddChildToCanvas(bg)
     slot:SetSize(mapSize)
-
     setAlignment(slot, defaultAlignment)
 
-    local layer = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), bg, FName("DotLayer"))
+    local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), bg, FName("MapBaseCanvas"))
+    bg:SetContent(canvas)
 
-    bg:SetContent(layer)
+    local clipBox = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), canvas, FName("MapClipBox"))
+    local clipSlot = canvas:AddChildToCanvas(clipBox)
+    clipSlot:SetSize(mapSize)
+    clipSlot:SetPosition({X = 0, Y = 0})
+    clipSlot:SetZOrder(-1000)
+    
+    -- Enable clipping on the container
+    pcall(function()
+        -- clipBox:SetClipping(1) -- 1 = ClipToBounds
+    end)
+
+    -- Create a container for the map background that can be rotated and scaled
+    local bgContainer = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), clipBox, FName("DotLayer"))
+    local containerSlot = clipBox:AddChildToCanvas(bgContainer)
+
+    containerSlot:SetSize(mapSize)
+
+    -- Center the container in the clip box
+    containerSlot:SetPosition({X = 0, Y = 0})
+    containerSlot:SetZOrder(0)
+
+    layer = bgContainer
+
 
     updateCachedPoints()
 
@@ -140,7 +161,6 @@ local function createMinimap()
     -- addPoint(layer, {X=0, Y=0, Z=1}, FLinearColor(0,0,0,1), playerDotSize, "playerImage2")
 
     addPoint(layer, {X=0, Y=0, Z=0}, FLinearColor(0,0,0,0.5), playerDotSize, "playerImage")
-
     addPoint(layer, {X=0, Y=0, Z=0}, FLinearColor(1,1,1,0.5), playerDotSize, "centerDot")
 
     bg:SetVisibility(VISIBLE)
@@ -157,6 +177,13 @@ local function updateMinimap()
 
     local pc = getCameraController and getCameraController() or UEHelpers.GetPlayerController()
 
+    local clipBox = FindObject("CanvasPanel", "MapClipBox")
+
+    pcall(function()
+        clipBox:SetClipping(1) -- 1 = ClipToBounds
+    end)
+
+
 --------------------------------------
 
 if pc and pc:IsValid() then
@@ -165,23 +192,25 @@ if pc and pc:IsValid() then
         local loc = cam:GetCameraLocation()
         local rot = cam:GetCameraRotation()
 
-        local size = 128000
-        local scale = 0.01
+        local size = mapSize.X
+
+        local scale = 1
         local angle = -rot.Yaw + 270
-        angle = 0
 
-        -- Normalize player position to 0-1 range
-        local pivotX = (loc.X / size) + 0.5  -- Add 0.5 to center the map
-        local pivotY = (loc.Y / size) + 0.5
+        local cx = loc.X*scaling
+        local cy = loc.Y*scaling
 
-        -- Set the pivot point to the player's location
-        --bgLayer:SetRenderTransformPivot({X = pivotX, Y = pivotY})
+        local u = cx / size
+        local v = cy / size
 
-        local tx = (0.5 - loc.X) * scale
-        local ty = (0.5 - loc.Y) * scale
+        bgLayer:SetRenderTransformPivot({X = u, Y = v})
 
+        local tx = size * (0.5 - u)
+        local ty = size * (0.5 - v)
 
-        -- Only apply rotation and scale
+        --tx = 0
+        --ty = 0
+
         bgLayer:SetRenderTransform({
             Translation = {X = tx, Y = ty},
             Scale = {X = scale, Y = scale},
@@ -192,7 +221,7 @@ if pc and pc:IsValid() then
 
         local playerImage = FindObject("Image", "playerImage")
         if playerImage and playerImage:IsValid() then
-            playerImage.Slot:SetPosition({X = loc.X - playerDotSize/2, Y = loc.Y - playerDotSize/2})
+            playerImage.Slot:SetPosition({X = loc.X*scaling - playerDotSize/2, Y = loc.Y*scaling - playerDotSize/2})
             playerImage.Slot:SetZOrder(math.floor(loc.Z))
         end
 
@@ -202,12 +231,11 @@ end
 -------------------------------------------
 
 
-
 --[[
-    ExecuteWithDelay(33,function()
+    ExecuteWithDelay(16,function()
         ExecuteInGameThread(updateMinimap) -- seems much more stable this way!
     end)
-]]
+    ]]
 
 end
 
@@ -292,12 +320,19 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
         print(ok and "REGISTERED" or "NOT FOUND", hook.hook)
     end
 
+    --RegisterHook("/Game/FirstPersonBP/Blueprints/CharacterTextHUD.CharacterTextHUD_C:Tick", function() --works when you talk to characters
+    RegisterHook("/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick", function() -- works when there's a hint text on screen
+        updateMinimap()
+        return true
+    end)
+
+
 end)
 
-LoopAsync(1000, function()  -- let's see if hooks work
+LoopAsync(60000, function()  -- let's see if hooks work
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
-    updateCachedPoints()
-    updateMinimap()
+    --updateCachedPoints()
+    --updateMinimap()
 end)
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
@@ -307,4 +342,12 @@ RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
     Ar:Log("toggling minimap")
     toggleMinimap()
     return true
+end)
+
+pcall(function()
+    --RegisterHook("/Game/FirstPersonBP/Blueprints/CharacterTextHUD.CharacterTextHUD_C:Tick", function() --works when you talk to characters
+    RegisterHook("/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick", function() -- works when there's a hint text on screen
+        updateMinimap()
+        return true
+    end)
 end)
