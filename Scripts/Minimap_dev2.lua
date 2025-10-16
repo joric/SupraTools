@@ -20,27 +20,13 @@ local cachedPoints = nil
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 
---[[
-Function /Script/UMG.UserWidget:Tick
-Function /Game/FirstPersonBP/Blueprints/HealthAndStuff.HealthAndStuff_C:Tick
-Function /Script/GeometryCache.GeometryCacheComponent:TickAtThisTime
-Function /Game/Blueprints/PlayerMap/PlayerMapWidget.PlayerMapWidget_C:Tick
-/Script/UMG.UserWidget:OnPaint
-]]
-
--- local tickHook = '/Game/FirstPersonBP/Blueprints/CharacterTextHUD.CharacterTextHUD_C:Tick'--works when you talk to characters
-local tickHook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick'  -- works when there's a hint text on screen
--- local tickHook = '/Script/UMG.UserWidget:Tick' -- never fires
--- local tickHook = '/Script/UMG.UserWidget:OnPaint'
--- local tickHook = '/Script/UMG.UserWidget:OnKeyDown'
-
 local pointTypes = {
     -- supraworld
-    --SecretVolume_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    --RealCoinPickup_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
-    -- PresentBox_Lootpools_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
-    --ItemSpawner_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
-    -- PresentBox_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
+    SecretVolume_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
+    RealCoinPickup_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
+    PresentBox_Lootpools_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
+    ItemSpawner_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
+    PresentBox_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
     PickupSpawner_C = {FLinearColor(0,0,1,1),FLinearColor(0,0,0,0)},
 
     -- supraland
@@ -286,12 +272,11 @@ end
 
 -------------------------------------------
 
-
 --[[
     ExecuteWithDelay(16,function()
         ExecuteInGameThread(updateMinimap) -- seems much more stable this way!
     end)
-    ]]
+]]
 
 end
 
@@ -353,7 +338,8 @@ local function registerHooks()
         { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Timeline_0__FinishedFunc" },
 
 
-        { hook = tickHook, call=updateMinimap },
+        { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick', call=updateMinimap },
+        { hook = '/Supraworld/Systems/Talk/Widgets/TextTalkBubbleWidget.TextTalkBubbleWidget_C:Tick', call=updateMinimap },
 
     }
 
