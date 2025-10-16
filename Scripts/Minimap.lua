@@ -3,19 +3,24 @@ local UEHelpers = require("UEHelpers")
 local VISIBLE = 4
 local HIDDEN = 2
 
-local defaultVisibility = VISIBLE
+local defaultVisibility = HIDDEN
 
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
-local defaultAlignment = 'center'
+local defaultAlignment = 'bottomleft'
 local mapSize = {X=320, Y=320}
 local scaling = 0.02
-local dotSize = 1000
-local playerDotSize = 2000
-local cachedPoints = nil
+local dotSize = 3
+local playerDotSize = 5
+
+local cachedPoints -- should still persist on reloading
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
+
+local playerImage = FindObject("/Script/UMG.Image", "playerImage")
+local playerImage2 = FindObject("/Script/UMG.Image", "playerImage2")
+
 
 local pointTypes = {
     -- supraworld
@@ -90,13 +95,11 @@ local function addPoint(layer, loc, color, size, name)
     return image
 end
 
-local function createMinimap()
+local function createMapWidget()
     if mapWidget and mapWidget:IsValid() then
         print("Minimap already exists.")
         return
     end
-
-    print("### CREATING MINIMAP ###")
 
     local gi = UEHelpers.GetGameInstance()
     local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("mapWidget"))
@@ -109,28 +112,27 @@ local function createMinimap()
     bg:SetBrushColor(FLinearColor(0, 0, 0, 0))
 
     local slot = canvas:AddChildToCanvas(bg)
-
     slot:SetSize(mapSize)
 
     setAlignment(slot, defaultAlignment)
 
     local layer = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), bg, FName("DotLayer"))
-
     bg:SetContent(layer)
 
     updateCachedPoints()
 
-    local i = 0
+    local count = 0
+    local cx,cy = mapSize.X/2, mapSize.Y/2
+
     for name, point in pairs(cachedPoints) do
-        local color = pointTypes[point.type][point.found and 2 or 1]
-        addPoint(layer, point.loc, color, dotSize, "minimapDot"..i)
-        i = i + 1
+        point.image = addPoint(layer, {X=cx, Y=cy, Z=point.loc.Z}, FLinearColor(1,1,1,1), dotSize, "minimapDot"..count)
+        count = count + 1
     end
 
-    print(string.format("-- Added %d dots", i))
+    print("--- loaded", count, "points")
 
-    addPoint(layer, {X=0, Y=0, Z=0}, FLinearColor(1,1,1,.5), playerDotSize+2, "playerImage")
-    addPoint(layer, {X=0, Y=0, Z=1}, FLinearColor(0,0,0,1), playerDotSize, "playerImage2")
+    playerImage = addPoint(layer, {X=cx, Y=cy, Z=0}, FLinearColor(1,1,1,.5), playerDotSize+2, "playerImage")
+    playerImage2 = addPoint(layer, {X=cx, Y=cy, Z=1}, FLinearColor(0,0,0,1), playerDotSize, "playerImage2")
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
@@ -139,10 +141,44 @@ local function createMinimap()
     mapWidget = widget
 end
 
+local function projectDot(w, h, scaling, camLoc, camRot, point, dotSize)
+    dotSize = dotSize or 0
+    local halfDot = dotSize / 2
+
+    local yaw = math.rad(camRot.Yaw or 0)
+    local cosY = math.cos(-yaw)
+    local sinY = math.sin(-yaw)
+
+    -- relative position to camera
+    local dx = point.X - camLoc.X
+    local dy = point.Y - camLoc.Y
+
+    -- rotate around Z (yaw)
+    local rx = dx * cosY - dy * sinY
+    local ry = dx * sinY + dy * cosY
+
+    -- map to widget coordinates
+    local widgetX = w/2 + ry * scaling  -- UE Y = -widget X
+    local widgetY = h/2 - rx * scaling  -- UE X = -widget Y
+
+    -- circular clamp accounting for dot size
+    local cx, cy = w/2, h/2
+    local relX, relY = widgetX - cx, widgetY - cy
+    local dist = math.sqrt(relX*relX + relY*relY)
+    local radius = math.min(w, h) / 2 - halfDot  -- subtract half dot size
+    if dist > radius then
+        local scale = radius / dist
+        relX = relX * scale
+        relY = relY * scale
+        widgetX = cx + relX
+        widgetY = cy + relY
+    end
+
+    return widgetX, widgetY
+end
+
 local function updateMinimap()
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
-
-    local bgLayer = FindObject("CanvasPanel", "DotLayer")
 
     local pc = getCameraController and getCameraController() or UEHelpers.GetPlayerController()
     if pc and pc:IsValid() then
@@ -151,40 +187,19 @@ local function updateMinimap()
             local loc = cam:GetCameraLocation()
             local rot = cam:GetCameraRotation()
 
+            for name, point in pairs(cachedPoints) do
+                if point.image and point.image:IsValid() then
 
-            local scale = 0.01
-            local angle = -rot.Yaw + 270
+                    local color = pointTypes[point.type][point.found and 2 or 1]
+                    point.image:SetColorAndOpacity(color)
 
-            local center = {X=0,Y=0}
+                    if color[4]~=0 then
+                        local px, py = projectDot(mapSize.X, mapSize.Y, scaling, loc, rot, point.loc, dotSize)
+                        point.image.Slot:SetPosition({X = px - dotSize / 2, Y = py - dotSize / 2})
+                    end
 
-            local size = 128000
-
-            local dx = loc.X - center.X
-            local dy = loc.Y - center.Y
-
-            local pivotX = 0.5 + dx / size
-            local pivotY = 0.5 + dy / size
-
-            bgLayer:SetRenderTransformPivot({X = pivotX, Y = pivotY})
-
-            -- The pivot is in normalized coordinates (0-1), so we need to:
-            -- 1. Convert pivot position to pixels: pivotX * mapSize.X, pivotY * mapSize.Y
-            -- 2. Subtract half the widget size to center it: mapSize.X/2, mapSize.Y/2
-            -- 3. Negate because we're moving the map, not the viewport
-
-            local tx = mapSize.X * (0.5 - pivotX)
-            local ty = mapSize.Y * (0.5 - pivotY)
-
-            bgLayer:SetRenderTransform({
-                Translation = {X = tx, Y = ty},
-                Scale = {X = scale, Y = scale},
-                Shear = {X = 0, Y = 0}, 
-                Angle = angle
-            })
-
-            --[[
-            local playerImage = FindObject("/Script/UMG.Image", "playerImage")
-            local playerImage2 = FindObject("/Script/UMG.Image", "playerImage2")
+                end
+            end
 
             if playerImage and playerImage:IsValid() then
                 playerImage.Slot:SetZOrder(math.floor(loc.Z))
@@ -193,7 +208,6 @@ local function updateMinimap()
             if playerImage2 and playerImage2:IsValid() then
                 playerImage2.Slot:SetZOrder(math.floor(loc.Z)+1)
             end
-            ]]
 
         end
     end
@@ -205,7 +219,7 @@ end
 
 local function toggleMinimap()
     if not mapWidget or not mapWidget:IsValid() then
-        createMinimap()
+        createMapWidget()
     end
 
     local visible = mapWidget:GetVisibility()~=VISIBLE
@@ -222,7 +236,7 @@ local function setFound(hook, name, found)
     if point then
         point.found = found
         if found then
-            -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+            print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
         end
     end
 end
@@ -256,7 +270,7 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
         return
     end
 
-    createMinimap()
+    createMapWidget()
     updateMinimap()
 
     for _, hook in ipairs(hooks) do
@@ -276,10 +290,13 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
 
 end)
 
+if mapWidget and mapWidget:IsValid() then
+    updateMinimap()
+end
+
 LoopAsync(60000, function()  -- let's see if hooks work
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
     updateCachedPoints()
-    updateMinimap()
 end)
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
