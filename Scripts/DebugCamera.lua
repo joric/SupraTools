@@ -60,21 +60,5 @@ local function teleportPlayer()
     end)
 end
 
-RegisterConsoleCommandHandler("teleportto", function(FullCommand, Parameters, Ar)
-    local x,y,z = tonumber(Parameters[1]), tonumber(Parameters[2]), tonumber(Parameters[3])
-    local pc = UEHelpers.GetPlayerController()
-    if not pc or not pc:IsValid() or not pc.Pawn or not pc.Pawn:IsValid() then
-        return
-    end
-
-    ExecuteWithDelay(250, function()
-        ExecuteInGameThread(function()
-            pc.Pawn:K2_TeleportTo({X=x,Y=y,Z=z}, pc.Pawn:K2_GetActorRotation())
-        end)
-    end)
-
-    return true
-end)
-
 RegisterKeyBind(Key.MIDDLE_MOUSE_BUTTON, toggleDebugCamera)
 RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, teleportPlayer)
