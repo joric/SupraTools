@@ -12,8 +12,8 @@ local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A)
 
 local defaultAlignment = 'center'
 local mapSize = {X=200000, Y=200000}
-local widgetSize = {X=768, Y=768}
-local scaling = 0.05
+local widgetSize = {X=1024, Y=1024}
+local scaling = 0.02
 local dotSize = 500
 local playerDotSize = 500
 local cachedPoints = nil
