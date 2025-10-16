@@ -155,6 +155,11 @@ local function GiveItem(name)
         return false, "could not find valid player controller"
     end
 
+    local self = FindFirstOf("FirstPersonCharacter_C")
+    if not self:IsValid() then
+        return false, "could not find character"
+    end
+
     --local loc = {X=0,Y=0,Z=0}
     --local loc = pc.Pawn:K2_GetActorLocation()
     --local rot = {Pitch=0,Yaw=0,Roll=0}
@@ -180,11 +185,6 @@ local function GiveItem(name)
     actor:SetActorScale3D({X=1,Y=1,Z=1}) -- optionally make actor BIG so it has more surface to autoselect
 
     print("Spawned actor:", actor:GetFullName())
-
-    local self = FindFirstOf("FirstPersonCharacter_C")
-    if not self:IsValid() then
-        return false, "could not find character"
-    end
 
     self:Using() -- and pick up item! this is very unreliable (object shapes are very different) but sometimes works
 
