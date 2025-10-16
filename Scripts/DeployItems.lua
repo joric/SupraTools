@@ -171,7 +171,7 @@ local function GiveItem(name)
     --local loc = pc.Pawn:K2_GetActorLocation()
     --local rot = {Pitch=0,Yaw=0,Roll=0}
 
-    local delta = {X=25,Y=100,Z=-50}
+    local delta = {X=15,Y=100,Z=-30}
 
     local cam = pc.PlayerCameraManager
     local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
