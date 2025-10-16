@@ -111,10 +111,8 @@ local function GetDeployAliases()
     end
 
     for name, values in pairs(Progressives) do
-        for _, value in ipairs(values) do
-            local str = string.format("%s (%s)", value, name)
-            table.insert(data, str)
-        end
+        local str = string.format("%s (%s)", name, table.concat(values, " "))
+        table.insert(data, str)
     end
 
     local unique = {}
@@ -169,13 +167,22 @@ local function GiveItem(name)
         return false, "could not find object"
     end
 
-    local world = UEHelpers.GetWorld()
     --local loc = {X=0,Y=0,Z=0}
-    local loc = pc.Pawn:K2_GetActorLocation()
-    local rot = {Pitch=0,Yaw=0,Roll=0}
+    --local loc = pc.Pawn:K2_GetActorLocation()
+    --local rot = {Pitch=0,Yaw=0,Roll=0}
 
-    local actor = world:SpawnActor(object, loc, rot)
-    actor:SetActorScale3D({X=3,Y=3,Z=3}) -- make actor BIG so it highlights for use (e.g. shells are too small)
+    local delta = {X=25,Y=100,Z=-50}
+
+    local cam = pc.PlayerCameraManager
+    local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
+    local dv = UEHelpers.GetKismetMathLibrary():Multiply_VectorInt(UEHelpers.GetKismetMathLibrary():GetForwardVector(rot), delta.Y)
+    local loc = UEHelpers.GetKismetMathLibrary():Add_VectorVector(pos, dv)
+
+    loc.X = loc.X + delta.X
+    loc.Z = loc.Z + delta.Z
+
+    local actor = UEHelpers.GetWorld():SpawnActor(object, loc, rot)
+    actor:SetActorScale3D({X=1,Y=1,Z=1}) -- make actor BIG so it highlights for use (e.g. shells are too small)
 
     print("Spawned actor:", actor:GetFullName())
 
