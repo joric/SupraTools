@@ -11,8 +11,9 @@ local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
 local defaultAlignment = 'center'
-local mapSize = {X=400, Y=400}
-local scaling = 0.01
+local mapSize = {X=200000, Y=200000}
+local widgetSize = {X=512, Y=512}
+local scaling = 1
 local dotSize = 1000 * scaling
 local playerDotSize = 1000 * scaling
 local cachedPoints = nil
@@ -112,9 +113,10 @@ local function createMinimap()
 
     local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas0, FName("MinimapBG"))
     bg:SetBrushColor(FLinearColor(0, 0, 0, 0.1))
+    bg:SetPadding({0,0,0,0})
 
     local slot = canvas0:AddChildToCanvas(bg)
-    slot:SetSize(mapSize)
+    slot:SetSize(widgetSize)
     setAlignment(slot, defaultAlignment)
 
     local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), bg, FName("MapBaseCanvas"))
@@ -122,7 +124,7 @@ local function createMinimap()
 
     local clipBox = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), canvas, FName("MapClipBox"))
     local clipSlot = canvas:AddChildToCanvas(clipBox)
-    clipSlot:SetSize(mapSize)
+    clipSlot:SetSize(widgetSize)
     clipSlot:SetPosition({X = 0, Y = 0})
     clipSlot:SetZOrder(-1000)
     
@@ -139,6 +141,8 @@ local function createMinimap()
 
     -- Center the container in the clip box
     containerSlot:SetPosition({X = 0, Y = 0})
+    containerSlot:SetAlignment({X = 0.5, Y = 0.5})
+    slot:SetAnchors({Minimum = {X = 0.5, Y = 0.5}, Maximum = {X = 0.5, Y = 0.5}})
     containerSlot:SetZOrder(0)
 
     layer = bgContainer
@@ -194,7 +198,7 @@ if pc and pc:IsValid() then
 
         local size = mapSize.X
 
-        local scale = 1
+        local scale = 0.01
         local angle = -rot.Yaw + 270
 
         local cx = loc.X*scaling
@@ -205,8 +209,8 @@ if pc and pc:IsValid() then
 
         bgLayer:SetRenderTransformPivot({X = u, Y = v})
 
-        local tx = size * (0.5 - u)
-        local ty = size * (0.5 - v)
+        local tx = size * (0.5 - u) + widgetSize.X/2
+        local ty = size * (0.5 - v) + widgetSize.Y/2
 
         --tx = 0
         --ty = 0
