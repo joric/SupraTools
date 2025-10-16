@@ -1,3 +1,5 @@
+-- map that uses 1:1 scaling and doesn't update point coordinates, just rotates the layer
+
 local UEHelpers = require("UEHelpers")
 
 local VISIBLE = 4
@@ -12,7 +14,7 @@ local defaultAlignment = 'center'
 local mapSize = {X=320, Y=320}
 local scaling = 0.02
 local dotSize = 1000
-local playerDotSize = 2000
+local playerDotSize = 1000
 
 local cachedPoints -- should still persist on reloading
 
@@ -20,11 +22,11 @@ local mapWidget = FindObject("UserWidget", "mapWidget")
 
 local pointTypes = {
     -- supraworld
-    SecretVolume_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    RealCoinPickup_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
-    PresentBox_Lootpools_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
-    ItemSpawner_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
-    PresentBox_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
+    --SecretVolume_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
+    --RealCoinPickup_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
+    -- PresentBox_Lootpools_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
+    --ItemSpawner_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
+    -- PresentBox_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
     PickupSpawner_C = {FLinearColor(0,0,1,1),FLinearColor(0,0,0,0)},
 
     -- supraland
@@ -66,14 +68,17 @@ local function updateCachedPoints()
 end
 
 local function setAlignment(slot, alignment)
+
+    local b = 0
+
     local alignments = {
         center = {anchor = {0.5, 0.5}, align = {0.5, 0.5}, pos = {0, 0}},
-        top = {anchor = {0.5, 0}, align = {0.5, 0}, pos = {0, 10}},
-        bottom = {anchor = {0.5, 1}, align = {0.5, 1}, pos = {0, -10}},
-        topleft = {anchor = {0, 0}, align = {0, 0}, pos = {10, 10}},
-        topright = {anchor = {1, 0}, align = {1, 0}, pos = {-10, 10}},
-        bottomleft = {anchor = {0, 1}, align = {0, 1}, pos = {10, -10}},
-        bottomright = {anchor = {1, 1}, align = {1, 1}, pos = {-10, -10}}
+        top = {anchor = {0.5, 0}, align = {0.5, 0}, pos = {0, b}},
+        bottom = {anchor = {0.5, 1}, align = {0.5, 1}, pos = {0, -b}},
+        topleft = {anchor = {0, 0}, align = {0, 0}, pos = {b, b}},
+        topright = {anchor = {1, 0}, align = {1, 0}, pos = {-b, b}},
+        bottomleft = {anchor = {0, 1}, align = {0, 1}, pos = {b, -b}},
+        bottomright = {anchor = {1, 1}, align = {1, 1}, pos = {-b, -b}}
     }
     local a = alignments[alignment] or alignments.center
     slot:SetAnchors({Minimum = {X = a.anchor[1], Y = a.anchor[2]}, Maximum = {X = a.anchor[1], Y = a.anchor[2]}})
@@ -121,17 +126,23 @@ local function createMinimap()
 
     updateCachedPoints()
 
-    local i = 0
     for name, point in pairs(cachedPoints) do
         local color = pointTypes[point.type][point.found and 2 or 1]
-        addPoint(layer, point.loc, color, dotSize, "minimapDot"..i)
-        i = i + 1
+
+        if name == 'PickupSpawner_C /Supraworld/Maps/Supraworld.Supraworld:PersistentLevel.PickupSpawner_C_UAID_FC3497C34610064D02_1268637352' then
+            color=FLinearColor(1,0,0,1)
+        end
+
+        --print("--- ADDING", name)
+        addPoint(layer, point.loc, color, dotSize, name .. ".Dot")
     end
 
-    print(string.format("-- Added %d dots", i))
+    -- addPoint(layer, {X=0, Y=0, Z=0}, FLinearColor(1,1,1,.5), playerDotSize+2, "playerImage")
+    -- addPoint(layer, {X=0, Y=0, Z=1}, FLinearColor(0,0,0,1), playerDotSize, "playerImage2")
 
-    addPoint(layer, {X=0, Y=0, Z=0}, FLinearColor(1,1,1,.5), playerDotSize+2, "playerImage")
-    addPoint(layer, {X=0, Y=0, Z=1}, FLinearColor(0,0,0,1), playerDotSize, "playerImage2")
+    addPoint(layer, {X=0, Y=0, Z=0}, FLinearColor(0,0,0,0.5), playerDotSize, "playerImage")
+
+    addPoint(layer, {X=0, Y=0, Z=0}, FLinearColor(1,1,1,0.5), playerDotSize, "centerDot")
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
@@ -146,58 +157,53 @@ local function updateMinimap()
     local bgLayer = FindObject("CanvasPanel", "DotLayer")
 
     local pc = getCameraController and getCameraController() or UEHelpers.GetPlayerController()
-    if pc and pc:IsValid() then
-        local cam = pc.PlayerCameraManager
-        if cam and cam:IsValid() then
-            local loc = cam:GetCameraLocation()
-            local rot = cam:GetCameraRotation()
+
+--------------------------------------
+
+if pc and pc:IsValid() then
+    local cam = pc.PlayerCameraManager
+    if cam and cam:IsValid() then
+        local loc = cam:GetCameraLocation()
+        local rot = cam:GetCameraRotation()
+
+        local size = 128000
+        local scale = 0.01
+        local angle = -rot.Yaw + 270
+        angle = 0
+
+        -- Normalize player position to 0-1 range
+        local pivotX = (loc.X / size) + 0.5  -- Add 0.5 to center the map
+        local pivotY = (loc.Y / size) + 0.5
+
+        -- Set the pivot point to the player's location
+        --bgLayer:SetRenderTransformPivot({X = pivotX, Y = pivotY})
+
+        local tx = (0.5 - loc.X) * scale
+        local ty = (0.5 - loc.Y) * scale
 
 
-            local scale = 0.01
-            local angle = -rot.Yaw + 270
+        -- Only apply rotation and scale
+        bgLayer:SetRenderTransform({
+            Translation = {X = tx, Y = ty},
+            Scale = {X = scale, Y = scale},
+            Shear = {X = 0, Y = 0}, 
+            Angle = angle
+        })
 
-            local center = {X=0,Y=0}
 
-            local size = 128000
-
-            local dx = loc.X - center.X
-            local dy = loc.Y - center.Y
-
-            local pivotX = 0.5 + dx / size
-            local pivotY = 0.5 + dy / size
-
-            bgLayer:SetRenderTransformPivot({X = pivotX, Y = pivotY})
-
-            -- The pivot is in normalized coordinates (0-1), so we need to:
-            -- 1. Convert pivot position to pixels: pivotX * mapSize.X, pivotY * mapSize.Y
-            -- 2. Subtract half the widget size to center it: mapSize.X/2, mapSize.Y/2
-            -- 3. Negate because we're moving the map, not the viewport
-
-            local tx = mapSize.X * (0.5 - pivotX)
-            local ty = mapSize.Y * (0.5 - pivotY)
-
-            bgLayer:SetRenderTransform({
-                Translation = {X = tx, Y = ty},
-                Scale = {X = scale, Y = scale},
-                Shear = {X = 0, Y = 0}, 
-                Angle = angle
-            })
-
-            --[[
-            local playerImage = FindObject("/Script/UMG.Image", "playerImage")
-            local playerImage2 = FindObject("/Script/UMG.Image", "playerImage2")
-
-            if playerImage and playerImage:IsValid() then
-                playerImage.Slot:SetZOrder(math.floor(loc.Z))
-            end
-
-            if playerImage2 and playerImage2:IsValid() then
-                playerImage2.Slot:SetZOrder(math.floor(loc.Z)+1)
-            end
-            ]]
-
+        local playerImage = FindObject("Image", "playerImage")
+        if playerImage and playerImage:IsValid() then
+            playerImage.Slot:SetPosition({X = loc.X - playerDotSize/2, Y = loc.Y - playerDotSize/2})
+            playerImage.Slot:SetZOrder(math.floor(loc.Z))
         end
+
     end
+end
+
+-------------------------------------------
+
+
+
 
     ExecuteWithDelay(33,function()
         ExecuteInGameThread(updateMinimap) -- seems much more stable this way!
@@ -224,6 +230,16 @@ local function setFound(hook, name, found)
         point.found = found
         if found then
             -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+
+            if name ~= nil then
+                local image = FindObject("Image", name .. ".Dot")
+
+                if image:IsValid() then
+                    print("removing point", image:GetFullName())
+                    image:RemoveFromParent()
+                end
+            end
+
         end
     end
 end

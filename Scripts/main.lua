@@ -91,4 +91,4 @@ require("GameSettings")
 require("DeployItems")
 require("PlayerProperties")
 
-require("Minimap" .. (os.getenv("dev") and "_dev" or "")) -- use setx dev 1 / setx dev ""
+require("Minimap" .. (os.getenv("dev") and "_dev2" or "")) -- use setx dev 1 / setx dev ""
