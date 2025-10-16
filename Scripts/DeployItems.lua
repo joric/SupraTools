@@ -171,7 +171,8 @@ local function GiveItem(name)
     --local loc = pc.Pawn:K2_GetActorLocation()
     --local rot = {Pitch=0,Yaw=0,Roll=0}
 
-    local delta = {X=15,Y=100,Z=-30}
+
+    local delta = {X=15,Y=100,Z=-30} -- shift object a little (works for shell and stomp)
 
     local cam = pc.PlayerCameraManager
     local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
@@ -182,7 +183,7 @@ local function GiveItem(name)
     loc.Z = loc.Z + delta.Z
 
     local actor = UEHelpers.GetWorld():SpawnActor(object, loc, rot)
-    actor:SetActorScale3D({X=1,Y=1,Z=1}) -- make actor BIG so it highlights for use (e.g. shells are too small)
+    actor:SetActorScale3D({X=1,Y=1,Z=1}) -- optionally make actor BIG so it has more surface to autoselect
 
     print("Spawned actor:", actor:GetFullName())
 
