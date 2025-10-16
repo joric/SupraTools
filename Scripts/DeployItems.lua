@@ -172,7 +172,7 @@ local function GiveItem(name)
     --local rot = {Pitch=0,Yaw=0,Roll=0}
 
 
-    local delta = {X=15,Y=100,Z=-30} -- shift object a little (works for shell and stomp)
+    local delta = {X=15,Y=100,Z=-30} -- shift object a little ({X=15,Y=100,Z=-30} works for shell and stomp)
 
     local cam = pc.PlayerCameraManager
     local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
