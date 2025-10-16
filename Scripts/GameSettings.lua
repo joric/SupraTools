@@ -41,20 +41,3 @@ RegisterConsoleCommandHandler("speed", function(FullCommand, Parameters, Ar)
     Ar:Log(string.format("Speed set to %.1f", value))
     return true
 end)
-
-
-RegisterConsoleCommandHandler("teleportto", function(FullCommand, Parameters, Ar)
-    local x,y,z = tonumber(Parameters[1]), tonumber(Parameters[2]), tonumber(Parameters[3])
-    local pc = UEHelpers.GetPlayerController()
-    if not pc or not pc:IsValid() or not pc.Pawn or not pc.Pawn:IsValid() then
-        return
-    end
-
-    ExecuteWithDelay(250, function()
-        ExecuteInGameThread(function()
-            pc.Pawn:K2_TeleportTo({X=x,Y=y,Z=z}, pc.Pawn:K2_GetActorRotation())
-        end)
-    end)
-
-    return true
-end)
