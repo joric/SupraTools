@@ -13,8 +13,7 @@ local mapSize = {X=320, Y=320}
 local scaling = 0.02
 local dotSize = 1000
 local playerDotSize = 2000
-
-local cachedPoints -- should still persist on reloading
+local cachedPoints = nil
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 

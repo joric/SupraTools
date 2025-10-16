@@ -15,8 +15,7 @@ local mapSize = {X=320, Y=320}
 local scaling = 0.02
 local dotSize = 1000
 local playerDotSize = 1000
-
-local cachedPoints -- should still persist on reloading
+local cachedPoints = nil
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 
@@ -204,10 +203,12 @@ end
 
 
 
-
+--[[
     ExecuteWithDelay(33,function()
         ExecuteInGameThread(updateMinimap) -- seems much more stable this way!
     end)
+]]
+
 end
 
 local function toggleMinimap()
@@ -293,7 +294,7 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
 
 end)
 
-LoopAsync(60000, function()  -- let's see if hooks work
+LoopAsync(1000, function()  -- let's see if hooks work
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
     updateCachedPoints()
     updateMinimap()
