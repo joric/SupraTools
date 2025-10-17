@@ -247,25 +247,24 @@ local function createMinimap()
     clipBox:SetClipping(1)
 
     -- Create a container for the map background that can be rotated and scaled
-    local bgContainer = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), clipBox, FName("DotLayer"))
-    local containerSlot = clipBox:AddChildToCanvas(bgContainer)
+    local dotLayer = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), clipBox, FName("DotLayer"))
+    local containerSlot = clipBox:AddChildToCanvas(dotLayer)
     containerSlot:SetZOrder(0)
     containerSlot:SetSize(mapSize)
+    containerSlot:SetAnchors({ Minimum = {X=0.5, Y=0.5}, Maximum = {X=0.5, Y=0.5} })
+    containerSlot:SetAlignment({X=0.5, Y=0.5})
     containerSlot:SetPosition({X = 0, Y = 0})
-    containerSlot:SetAlignment({X = 0.5, Y = 0.5})
 
-    loadImages(bgContainer)
+    loadImages(dotLayer)
     positionImages()
     updateCachedPoints()
 
-    layer = bgContainer
-
     for name, point in pairs(cachedPoints) do
         local color = pointTypes[point.type][point.found and 2 or 1]
-        addPoint(layer, point.loc, color, dotSize, name .. ".Dot")
+        addPoint(dotLayer, point.loc, color, dotSize, name .. ".Dot")
     end
 
-    addPoint(layer, {X=0, Y=0, Z=0}, playerColor, dotSize, "playerDot")
+    addPoint(dotLayer, {X=0, Y=0, Z=0}, playerColor, dotSize, "playerDot")
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
@@ -340,8 +339,8 @@ local function updateMinimap()
 
             bgLayer:SetRenderTransformPivot({X = u, Y = v})
 
-            local tx = size * (0.5 - u) + widgetSize.X/2
-            local ty = size * (0.5 - v) + widgetSize.Y/2
+            local tx = size * (0.5 - u)
+            local ty = size * (0.5 - v)
 
             bgLayer:SetRenderTransform({
                 Translation = {X = tx, Y = ty},
