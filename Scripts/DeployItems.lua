@@ -188,6 +188,8 @@ local function GiveItem(name)
 
     self:Using() -- and pick up item! this is very unreliable (object shapes are very different) but sometimes works
 
+    ExecuteWithDelay(500, function() self:UseReleased())
+
     return true
 end
 
