@@ -212,7 +212,7 @@ local function DeployItem(name)
 end
 
 local function tagify(name)
-    return name:gsub("Buy",""):gsub("BP_Purchase",""):gsub("_C",""):lower()
+    return name:gsub("Buy",""):gsub("BP_Purchase",""):gsub("_C$",""):gsub("^_",""):lower()
 end
 
 local function consolefy2(data)
