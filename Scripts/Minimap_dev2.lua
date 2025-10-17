@@ -10,13 +10,14 @@ local defaultVisibility = VISIBLE
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
-local defaultAlignment = 'center'
+local widgetAlignment = 'bottomleft'
+local widgetOpacity = 0.85
+local widgetSize = {X=320, Y=320}
 local mapSize = {X=200000, Y=200000}
-local widgetSize = {X=1024, Y=1024}
-local scaling = 0.02
-local dotSize = 500
-local playerDotSize = 500
+local scaling = 0.05
+local dotSize = 100
 local cachedPoints = nil
+local playerColor = FLinearColor(1,1,1,1)
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 
@@ -68,7 +69,6 @@ local function updateCachedPoints()
 end
 
 local function setAlignment(slot, alignment)
-
     local b = 0
 
     local alignments = {
@@ -96,6 +96,58 @@ local function addPoint(layer, loc, color, size, name)
     return image
 end
 
+local function positionImages()
+    local mapBounds = FindFirstOf("PlayerMapActor_C")
+    if not mapBounds:IsValid() then
+        return
+    end
+    -- print("### MAP ACTOR FOUND ###", mapBounds.MapWorldSize, mapBounds.MapWorldCenter.X, mapBounds.MapWorldCenter.Y)
+
+    -- Calculate tile size based on container
+
+    local tileSize = mapBounds.MapWorldSize / 2
+
+    local cx, cy = mapBounds.MapWorldCenter.X - tileSize, mapBounds.MapWorldCenter.Y - tileSize
+
+
+    local pos = {{0,0},{1,0},{0,1},{1,1}}
+    for i = 1, 4 do
+        local image = FindObject("Image", "mapTile"..i)
+        if image:IsValid() then
+            -- Position tile in grid (centered in the larger container)
+
+            image.Slot:SetPosition({X = pos[i][1] * tileSize + cx, Y = pos[i][2] * tileSize + cy})
+
+            image.Slot:SetSize({X = tileSize, Y = tileSize})
+            image:SetVisibility(VISIBLE)
+            -- image:SetColorAndOpacity({R = 1, G = 1, B = 1, A = 0.5})
+        end
+    end
+end
+
+local function loadImages(bgContainer)
+    local templates = {
+        "/Game/Blueprints/PlayerMap/Textures/T_Downscale%d.T_Downscale%d",
+        "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q%d.T_SIUMapV7Q%d",
+        "/PlayerMap/Textures/T_SupraworldMapV4Q%d.T_SupraworldMapV4Q%d",
+    }
+
+    for i = 1, 4 do
+        for _,template in ipairs(templates) do
+            local path = string.format(template, i-1, i-1)
+            local texture = StaticFindObject(path)
+            if texture and texture:IsValid() then
+                print("Loaded " .. path, 'SRGB', texture.SRGB, 'Compression', texture.CompressionSettings)
+                local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer, FName("mapTile"..i))
+                image:SetBrushFromTexture(texture, false)
+                local slot = bgContainer:AddChildToCanvas(image)
+                slot:SetZOrder(-8000 + i)
+                break
+            end
+        end
+    end
+end
+
 local function createMinimap()
     if mapWidget and mapWidget:IsValid() then
         print("Minimap already exists.")
@@ -111,6 +163,7 @@ local function createMinimap()
 -- widget.bCanEverTick = true
 -- widget:SetVisibility(0) -- Visible
 
+    widget:SetRenderOpacity(widgetOpacity)
 
     widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("MinimapTree"))
 
@@ -123,6 +176,7 @@ local function createMinimap()
 
     local slot = canvas0:AddChildToCanvas(bg)
     slot:SetSize(widgetSize)
+
     setAlignment(slot, defaultAlignment)
 
     local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), bg, FName("MapBaseCanvas"))
@@ -133,11 +187,10 @@ local function createMinimap()
     clipSlot:SetSize(widgetSize)
     clipSlot:SetPosition({X = 0, Y = 0})
     clipSlot:SetZOrder(-1000)
-    
-    -- Enable clipping on the container
-    pcall(function()
-        -- clipBox:SetClipping(1) -- 1 = ClipToBounds
-    end)
+
+    --setAlignment(slot, defaultAlignment)
+
+    clipBox:SetClipping(1)
 
     -- Create a container for the map background that can be rotated and scaled
     local bgContainer = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), clipBox, FName("DotLayer"))
@@ -147,31 +200,27 @@ local function createMinimap()
 
     -- Center the container in the clip box
     containerSlot:SetPosition({X = 0, Y = 0})
+
     containerSlot:SetAlignment({X = 0.5, Y = 0.5})
     slot:SetAnchors({Minimum = {X = 0.5, Y = 0.5}, Maximum = {X = 0.5, Y = 0.5}})
+
     containerSlot:SetZOrder(0)
 
     layer = bgContainer
 
+    loadImages(bgContainer)
+
+    positionImages()
 
     updateCachedPoints()
 
     for name, point in pairs(cachedPoints) do
         local color = pointTypes[point.type][point.found and 2 or 1]
-
-        if name == 'PickupSpawner_C /Supraworld/Maps/Supraworld.Supraworld:PersistentLevel.PickupSpawner_C_UAID_FC3497C34610064D02_1268637352' then
-            color=FLinearColor(1,0,0,1)
-        end
-
-        --print("--- ADDING", name)
         addPoint(layer, point.loc, color, dotSize, name .. ".Dot")
     end
 
-    -- addPoint(layer, {X=0, Y=0, Z=0}, FLinearColor(1,1,1,.5), playerDotSize+2, "playerImage")
-    -- addPoint(layer, {X=0, Y=0, Z=1}, FLinearColor(0,0,0,1), playerDotSize, "playerImage2")
-
-    addPoint(layer, {X=0, Y=0, Z=0}, FLinearColor(0,0,0,0.5), playerDotSize, "playerImage")
-    addPoint(layer, {X=0, Y=0, Z=0}, FLinearColor(1,1,1,0.5), playerDotSize, "centerDot")
+    addPoint(layer, {X=0, Y=0, Z=0}, playerColor, dotSize, "playerDot")
+    addPoint(layer, {X=0, Y=0, Z=0}, FLinearColor(1,1,1,0.5), dotSize, "centerDot")
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
@@ -179,34 +228,35 @@ local function createMinimap()
 
     mapWidget = widget
 
+    --[[
+    -- trying to tick
     local widgetCompClass = StaticFindObject("/Script/UMG.WidgetComponent")
     local widgetComp = StaticConstructObject(widgetCompClass, gi, FName("MapWidgetComp"))
 
+        -- widget:SetTickMode(2)  -- Try different values: 0=Disabled, 1=Enabled, 2=Automatic?
 
-    -- widget:SetTickMode(2)  -- Try different values: 0=Disabled, 1=Enabled, 2=Automatic?
+    widgetComp:SetDrawSize({X=512,Y=512})
+    widgetComp:SetWidgetSpace(1)     -- 1 = screen space, 0 = world space
+    widgetComp:SetTickMode(1)        -- ETickMode::Automatic (if exposed)
+    widgetComp:SetTwoSided(true)
 
-widgetComp:SetDrawSize({X=512,Y=512})
-widgetComp:SetWidgetSpace(1)     -- 1 = screen space, 0 = world space
-widgetComp:SetTickMode(1)        -- ETickMode::Automatic (if exposed)
-widgetComp:SetTwoSided(true)
-
--- 4. Assign your manually created widget
+    -- 4. Assign your manually created widget
 
 
--- 5. Register and attach
--- gi:AddInstanceComponent(widgetComp)
--- widgetComp:RegisterComponent()
+    -- 5. Register and attach
+    -- gi:AddInstanceComponent(widgetComp)
+    -- widgetComp:RegisterComponent()
 
-widgetComp:SetTickWhenOffscreen(true)
+    widgetComp:SetTickWhenOffscreen(true)
 
-widgetComp:SetWidget(widget)
+    widgetComp:SetWidget(widget)
 
     for _, comp in ipairs(FindAllOf("WidgetComponent")or{}) do
         --if comp:GetWidget() == widget then
             print("Found component", comp:GetFullName(), comp:GetWidget():GetFullName())
         --end
     end
-
+    ]]
 
 end
 
@@ -216,61 +266,45 @@ local function updateMinimap()
     -- print("tick!")
 
     local bgLayer = FindObject("CanvasPanel", "DotLayer")
-
     local pc = getCameraController and getCameraController() or UEHelpers.GetPlayerController()
 
-    local clipBox = FindObject("CanvasPanel", "MapClipBox")
+    if pc and pc:IsValid() then
+        local cam = pc.PlayerCameraManager
+        if cam and cam:IsValid() then
+            local loc = cam:GetCameraLocation()
+            local rot = cam:GetCameraRotation()
 
-    pcall(function()
-        clipBox:SetClipping(1) -- 1 = ClipToBounds
-    end)
+            local size = mapSize.X
 
+            local scale = scaling
+            local angle = -rot.Yaw + 270
 
---------------------------------------
+            local cx = loc.X
+            local cy = loc.Y
 
-if pc and pc:IsValid() then
-    local cam = pc.PlayerCameraManager
-    if cam and cam:IsValid() then
-        local loc = cam:GetCameraLocation()
-        local rot = cam:GetCameraRotation()
+            local u = cx / size
+            local v = cy / size
 
-        local size = mapSize.X
+            bgLayer:SetRenderTransformPivot({X = u, Y = v})
 
-        local scale = scaling
-        local angle = -rot.Yaw + 270
+            local tx = size * (0.5 - u) + widgetSize.X/2
+            local ty = size * (0.5 - v) + widgetSize.Y/2
 
-        local cx = loc.X
-        local cy = loc.Y
+            bgLayer:SetRenderTransform({
+                Translation = {X = tx, Y = ty},
+                Scale = {X = scale, Y = scale},
+                Shear = {X = 0, Y = 0}, 
+                Angle = angle
+            })
 
-        local u = cx / size
-        local v = cy / size
+            local playerImage = FindObject("Image", "playerDot")
+            if playerImage and playerImage:IsValid() then
+                playerImage.Slot:SetPosition({X = loc.X - dotSize/2, Y = loc.Y - dotSize/2})
+                playerImage.Slot:SetZOrder(math.floor(loc.Z))
+            end
 
-        bgLayer:SetRenderTransformPivot({X = u, Y = v})
-
-        local tx = size * (0.5 - u) + widgetSize.X/2
-        local ty = size * (0.5 - v) + widgetSize.Y/2
-
-        --tx = 0
-        --ty = 0
-
-        bgLayer:SetRenderTransform({
-            Translation = {X = tx, Y = ty},
-            Scale = {X = scale, Y = scale},
-            Shear = {X = 0, Y = 0}, 
-            Angle = angle
-        })
-
-
-        local playerImage = FindObject("Image", "playerImage")
-        if playerImage and playerImage:IsValid() then
-            playerImage.Slot:SetPosition({X = loc.X - playerDotSize/2, Y = loc.Y - playerDotSize/2})
-            playerImage.Slot:SetZOrder(math.floor(loc.Z))
         end
-
     end
-end
-
--------------------------------------------
 
 --[[
     ExecuteWithDelay(16,function()
@@ -299,13 +333,13 @@ local function setFound(hook, name, found)
     if point then
         point.found = found
         if found then
-            print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+            -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
 
             if name ~= nil then
                 local image = FindObject("Image", name .. ".Dot")
 
                 if image:IsValid() then
-                    print("removing point", image:GetFullName())
+                    -- print("removing point", image:GetFullName())
                     image:RemoveFromParent()
                 end
             end
