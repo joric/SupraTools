@@ -1,5 +1,10 @@
 -- map that uses 1:1 scaling and doesn't update point coordinates, just rotates the layer
 
+-- I am currently having troubles with HDR textures in Supraworld
+-- SW_PlayerMapWidget displays them somehow (probably uses HDR material)
+-- I cannot find the way to display HDR images in widgets just yet
+-- May be Package /PlayerMap/Materials/TextureBrush/M_TextureBrush
+
 local UEHelpers = require("UEHelpers")
 
 local VISIBLE = 4
@@ -11,7 +16,7 @@ local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
 local widgetAlignment = 'bottomleft'
-local widgetOpacity = 0.85
+local widgetOpacity = 0.75
 local widgetSize = {X=320, Y=320}
 local mapSize = {X=200000, Y=200000}
 local scaling = 0.05
@@ -132,6 +137,21 @@ local function loadImages(bgContainer)
         "/PlayerMap/Textures/T_SupraworldMapV4Q%d.T_SupraworldMapV4Q%d",
     }
 
+    local material = StaticFindObject("/PlayerMap/Materials/TextureBrush/M_TextureBrush.M_TextureBrush")
+    if material then
+        print("-- loaded material", material and material:GetFullName())
+
+        local matlib = StaticFindObject("/Script/Engine.Default__KismetMaterialLibrary")
+        print("-- loaded library", matlib:GetFullName(), matlib.CreateDynamicMaterialInstance)
+
+        local world = UEHelpers.GetWorld()
+        local dmi = matlib:CreateDynamicMaterialInstance(world, material, FName("mapMaterial"), 0)
+
+        if dmi and dmi:IsValid() then
+            print("-- loaded dynamic material", dmi:GetFullName())
+        end
+    end
+
     for i = 1, 4 do
         for _,template in ipairs(templates) do
             local path = string.format(template, i-1, i-1)
@@ -139,7 +159,15 @@ local function loadImages(bgContainer)
             if texture and texture:IsValid() then
                 print("Loaded " .. path, 'SRGB', texture.SRGB, 'Compression', texture.CompressionSettings)
                 local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer, FName("mapTile"..i))
-                image:SetBrushFromTexture(texture, false)
+
+                if not texture.SRGB and dmi and dmi:IsValid() then
+                    print("Setting texture to material (crashes here)")
+                    -- dmi:SetTextureParameterValue("Texture", texture) -- crashes here
+                    image:SetBrushFromMaterial(dmi)
+                else
+                    image:SetBrushFromTexture(texture, false)
+                end
+
                 local slot = bgContainer:AddChildToCanvas(image)
                 slot:SetZOrder(-8000 + i)
                 break
