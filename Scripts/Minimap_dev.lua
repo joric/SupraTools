@@ -27,13 +27,15 @@ local dotSize = 5.0/scaling
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 
+local hooksRegistered = false
+
 local pointTypes = {
     -- supraworld
     SecretVolume_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
     RealCoinPickup_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
     PresentBox_Lootpools_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
     ItemSpawner_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
-    PresentBox_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
+    PresentBox_C = {FLinearColor(1,0,1,1),FLinearColor(0,0,0,0)},
     PickupSpawner_C = {FLinearColor(0,0,1,1),FLinearColor(0,0,0,0)},
 
     -- supraland
@@ -189,7 +191,8 @@ local function createMinimap()
 
     if mapWidget and mapWidget:IsValid() then
         print("Minimap already exists.")
-        return
+        widget:RemoveFromParent()
+        --return
     end
 
     print("### CREATING MINIMAP ###")
@@ -359,7 +362,7 @@ local function setFound(hook, name, found)
     if point then
         point.found = found
         if found then
-            print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+            -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
 
             if name ~= nil then
                 local image = FindObject("Image", name .. ".Dot")
@@ -425,9 +428,16 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
         return
     end
 
-    createMinimap()
-    updateMinimap()
-    registerHooks()
+    if not hooksRegistered then
+        registerHooks()
+        hooksRegistered = true
+    end
+
+    -- need delay to load things
+    ExecuteWithDelay(1000, function()
+        createMinimap()
+        updateMinimap()
+    end)
 
 end)
 
