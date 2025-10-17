@@ -417,7 +417,6 @@ local function registerHooks()
         end)
         -- print(ok and "REGISTERED" or "NOT FOUND", hook.hook)
     end
-
 end
 
 RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
@@ -439,8 +438,6 @@ LoopAsync(60000, function()  -- let's see if hooks work
     updateMinimap()
 end)
 
-ExecuteAsync(updateCachedPoints)
-
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
 
 RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
@@ -450,4 +447,8 @@ RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
     return true
 end)
 
-registerHooks()
+if mapWidget and mapWidget:IsValid() then
+    registerHooks()
+    ExecuteAsync(updateCachedPoints)
+end
+
