@@ -15,7 +15,7 @@ local defaultVisibility = VISIBLE
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
-local widgetAlignment = 'topright'
+local widgetAlignment = 'bottomright'
 local widgetOpacity = 0.75
 local widgetSize = {X=400, Y=400}
 local mapSize = {X=200000, Y=200000}
