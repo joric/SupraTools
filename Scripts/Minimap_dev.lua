@@ -17,12 +17,12 @@ local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A)
 
 local widgetAlignment = 'bottomleft'
 local widgetOpacity = 0.75
-local widgetSize = {X=320, Y=320}
+local widgetSize = {X=400, Y=400}
 local mapSize = {X=200000, Y=200000}
 local scaling = 0.05
-local dotSize = 100
 local cachedPoints = nil
 local playerColor = FLinearColor(1,1,1,1)
+local dotSize = 5.0/scaling
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 
@@ -186,13 +186,6 @@ local function createMinimap()
 
     local gi = UEHelpers.GetGameInstance()
     local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("mapWidget"))
-
--- widget:Initialize()
--- widget.bCanEverTick = true
--- widget:SetVisibility(0) -- Visible
-
-    widget:SetRenderOpacity(widgetOpacity)
-
     widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("MinimapTree"))
 
     local canvas0 = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("MinimapCanvas"))
@@ -216,8 +209,6 @@ local function createMinimap()
     clipSlot:SetPosition({X = 0, Y = 0})
     clipSlot:SetZOrder(-1000)
 
-    --setAlignment(slot, defaultAlignment)
-
     clipBox:SetClipping(1)
 
     -- Create a container for the map background that can be rotated and scaled
@@ -234,13 +225,14 @@ local function createMinimap()
 
     containerSlot:SetZOrder(0)
 
-    layer = bgContainer
-
     loadImages(bgContainer)
 
     positionImages()
 
     updateCachedPoints()
+
+
+    layer = bgContainer
 
     for name, point in pairs(cachedPoints) do
         local color = pointTypes[point.type][point.found and 2 or 1]
@@ -254,10 +246,18 @@ local function createMinimap()
     widget:SetVisibility(defaultVisibility)
     widget:AddToViewport(99)
 
+    widget:SetRenderOpacity(widgetOpacity)
+
     mapWidget = widget
 
     --[[
     -- trying to tick
+
+-- widget:Initialize()
+-- widget.bCanEverTick = true
+-- widget:SetVisibility(0) -- Visible
+
+
     local widgetCompClass = StaticFindObject("/Script/UMG.WidgetComponent")
     local widgetComp = StaticConstructObject(widgetCompClass, gi, FName("MapWidgetComp"))
 

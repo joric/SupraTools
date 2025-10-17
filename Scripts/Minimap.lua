@@ -110,6 +110,7 @@ local function createMapWidget()
 
     local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("MinimapBG"))
     bg:SetBrushColor(FLinearColor(0, 0, 0, 0))
+    bg:SetPadding({0,0,0,0})
 
     local slot = canvas:AddChildToCanvas(bg)
     slot:SetSize(mapSize)
