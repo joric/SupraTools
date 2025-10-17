@@ -151,19 +151,7 @@ local function groupResults(items)
     return table.concat(res)
 end
 
-local function getAllAbilities()
-    local out = {}
-    for _, obj in pairs(FindObjects(30000, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
-        if obj and obj:IsValid() then
-            local path = tostring(obj:GetFullName())
-            if path:find("/Abilities/") and path:find("/Inventory") then
-                local name = path:match("Inventory_([^%.]+)")
-                if name then
-                    table.insert(out, name:lower())
-                end
-            end
-        end
-    end
+local function consolefy(out)
     table.sort(out)
 
     local result = {}
@@ -180,6 +168,23 @@ local function getAllAbilities()
     end
 
     return table.concat(result)
+end
+
+local function getAllAbilities()
+    local out = {}
+    for _, obj in pairs(FindObjects(30000, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
+        if obj and obj:IsValid() then
+            local path = tostring(obj:GetFullName())
+            if path:find("/Abilities/") and path:find("/Inventory") then
+                local name = path:match("Inventory_([^%.]+)")
+                if name then
+                    table.insert(out, name:lower())
+                end
+            end
+        end
+    end
+
+    return consolefy(out)
 end
 
 local function inventoryHandler(fn, actionVerb, usageMsg, failMsg)

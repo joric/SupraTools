@@ -211,28 +211,72 @@ local function DeployItem(name)
     return true
 end
 
+local function tagify(name)
+    return name:gsub("Buy",""):gsub("BP_Purchase",""):gsub("_C",""):lower()
+end
+
+local function consolefy2(data)
+    out = {}
+    for _, name in ipairs(data) do
+        table.insert(out, tagify(name))
+    end
+    table.sort(out)
+
+    local result = {}
+    local lastFirst = ""
+    for _, name in ipairs(out) do
+        local first = name:sub(1,1)
+        if first ~= lastFirst and lastFirst ~= "" then
+            table.insert(result, "\n")
+        elseif lastFirst ~= "" then
+            table.insert(result, " ")
+        end
+        table.insert(result, name)
+        lastFirst = first
+    end
+    return table.concat(result)
+end
+
+local function GetDeployables(filter)
+    local out = {}
+    for _, obj in pairs(FindObjects(30000, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
+        if obj and obj:IsValid() then
+            local path = tostring(obj:GetFullName())
+            if path:find("/Buy") or path:find("/BP_Purchase") then
+                local name = obj:GetFName():ToString()
+                if name then
+                    if not filter or name:lower():find(filter:lower()) then
+                        table.insert(out, name)
+                    end
+                end
+            end
+        end
+    end
+    table.sort(out)
+    return out
+end
+
+
 RegisterConsoleCommandHandler("deploy", function(FullCommand, Parameters, Ar)
     local name = Parameters[1]
     if not name then
-        local res = GetDeployAliases()
-        for _, str in ipairs(res) do
-            Ar:Log(str)
-        end
-        Ar:Log("Usage: deploy <alias or name>")
+        local out = GetDeployables()
+        Ar:Log(consolefy2(out))
+        Ar:Log("Usage: deploy <name>")
         return true
     end
 
-    local name, err = GetItemName(name)
+    local out = GetDeployables(name)
 
-    if name then
-        ok, err = DeployItem(name)
+    if #out==1 then
+        ok, err = DeployItem(out[1])
         if ok then
-            Ar:Log(string.format("%s deployed.", name))
+            Ar:Log(string.format("%s (%s) deployed.", out[1], tagify(out[1])))
         else
             Ar:Log(err)
         end
     else
-        Ar:Log(err)
+        Ar:Log(consolefy2(out))
     end
 
     return true
