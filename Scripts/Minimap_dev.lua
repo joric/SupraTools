@@ -25,6 +25,7 @@ local cachedPoints = nil
 local playerColor = FLinearColor(1,1,1,1)
 local dotSize = 5.0/scaling
 local tilesVisibility = true
+local spherify = false
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 
@@ -54,16 +55,13 @@ local function setFound(hook, name, found)
         point.found = found
         if found then
             -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
-
             if name ~= nil then
                 local image = FindObject("Image", name .. ".Dot")
-
                 if image:IsValid() then
                     -- print("removing point", image:GetFullName())
                     image:RemoveFromParent()
                 end
             end
-
         end
     end
 end
@@ -125,7 +123,8 @@ local function addPoint(layer, loc, color, size, name)
     local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), layer, FName(name))
     local slot = layer:AddChildToCanvas(image)
     image:SetColorAndOpacity(color)
-    image.Slot:SetPosition({X = loc.X  -size/2, Y = loc.Y - size/2})
+    image.Slot:SetAlignment({X = 0.5, Y = 0.5})
+    image.Slot:SetPosition({X = loc.X, Y = loc.Y})
     image.Slot:SetSize({X = size, Y = size})
     image.Slot:SetZOrder(math.floor(loc.Z))
     return image
@@ -260,7 +259,7 @@ local function createMinimap()
 
     for name, point in pairs(cachedPoints) do
         local color = pointTypes[point.type][point.found and 2 or 1]
-        addPoint(dotLayer, point.loc, color, dotSize, name .. ".Dot")
+        cachedPoints[name].image = addPoint(dotLayer, point.loc, color, dotSize, name .. ".Dot")
     end
 
     addPoint(dotLayer, {X=0, Y=0, Z=0}, playerColor, dotSize, "playerDot")
@@ -311,6 +310,37 @@ local function createMinimap()
 
 end
 
+local function updatePoints(loc)
+    for name, point in pairs(cachedPoints) do
+        local image = cachedPoints[name].image
+        if image and image:IsValid() and image.Slot and image.Slot:IsValid() then
+
+            local x, y = point.loc.X, point.loc.Y
+
+            if spherify and loc then
+                local cx, cy = loc.X, loc.Y
+
+                local w = widgetSize.X / scaling
+                local h = widgetSize.Y / scaling
+
+                local relX, relY = x - cx, y - cy
+                local dist = math.sqrt(relX*relX + relY*relY)
+                local radius = math.min(w, h) / 2 - dotSize / 2
+
+                if dist > radius then
+                    local scale = radius / dist
+                    relX = relX * scale
+                    relY = relY * scale
+                    x = cx + relX
+                    y = cy + relY
+                end
+            end
+
+            image.Slot:SetPosition({X = x, Y = y})
+        end
+    end
+end
+
 local function updateMinimap()
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
 
@@ -348,9 +378,11 @@ local function updateMinimap()
                 Angle = angle
             })
 
+            if spherify then updatePoints(loc) end
+
             local playerImage = FindObject("Image", "playerDot")
             if playerImage and playerImage:IsValid() then
-                playerImage.Slot:SetPosition({X = loc.X - dotSize/2, Y = loc.Y - dotSize/2})
+                playerImage.Slot:SetPosition({X = loc.X, Y = loc.Y})
                 playerImage.Slot:SetZOrder(math.floor(loc.Z))
             end
 
@@ -481,6 +513,11 @@ local widgetPositions = {
     {align='topleft', size={X=400,Y=400}, tiles=false},
     {align='topright', size={X=400,Y=400}, tiles=false},
     {align='center', size={X=800,Y=800}, tiles=false},
+    {align='bottomright', size={X=400,Y=400}, tiles=false, spherify=true},
+    {align='bottomleft', size={X=400,Y=400}, tiles=false, spherify=true},
+    {align='topleft', size={X=400,Y=400}, tiles=false, spherify=true},
+    {align='topright', size={X=400,Y=400}, tiles=false, spherify=true},
+    {align='center', size={X=800,Y=800}, tiles=false, spherify=true},
 }
 
 local function cycleMinimap()
@@ -496,12 +533,14 @@ local function cycleMinimap()
     widgetAlignment = p.align
     widgetSize = p.size
     tilesVisibility = p.tiles
+    spherify = p.spherify and true or false
 
     print("setting position to", widgetAlignment, widgetSize, obj.Slot)
 
     obj.Slot:SetSize(widgetSize)
     setAlignment(obj.Slot, widgetAlignment)
     updateTiles()
+    updatePoints()
 end
 
 -- RegisterKeyBind(Key.R, {}, updateCachedPoints)
