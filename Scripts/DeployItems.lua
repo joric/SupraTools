@@ -256,22 +256,40 @@ local function GetDeployables(filter)
     return out
 end
 
+local function findExactMatch(tbl, value)
+    for _, v in ipairs(tbl) do
+        if tagify(v) == value then
+            return v
+        end
+    end
+    return nil
+end
+
 
 RegisterConsoleCommandHandler("deploy", function(FullCommand, Parameters, Ar)
     local name = Parameters[1]
     if not name then
         local out = GetDeployables()
         Ar:Log(consolefy2(out))
-        Ar:Log("Usage: deploy <name>")
+        Ar:Log("Usage: deploy <name> or <substring>")
         return true
     end
 
     local out = GetDeployables(name)
 
+    -- check for precise hit or the only hit
+    local hit = nil
+
     if #out==1 then
-        ok, err = DeployItem(out[1])
+        hit = out[1]
+    else
+        hit = findExactMatch(out, name)
+    end
+
+    if hit then
+        ok, err = DeployItem(hit)
         if ok then
-            Ar:Log(string.format("%s (%s) deployed.", out[1], tagify(out[1])))
+            Ar:Log(string.format("%s (%s) deployed.", out[1], tagify(hit)))
         else
             Ar:Log(err)
         end
