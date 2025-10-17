@@ -16,13 +16,14 @@ local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
 local widgetAlignment = 'bottomright'
-local widgetOpacity = 0.75
+local widgetOpacity = 0.85
+local backgroundColor = FLinearColor(1,1,1,0.25)
 local widgetSize = {X=400, Y=400}
 local mapSize = {X=200000, Y=200000}
 local scaling = 0.05
 local cachedPoints = nil
 local playerColor = FLinearColor(1,1,1,1)
-local dotSize = 5.0/scaling
+local dotSize = 3.0/scaling
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 
@@ -45,6 +46,7 @@ local pointTypes = {
 }
 
 local function updateCachedPoints()
+    print("calling updateCachedPoints")
     cachedPoints = cachedPoints or {}
     for type, color in pairs(pointTypes) do
         for _, actor in ipairs(FindAllOf(type) or {}) do
@@ -62,6 +64,10 @@ local function updateCachedPoints()
                 if (type == "Coin_C" or type=="PhysicalCoin_C" or type=="CoinBig_C" or type=="CoinRed_C") 
                     and not actor.Coin:IsValid() or (actor.Coin:IsValid() and not actor.Coin:IsVisible()) then -- the only reliable way I found
                     found = true
+                end
+
+                if found then
+                    print("cached", name)
                 end
 
                 cachedPoints[name] = cachedPoints[name] or {}
@@ -193,7 +199,7 @@ local function createMinimap()
     widget.WidgetTree.RootWidget = canvas0
 
     local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas0, FName("MinimapBG"))
-    bg:SetBrushColor(FLinearColor(1,1,1,0.5))
+    bg:SetBrushColor(backgroundColor)
     bg:SetPadding({0,0,0,0})
 
     local slot = canvas0:AddChildToCanvas(bg)
@@ -350,7 +356,7 @@ local function setFound(hook, name, found)
     if point then
         point.found = found
         if found then
-            -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+            print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
 
             if name ~= nil then
                 local image = FindObject("Image", name .. ".Dot")
@@ -426,9 +432,11 @@ end)
 
 LoopAsync(60000, function()  -- let's see if hooks work
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
-    --updateCachedPoints()
-    --updateMinimap()
+    updateCachedPoints()
+    updateMinimap()
 end)
+
+ExecuteAsync(updateCachedPoints)
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
 
