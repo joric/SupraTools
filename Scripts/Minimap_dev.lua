@@ -337,7 +337,7 @@ local function updateMinimap()
 
 --[[
     ExecuteWithDelay(16,function()
-        ExecuteInGameThread(updateMinimap) -- seems much more stable this way!
+        ExecuteInGameThread(updateMinimap) -- almost stable but hangs on scripts reloading by Ctrl+R
     end)
 ]]
 
@@ -401,8 +401,12 @@ local function registerHooks()
         { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Timeline_0__FinishedFunc" },
 
 
-        { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick', call=updateMinimap },
-        { hook = '/Supraworld/Abilities/ToyCharacterIK_Toothpick.ToyCharacterIK_Toothpick_C:Tick_UpdateHandLocations', call=updateMinimap },
+        { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick', call=updateMinimap }, -- works when task text is in top right
+
+        { hook = '/Supraworld/Systems/Talk/Widgets/TextTalkBubbleWidget.TextTalkBubbleWidget_C:Tick', call=updateMinimap }, -- only works when bubbles
+        --{ hook = '/Supraworld/Abilities/ToyCharacterIK_Toothpick.ToyCharacterIK_Toothpick_C:Tick_UpdateHandLocations', call=updateMinimap }, -- only works for toothpick
+        --{ hook = '/SupraCore/Core/SupraRotationComponent.SupraRotationComponent_C:Tick_RotateToLocation', call=updateMinimap }, -- slow! super many objects
+        --{hook = '/Supraworld/Core/PostProcessManagerControllerComponent.PostProcessManagerControllerComponent_C:ReceiveTick', call=updateMinimap}, -- never called
 
     }
 
