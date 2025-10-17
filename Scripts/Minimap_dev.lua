@@ -17,13 +17,14 @@ local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A)
 
 local widgetAlignment = 'bottomright'
 local widgetOpacity = 0.85
-local backgroundColor = FLinearColor(1,1,1,0.25)
+local backgroundColor = FLinearColor(0,0,0,0.25)
 local widgetSize = {X=400, Y=400}
 local mapSize = {X=200000, Y=200000}
 local scaling = 0.05
 local cachedPoints = nil
 local playerColor = FLinearColor(1,1,1,1)
 local dotSize = 5.0/scaling
+local tilesVisibility = true
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 
@@ -130,7 +131,7 @@ local function addPoint(layer, loc, color, size, name)
     return image
 end
 
-local function positionImages()
+local function updateTiles()
     local mapBounds = FindFirstOf("PlayerMapActor_C")
     if not mapBounds:IsValid() then
         return
@@ -153,7 +154,7 @@ local function positionImages()
             image.Slot:SetPosition({X = pos[i][1] * tileSize + cx, Y = pos[i][2] * tileSize + cy})
 
             image.Slot:SetSize({X = tileSize, Y = tileSize})
-            image:SetVisibility(VISIBLE)
+            image:SetVisibility(tilesVisibility and VISIBLE or HIDDEN)
             -- image:SetColorAndOpacity({R = 1, G = 1, B = 1, A = 0.5})
         end
     end
@@ -222,14 +223,14 @@ local function createMinimap()
     local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("mapWidget"))
     widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("MinimapTree"))
 
-    local canvas0 = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("MinimapCanvas"))
-    widget.WidgetTree.RootWidget = canvas0
+    local outerCanvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("MinimapCanvas"))
+    widget.WidgetTree.RootWidget = outerCanvas
 
-    local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas0, FName("MinimapBG"))
+    local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), outerCanvas, FName("MinimapBG"))
     bg:SetBrushColor(backgroundColor)
     bg:SetPadding({0,0,0,0})
 
-    local slot = canvas0:AddChildToCanvas(bg)
+    local slot = outerCanvas:AddChildToCanvas(bg)
     slot:SetSize(widgetSize)
     setAlignment(slot, widgetAlignment)
 
@@ -239,11 +240,9 @@ local function createMinimap()
     local clipBox = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), canvas, FName("MapClipBox"))
     local clipSlot = canvas:AddChildToCanvas(clipBox)
     clipSlot:SetZOrder(-1000)
-    -- clipSlot:SetSize(widgetSize)
     clipSlot:SetPosition({X = 0, Y = 0})
     clipSlot:SetAnchors({Minimum = {X = 0, Y = 0}, Maximum = {X = 1, Y = 1}})
     clipSlot:SetOffsets({Left = 0, Top = 0, Right = 0, Bottom = 0})
-
     clipBox:SetClipping(1)
 
     -- Create a container for the map background that can be rotated and scaled
@@ -256,7 +255,7 @@ local function createMinimap()
     containerSlot:SetPosition({X = 0, Y = 0})
 
     loadImages(dotLayer)
-    positionImages()
+    updateTiles()
     updateCachedPoints()
 
     for name, point in pairs(cachedPoints) do
@@ -470,12 +469,18 @@ if mapWidget and mapWidget:IsValid() then
 end
 
 local widgetPosition = 0
+
 local widgetPositions = {
-    {'bottomright', 400},
-    {'bottomleft', 400},
-    {'topleft', 400},
-    {'topright', 400},
-    {'center', 800},
+    {align='bottomright', size={X=400,Y=400}, tiles=true},
+    {align='bottomleft', size={X=400,Y=400}, tiles=true},
+    {align='topleft', size={X=400,Y=400}, tiles=true},
+    {align='topright', size={X=400,Y=400}, tiles=true},
+    {align='center', size={X=800,Y=800}, tiles=true},
+    {align='bottomright', size={X=400,Y=400}, tiles=false},
+    {align='bottomleft', size={X=400,Y=400}, tiles=false},
+    {align='topleft', size={X=400,Y=400}, tiles=false},
+    {align='topright', size={X=400,Y=400}, tiles=false},
+    {align='center', size={X=800,Y=800}, tiles=false},
 }
 
 local function cycleMinimap()
@@ -486,16 +491,17 @@ local function cycleMinimap()
     if not obj:IsValid() then return end
 
     widgetPosition = (widgetPosition + 1) % #widgetPositions
+    local p = widgetPositions[widgetPosition+1]
 
-    widgetAlignment = widgetPositions[widgetPosition+1][1]
-    local size = widgetPositions[widgetPosition+1][2]
-    widgetSize = {X=size, Y=size}
+    widgetAlignment = p.align
+    widgetSize = p.size
+    tilesVisibility = p.tiles
 
     print("setting position to", widgetAlignment, widgetSize, obj.Slot)
 
     obj.Slot:SetSize(widgetSize)
     setAlignment(obj.Slot, widgetAlignment)
-
+    updateTiles()
 end
 
 -- RegisterKeyBind(Key.R, {}, updateCachedPoints)
