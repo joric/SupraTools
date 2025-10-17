@@ -23,7 +23,7 @@ local mapSize = {X=200000, Y=200000}
 local scaling = 0.05
 local cachedPoints = nil
 local playerColor = FLinearColor(1,1,1,1)
-local dotSize = 3.0/scaling
+local dotSize = 5.0/scaling
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 
@@ -184,6 +184,9 @@ local function loadImages(bgContainer)
 end
 
 local function createMinimap()
+
+    mapWidget = FindObject("UserWidget", "mapWidget")
+
     if mapWidget and mapWidget:IsValid() then
         print("Minimap already exists.")
         return
