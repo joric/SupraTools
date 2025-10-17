@@ -271,7 +271,7 @@ RegisterConsoleCommandHandler("deploy", function(FullCommand, Parameters, Ar)
     if not name then
         local out = GetDeployables()
         Ar:Log(consolefy2(out))
-        Ar:Log("Usage: deploy <name> or <substring>")
+        Ar:Log("Usage: deploy <name or substring>")
         return true
     end
 
