@@ -47,6 +47,27 @@ local pointTypes = {
     Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)},
 }
 
+local function setFound(hook, name, found)
+    local point = cachedPoints and cachedPoints[name]
+    if point then
+        point.found = found
+        if found then
+            -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+
+            if name ~= nil then
+                local image = FindObject("Image", name .. ".Dot")
+
+                if image:IsValid() then
+                    -- print("removing point", image:GetFullName())
+                    image:RemoveFromParent()
+                end
+            end
+
+        end
+    end
+end
+
+
 local function updateCachedPoints()
     print("calling updateCachedPoints")
     cachedPoints = cachedPoints or {}
@@ -69,7 +90,7 @@ local function updateCachedPoints()
                 end
 
                 if found then
-                    print("cached", name)
+                    setFound('updateCachedPoints', name, true)
                 end
 
                 cachedPoints[name] = cachedPoints[name] or {}
@@ -218,8 +239,11 @@ local function createMinimap()
     local clipBox = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), canvas, FName("MapClipBox"))
     local clipSlot = canvas:AddChildToCanvas(clipBox)
     clipSlot:SetZOrder(-1000)
-    clipSlot:SetSize(widgetSize)
+    -- clipSlot:SetSize(widgetSize)
     clipSlot:SetPosition({X = 0, Y = 0})
+    clipSlot:SetAnchors({Minimum = {X = 0, Y = 0}, Maximum = {X = 1, Y = 1}})
+    clipSlot:SetOffsets({Left = 0, Top = 0, Right = 0, Bottom = 0})
+
     clipBox:SetClipping(1)
 
     -- Create a container for the map background that can be rotated and scaled
@@ -357,26 +381,6 @@ local function toggleMinimap()
     end
 end
 
-local function setFound(hook, name, found)
-    local point = cachedPoints and cachedPoints[name]
-    if point then
-        point.found = found
-        if found then
-            -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
-
-            if name ~= nil then
-                local image = FindObject("Image", name .. ".Dot")
-
-                if image:IsValid() then
-                    -- print("removing point", image:GetFullName())
-                    image:RemoveFromParent()
-                end
-            end
-
-        end
-    end
-end
-
 local function registerHooks()
     local hooks = {
         -- supraworld
@@ -465,4 +469,38 @@ if mapWidget and mapWidget:IsValid() then
     registerHooks()
     ExecuteAsync(updateCachedPoints)
 end
+
+local widgetPosition = 0
+local widgetPositions = {
+    {'bottomright', 400},
+    {'bottomleft', 400},
+    {'topleft', 400},
+    {'topright', 400},
+    {'center', 800},
+}
+
+local function cycleMinimap()
+    if not mapWidget or not mapWidget:IsValid() then return end
+
+    --local obj = FindObject("CanvasPanel", "MinimapCanvas")
+    local obj = FindObject("Border", "MinimapBG")
+    if not obj:IsValid() then return end
+
+    widgetPosition = (widgetPosition + 1) % #widgetPositions
+
+    widgetAlignment = widgetPositions[widgetPosition+1][1]
+    local size = widgetPositions[widgetPosition+1][2]
+    widgetSize = {X=size, Y=size}
+
+    print("setting position to", widgetAlignment, widgetSize, obj.Slot)
+
+    obj.Slot:SetSize(widgetSize)
+    setAlignment(obj.Slot, widgetAlignment)
+
+end
+
+-- RegisterKeyBind(Key.R, {}, updateCachedPoints)
+
+RegisterKeyBind(Key.M, {ModifierKey.ALT, ModifierKey.CONTROL}, cycleMinimap)
+
 
