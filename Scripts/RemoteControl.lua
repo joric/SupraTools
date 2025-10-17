@@ -9,7 +9,7 @@ local ACTIONS = { -- ordered by priority
     { name = "ApplyPurchase" },
     { name = "ButtonPress" },
     { name = "Set_Active",  call = function(actor) actor:Set_Active(true, false, false, false) end }, -- enables jumppads
-    { name = "Open", call = function(actor, ctx) if actor.bOpen then actor:Close() else actor:Open() end end },
+    { name = "Open", call = function(actor, ctx) if actor:GetClass():GetFName():ToString()=='Jumppad_C' then actor:Activate() elseif actor.bOpen then actor:Close() else actor:Open() end end },
     { name = "Heat", call = function(actor, ctx) actor:Heat(ctx.pc.Pawn, true) end }, -- melts chocolate eggs
     { name = "Pickup", call = function(actor, ctx) actor:Pickup(ctx.pc.Pawn) end },
     { name = "SetUnlocked", call = function(actor) actor:SetUnlocked(true, true, true, true) end },
