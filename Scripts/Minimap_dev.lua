@@ -15,7 +15,7 @@ local defaultVisibility = VISIBLE
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
-local widgetAlignment = 'bottomright'
+local widgetAlignment = 'topright'
 local widgetOpacity = 0.75
 local widgetSize = {X=400, Y=400}
 local mapSize = {X=200000, Y=200000}
@@ -167,9 +167,10 @@ local function loadImages(bgContainer)
                 else
                     image:SetBrushFromTexture(texture, false)
                 end
-
                 local slot = bgContainer:AddChildToCanvas(image)
                 slot:SetZOrder(-8000 + i)
+
+                image:SetVisibility(HIDDEN) -- hide images before positioning
                 break
             end
         end
@@ -229,7 +230,6 @@ local function createMinimap()
     end
 
     addPoint(layer, {X=0, Y=0, Z=0}, playerColor, dotSize, "playerDot")
-    addPoint(layer, {X=0, Y=0, Z=0}, FLinearColor(1,1,1,0.5), dotSize, "centerDot")
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
