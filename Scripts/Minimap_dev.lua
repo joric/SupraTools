@@ -428,6 +428,8 @@ local function toggleMinimap()
     end
 end
 
+local hookInfo = {}
+
 local function registerHooks()
     local hooks = {
         -- supraworld
@@ -473,7 +475,14 @@ local function registerHooks()
 
     for _, hook in ipairs(hooks) do
         ok, err = pcall(function()
-            RegisterHook(hook.hook, function(self, param, ...)
+            local p = hookInfo[hook.hook]
+            if p then
+                UnregisterHook(hook.hook, preId, postId)
+            end
+            local preId, postId = RegisterHook(hook.hook, function(self, param, ...)
+                hookInfo[hook.hook] = {}
+                hookInfo[hook.hook].preId = preId
+                hookInfo[hook.hook].postId = postId
                 local name = self:get():GetFullName()
                 -- print("Hook fired:", hook.hook, "Self:", self:get():GetFName():ToString(), "param", param and param:get())
                 if hook.call then

@@ -212,7 +212,7 @@ local function DeployItem(name)
 end
 
 local function tagify(name)
-    return name:gsub("Buy",""):gsub("BP_Purchase",""):gsub("_C$",""):gsub("^_",""):lower()
+    return name:gsub("Buy",""):gsub("BP_Purchase",""):gsub("Purchase",""):gsub("_C$",""):gsub("^_",""):lower()
 end
 
 local function consolefy2(data)
@@ -242,7 +242,7 @@ local function GetDeployables(filter)
     for _, obj in pairs(FindObjects(30000, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
         if obj and obj:IsValid() then
             local path = tostring(obj:GetFullName())
-            if path:find("/Buy") or path:find("/BP_Purchase") then
+            if path:find("/Buy") or path:find("/BP_Purchase") or path:find("/Purchase") then
                 local name = obj:GetFName():ToString()
                 if name then
                     if not filter or name:lower():find(filter:lower()) then
