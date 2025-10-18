@@ -16,7 +16,7 @@ local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
 local widgetAlignment = 'bottomright'
-local widgetOpacity = 0.85
+local widgetOpacity = 0.75
 local backgroundColor = FLinearColor(0,0,0,0)
 local widgetSize = {X=320, Y=320}
 local mapSize = {X=200000, Y=200000}
