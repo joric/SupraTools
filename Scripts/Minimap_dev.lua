@@ -21,7 +21,6 @@ local backgroundColor = FLinearColor(0,0,0,0)
 local widgetSize = {X=320, Y=320}
 local mapSize = {X=200000, Y=200000}
 local scaling = 0.05
-local cachedPoints = nil
 local playerColor = FLinearColor(1,1,1,1)
 local dotSize = 5.0/scaling
 local tilesVisibility = true
@@ -29,6 +28,7 @@ local spherify = true
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
 local hooksRegistered = false
+local cachedPoints = {}
 
 local pointTypes = {
     -- supraworld
@@ -69,8 +69,10 @@ end
 
 local function updateCachedPoints()
     print("calling updateCachedPoints")
-    cachedPoints = cachedPoints or {}
+
+    local total = 0
     for type, color in pairs(pointTypes) do
+        local count = 0
         for _, actor in ipairs(FindAllOf(type) or {}) do
             if actor:IsValid() then
                 local name = actor:GetFullName()
@@ -96,9 +98,16 @@ local function updateCachedPoints()
                 cachedPoints[name].loc = actor:K2_GetActorLocation() -- cannot cache, coordinates may caught up later
                 cachedPoints[name].found = found
                 cachedPoints[name].type = type
+
+                count = count + 1
             end
         end
+        if count>0 then
+            print(string.format("%s: %d", type, count))
+            total = total + count
+        end
     end
+    print(string.format("Total cached points: %d", total))
 end
 
 local function setAlignment(slot, alignment)
@@ -188,17 +197,14 @@ local function loadImages(bgContainer)
             if texture and texture:IsValid() then
                 print("Loaded " .. path, 'SRGB', texture.SRGB, 'Compression', texture.CompressionSettings)
                 local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer, FName("mapTile"..i))
-
                 if not texture.SRGB and dmi and dmi:IsValid() then
-                    print("Setting texture to material (crashes here)")
                     -- dmi:SetTextureParameterValue("Texture", texture) -- crashes here
-                    image:SetBrushFromMaterial(dmi)
+                    -- image:SetBrushFromMaterial(dmi)
                 else
                     image:SetBrushFromTexture(texture, false)
                 end
                 local slot = bgContainer:AddChildToCanvas(image)
                 slot:SetZOrder(-8000 + i)
-
                 image:SetVisibility(HIDDEN) -- hide images before positioning
                 break
             end
@@ -433,13 +439,24 @@ local hookInfo = {}
 local function registerHooks()
     local hooks = {
         -- supraworld
-        { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", call = function(hook,name,param) setFound(hook,name,param) end },
-        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
-        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:ItemPickedup", call = function(hook,name,param) setFound(hook,name,param) end },
-        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
-        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:OnSpawnedItemPickedUp", call = function(hook,name,param) setFound(hook,name,param) end }, -- works for hay
-        { hook = "/Supraworld/Levelobjects/RespawnablePickupSpawner.RespawnablePickupSpawner_C:SetPickedUp", call = function(hook,name,param) setFound(hook,name,param) end },
-        { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken", call = function(hook,name,param) setFound(hook,name,param) end },
+        { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", call = setFound },
+        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", call = setFound },
+        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:ItemPickedup", call = setFound },
+        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:SetPickedUp", call = setFound },
+        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:OnSpawnedItemPickedUp", call = setFound }, -- works for hay
+        { hook = "/Supraworld/Levelobjects/RespawnablePickupSpawner.RespawnablePickupSpawner_C:SetPickedUp", call = setFound },
+        { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken", call = setFound },
+        { hook = '/Supraworld/Systems/Talk/Widgets/TextTalkBubbleWidget.TextTalkBubbleWidget_C:Tick', call=updateMinimap }, -- only works in supraworld when bubbles
+
+        --{ hook = '/Supraworld/Abilities/ToyCharacterIK_Toothpick.ToyCharacterIK_Toothpick_C:Tick_UpdateHandLocations', call=updateMinimap }, -- only works for toothpick
+        --{ hook = '/SupraCore/Core/SupraRotationComponent.SupraRotationComponent_C:Tick_RotateToLocation', call=updateMinimap }, -- slow! super many objects
+        --{ hook = '/Supraworld/Core/PostProcessManagerControllerComponent.PostProcessManagerControllerComponent_C:ReceiveTick', call=updateMinimap}, -- never called
+        --{ hook='/Script/SupraCore.PlayerStatSubsystem:TickPlaytime', call=updateMinimap},
+        --{ hook='/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostUpdateWork_K2Node_ComponentBoundEvent_1_OnTick__DelegateSignature', call=function(hook,name,param) updateMinimap(hook,name,param) end},
+        --{ hook='/SupraCore/Systems/CustomPhysicsHandleActor/PhysicsHandle_Control.PhysicsHandle_Control_C:BndEvt__CustomPhysicsHandleActor_Control_TickComponent_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature',call=updateMinimap},
+        --{ hook='/Script/UMG.UserWidget:Tick', call=updateMinimap} -- never fires, need to set up widget
+        --{ hook='Function /Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostPhysics_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature', call=updateMinimap} -- very slow
+
 
         -- supraland
         { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" },
@@ -449,28 +466,8 @@ local function registerHooks()
         { hook = "/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc" },
         { hook = "/Game/Blueprints/Levelobjects/PhysicalCoin.PhysicalCoin_C:DestroyAllComponents" },
         { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Timeline_0__FinishedFunc" },
-
-
         { hook = "/Game/Blueprints/Levelobjects/DestroyablePots.DestroyablePots_C:ReceiveAnyDamage" },
-
-
         { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick', call=updateMinimap }, -- works in supraland and/or siu pretty reliably (not in supraworld)
-
-        --{ hook = '/Supraworld/Systems/Talk/Widgets/TextTalkBubbleWidget.TextTalkBubbleWidget_C:Tick', call=updateMinimap }, -- only works when bubbles
-        --{ hook = '/Supraworld/Abilities/ToyCharacterIK_Toothpick.ToyCharacterIK_Toothpick_C:Tick_UpdateHandLocations', call=updateMinimap }, -- only works for toothpick
-        --{ hook = '/SupraCore/Core/SupraRotationComponent.SupraRotationComponent_C:Tick_RotateToLocation', call=updateMinimap }, -- slow! super many objects
-        --{hook = '/Supraworld/Core/PostProcessManagerControllerComponent.PostProcessManagerControllerComponent_C:ReceiveTick', call=updateMinimap}, -- never called
-        --{hook='/Script/SupraCore.PlayerStatSubsystem:TickPlaytime', call=updateMinimap},
-
-
-        --{hook='/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostUpdateWork_K2Node_ComponentBoundEvent_1_OnTick__DelegateSignature', call=function(hook,name,param) updateMinimap(hook,name,param) end},
-
-        --{hook='/SupraCore/Systems/CustomPhysicsHandleActor/PhysicsHandle_Control.PhysicsHandle_Control_C:BndEvt__CustomPhysicsHandleActor_Control_TickComponent_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature',call=updateMinimap},
-
-          {hook='Function /Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostPhysics_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature', call=updateMinimap}
-
-          --{hook='/Script/UMG.UserWidget:Tick', call=updateMinimap}
-
     }
 
     for _, hook in ipairs(hooks) do
