@@ -10,7 +10,7 @@ local UEHelpers = require("UEHelpers")
 local VISIBLE = 4
 local HIDDEN = 2
 
-local defaultVisibility = VISIBLE
+local defaultVisibility = HIDDEN
 
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
@@ -573,10 +573,10 @@ local widgetPositions = {
     {align='topleft', size={X=400,Y=400}, tiles=false},
     {align='topright', size={X=400,Y=400}, tiles=false},
     {align='center', size={X=800,Y=800}, tiles=false},
-    {align='bottomright', size={X=320,Y=320}, tiles=false, spherify=true},
-    {align='bottomleft', size={X=320,Y=320}, tiles=false, spherify=true},
-    {align='topleft', size={X=320,Y=320}, tiles=false, spherify=true},
-    {align='topright', size={X=320,Y=320}, tiles=false, spherify=true},
+    {align='bottomright', size={X=400,Y=400}, tiles=false, spherify=true},
+    {align='bottomleft', size={X=400,Y=400}, tiles=false, spherify=true},
+    {align='topleft', size={X=400,Y=400}, tiles=false, spherify=true},
+    {align='topright', size={X=400,Y=400}, tiles=false, spherify=true},
     {align='center', size={X=800,Y=800}, tiles=false, spherify=true},
 }
 
@@ -595,7 +595,7 @@ local function cycleMinimap()
     tilesVisibility = p.tiles
     spherify = p.spherify and true or false
 
-    print("setting position to", widgetAlignment, widgetSize, obj.Slot)
+    print("Setting minimap position to", widgetAlignment)
 
     obj.Slot:SetSize(widgetSize)
     setAlignment(obj.Slot, widgetAlignment)
