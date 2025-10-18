@@ -51,17 +51,15 @@ local pointTypes = {
 }
 
 local function setFound(hook, name, found)
-    local point = cachedPoints and cachedPoints[name]
+    local point = name and cachedPoints and cachedPoints[name]
     if point then
         point.found = found
         if found then
-            -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
-            if name ~= nil then
-                local image = FindObject("Image", name .. ".Dot")
-                if image:IsValid() then
-                    -- print("removing point", image:GetFullName())
-                    image:RemoveFromParent()
-                end
+            print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+            local image = FindObject("Image", name .. ".Dot")
+            if image:IsValid() then
+                -- print("removing point", image:GetFullName())
+                image:RemoveFromParent()
             end
         end
     end
@@ -483,13 +481,18 @@ local function registerHooks()
 
 
         -- supraland
-        { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" },
+        { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" }, -- Supraland
+        { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:BndEvt__Box_K2Node_ComponentBoundEvent_0_ComponentBeginOverlapSignature__DelegateSignature" }, -- SIU
+
         { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc" },
         { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:DestroyAllComponents" },
         { hook = "/Game/Blueprints/Levelobjects/CoinBig.CoinBig_C:Timeline_0__FinishedFunc" },
         { hook = "/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc" },
         { hook = "/Game/Blueprints/Levelobjects/PhysicalCoin.PhysicalCoin_C:DestroyAllComponents" },
-        { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Timeline_0__FinishedFunc" },
+
+        { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Timeline_0__FinishedFunc" }, -- Supraland
+        { hook = "/Game/Blueprints/Levelobjects/Chest.Chest_C:Timeline_0__FinishedFunc" }, -- SIU
+
         { hook = "/Game/Blueprints/Levelobjects/DestroyablePots.DestroyablePots_C:ReceiveAnyDamage" },
         { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick', call=updateMinimap }, -- works in supraland and/or siu pretty reliably (not in supraworld)
     }
