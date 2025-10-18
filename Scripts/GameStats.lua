@@ -22,7 +22,7 @@ local Visibility_HITTESTINVISIBLE = 3
 local Visibility_SELFHITTESTINVISIBLE = 4
 local Visibility_ALL = 5
 
-local widgetVisibilityMode = 4
+local widgetVisibilityMode = Visibility_SELFHITTESTINVISIBLE
 
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
