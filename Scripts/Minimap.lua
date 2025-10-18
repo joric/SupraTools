@@ -18,7 +18,7 @@ local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A)
 local widgetAlignment = 'bottomright'
 local widgetOpacity = 0.75
 local backgroundColor = FLinearColor(0,0,0,0)
-local widgetSize = {X=320, Y=320}
+local widgetSize = {X=400, Y=400}
 local mapSize = {X=200000, Y=200000}
 local scaling = 0.05
 local playerColor = FLinearColor(1,1,1,1)
