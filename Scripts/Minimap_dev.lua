@@ -24,11 +24,12 @@ local scaling = 0.05
 local playerColor = FLinearColor(1,1,1,1)
 local dotSize = 5.0/scaling
 local tilesVisibility = true
-local spherify = true
+local spherify = false
 
-local mapWidget = FindObject("UserWidget", "mapWidget")
+local mapWidget = FindObject("UserWidget", "MinimapWidget")
 local hooksRegistered = false
 local cachedPoints = {}
+local playerImage = FindObject("Image", "playerDot")
 
 local pointTypes = {
     -- supraworld
@@ -54,7 +55,7 @@ local function setFound(hook, name, found)
     if point then
         point.found = found
         if found then
-            print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+            -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
             if name ~= nil then
                 local image = FindObject("Image", name .. ".Dot")
                 if image:IsValid() then
@@ -68,7 +69,7 @@ end
 
 
 local function updateCachedPoints()
-    print("calling updateCachedPoints")
+    print("-- Calling updateCachedPoints")
 
     local total = 0
     for type, color in pairs(pointTypes) do
@@ -108,6 +109,9 @@ local function updateCachedPoints()
         end
     end
     print(string.format("Total cached points: %d", total))
+
+    -- this is really expensive for some reason (linear search across 1000+ dots?)
+    playerImage = FindObject("Image", "playerDot")
 end
 
 local function setAlignment(slot, alignment)
@@ -214,7 +218,7 @@ end
 
 local function createMinimap()
 
-    mapWidget = FindObject("UserWidget", "mapWidget")
+    mapWidget = FindObject("UserWidget", "MinimapWidget")
 
     if mapWidget and mapWidget:IsValid() then
         print("Minimap already exists.")
@@ -225,10 +229,10 @@ local function createMinimap()
     print("### CREATING MINIMAP ###")
 
     local gi = UEHelpers.GetGameInstance()
-    local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("mapWidget"))
+    local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("MinimapWidget"))
     widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("MinimapTree"))
 
-    local outerCanvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("MinimapCanvas"))
+    local outerCanvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("MinimapOuterCanvas"))
     widget.WidgetTree.RootWidget = outerCanvas
 
     local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), outerCanvas, FName("MinimapBG"))
@@ -239,10 +243,10 @@ local function createMinimap()
     slot:SetSize(widgetSize)
     setAlignment(slot, widgetAlignment)
 
-    local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), bg, FName("MapBaseCanvas"))
+    local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), bg, FName("MinimapCanvas"))
     bg:SetContent(canvas)
 
-    local clipBox = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), canvas, FName("MapClipBox"))
+    local clipBox = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), canvas, FName("MinimapClipBox"))
     local clipSlot = canvas:AddChildToCanvas(clipBox)
     clipSlot:SetZOrder(-1000)
     clipSlot:SetPosition({X = 0, Y = 0})
@@ -268,7 +272,7 @@ local function createMinimap()
         cachedPoints[name].image = addPoint(dotLayer, point.loc, color, dotSize, name .. ".Dot")
     end
 
-    addPoint(dotLayer, {X=0, Y=0, Z=0}, playerColor, dotSize, "playerDot")
+    playerImage = addPoint(dotLayer, {X=0, Y=0, Z=0}, playerColor, dotSize, "playerDot")
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
@@ -279,7 +283,7 @@ local function createMinimap()
     mapWidget = widget
 
     local widgetCompClass = StaticFindObject("/Script/UMG.WidgetComponent")
-    local widgetComp = StaticConstructObject(widgetCompClass, gi, FName("MapWidgetComp"))
+    local widgetComp = StaticConstructObject(widgetCompClass, gi, FName("MinimapWidgetComponent"))
 
     widgetComp:SetWidget(widget)
     widgetComp:SetTickMode(2)
@@ -366,8 +370,8 @@ local function updateMinimap(hook, name, param)
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
     -- print("tick!", hook, name, param)
 
-    if (os.clock() - (lastTime or 0)) * 1000 < throttleMs then return end
-    lastTime = os.clock()
+    --if (os.clock() - (lastTime or 0)) * 1000 < throttleMs then return end
+    --lastTime = os.clock()
 
     local bgLayer = FindObject("CanvasPanel", "DotLayer")
     local pc = getCameraController and getCameraController() or UEHelpers.GetPlayerController()
@@ -403,17 +407,15 @@ local function updateMinimap(hook, name, param)
 
             if spherify then updatePoints(loc) end
 
-            local playerImage = FindObject("Image", "playerDot")
             if playerImage and playerImage:IsValid() then
                 playerImage.Slot:SetPosition({X = loc.X, Y = loc.Y})
                 playerImage.Slot:SetZOrder(math.floor(loc.Z))
             end
-
         end
     end
 
 --[[
-    ExecuteWithDelay(16,function()
+    ExecuteWithDelay(33,function()
         ExecuteInGameThread(updateMinimap) -- almost stable but hangs on scripts reloading by Ctrl+R
     end)
 ]]
@@ -434,6 +436,11 @@ local function toggleMinimap()
     end
 end
 
+local function filterCallback(self, p1)
+    --print("callback", p1 and p1:GetFullName())
+    updateMinimap()
+end
+
 local hookInfo = {}
 
 local function registerHooks()
@@ -446,16 +453,33 @@ local function registerHooks()
         { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:OnSpawnedItemPickedUp", call = setFound }, -- works for hay
         { hook = "/Supraworld/Levelobjects/RespawnablePickupSpawner.RespawnablePickupSpawner_C:SetPickedUp", call = setFound },
         { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken", call = setFound },
-        { hook = '/Supraworld/Systems/Talk/Widgets/TextTalkBubbleWidget.TextTalkBubbleWidget_C:Tick', call=updateMinimap }, -- only works in supraworld when bubbles
 
-        --{ hook = '/Supraworld/Abilities/ToyCharacterIK_Toothpick.ToyCharacterIK_Toothpick_C:Tick_UpdateHandLocations', call=updateMinimap }, -- only works for toothpick
-        --{ hook = '/SupraCore/Core/SupraRotationComponent.SupraRotationComponent_C:Tick_RotateToLocation', call=updateMinimap }, -- slow! super many objects
-        --{ hook = '/Supraworld/Core/PostProcessManagerControllerComponent.PostProcessManagerControllerComponent_C:ReceiveTick', call=updateMinimap}, -- never called
-        --{ hook='/Script/SupraCore.PlayerStatSubsystem:TickPlaytime', call=updateMinimap},
-        --{ hook='/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostUpdateWork_K2Node_ComponentBoundEvent_1_OnTick__DelegateSignature', call=function(hook,name,param) updateMinimap(hook,name,param) end},
-        --{ hook='/SupraCore/Systems/CustomPhysicsHandleActor/PhysicsHandle_Control.PhysicsHandle_Control_C:BndEvt__CustomPhysicsHandleActor_Control_TickComponent_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature',call=updateMinimap},
-        --{ hook='/Script/UMG.UserWidget:Tick', call=updateMinimap} -- never fires, need to set up widget
-        --{ hook='Function /Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostPhysics_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature', call=updateMinimap} -- very slow
+
+        -- this is called too often, more than once per frame
+        --{ hook = '/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostPhysics_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature', call=updateMinimap}, -- very slow
+
+        --{ hook = '/Supraworld/Systems/Talk/Widgets/TextTalkBubbleWidget.TextTalkBubbleWidget_C:Tick', call=updateMinimap }, -- only works in supraworld when bubbles
+
+        { hook = '/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostPhysics_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature', call=filterCallback}, -- very slow
+
+
+        --[[
+        -- neither of those fire
+        { hook = "/Supraworld/Systems/Talk/Widgets/TalkTextWidget.TalkTextWidget_C:Tick" },
+        { hook = "/PlayerMap/SW_PlayerMapWidget.SW_PlayerMapWidget_C:Tick" },
+        { hook = "/Supraworld/Core/UserInterface/HUD/W_EquipmentBarSlot.W_EquipmentBarSlot_C:Tick" },
+        { hook = "/Supraworld/Abilities/BlowGun/UI/W_Reticle_BlowGun.W_Reticle_BlowGun_C:Tick" },
+        { hook = "/SupraworldMenu/UI/Menu/W_UserWatermark.W_UserWatermark_C:Tick" },
+
+        -- these fire ocasionally
+        { hook = '/Supraworld/Abilities/ToyCharacterIK_Toothpick.ToyCharacterIK_Toothpick_C:Tick_UpdateHandLocations', call=updateMinimap }, -- only works for toothpick
+        { hook = '/SupraCore/Core/SupraRotationComponent.SupraRotationComponent_C:Tick_RotateToLocation', call=updateMinimap }, -- slow! super many objects
+        { hook = '/Supraworld/Core/PostProcessManagerControllerComponent.PostProcessManagerControllerComponent_C:ReceiveTick', call=updateMinimap}, -- never called
+        { hook = '/Script/SupraCore.PlayerStatSubsystem:TickPlaytime', call=updateMinimap},
+        { hook = '/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostUpdateWork_K2Node_ComponentBoundEvent_1_OnTick__DelegateSignature', call=function(hook,name,param) updateMinimap(hook,name,param) end},
+        { hook = '/SupraCore/Systems/CustomPhysicsHandleActor/PhysicsHandle_Control.PhysicsHandle_Control_C:BndEvt__CustomPhysicsHandleActor_Control_TickComponent_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature',call=updateMinimap},
+        { hook = '/Script/UMG.UserWidget:Tick', call=updateMinimap} -- never fires, need to set up widget
+        ]]
 
 
         -- supraland
@@ -527,7 +551,11 @@ RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
     return true
 end)
 
+
+print("-- mapWidget", mapWidget and mapWidget:IsValid())
+
 if mapWidget and mapWidget:IsValid() then
+    print("-- re-registering hooks -- ")
     registerHooks()
     ExecuteAsync(updateCachedPoints)
 end
@@ -578,5 +606,4 @@ end
 -- RegisterKeyBind(Key.R, {}, updateCachedPoints)
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT, ModifierKey.CONTROL}, cycleMinimap)
-
 
