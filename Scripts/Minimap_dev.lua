@@ -17,18 +17,17 @@ local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A)
 
 local widgetAlignment = 'bottomright'
 local widgetOpacity = 0.85
-local backgroundColor = FLinearColor(0,0,0,0.25)
-local widgetSize = {X=400, Y=400}
+local backgroundColor = FLinearColor(0,0,0,0)
+local widgetSize = {X=320, Y=320}
 local mapSize = {X=200000, Y=200000}
 local scaling = 0.05
 local cachedPoints = nil
 local playerColor = FLinearColor(1,1,1,1)
 local dotSize = 5.0/scaling
 local tilesVisibility = true
-local spherify = false
+local spherify = true
 
 local mapWidget = FindObject("UserWidget", "mapWidget")
-
 local hooksRegistered = false
 
 local pointTypes = {
@@ -47,6 +46,7 @@ local pointTypes = {
     CoinBig_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
     CoinRed_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
     Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)},
+    DestroyablePots_C = {FLinearColor(1,0,1,1),FLinearColor(1,0,0,0)},
 }
 
 local function setFound(hook, name, found)
@@ -54,7 +54,7 @@ local function setFound(hook, name, found)
     if point then
         point.found = found
         if found then
-            -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
+            print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
             if name ~= nil then
                 local image = FindObject("Image", name .. ".Dot")
                 if image:IsValid() then
@@ -272,12 +272,23 @@ local function createMinimap()
 
     mapWidget = widget
 
+    local widgetCompClass = StaticFindObject("/Script/UMG.WidgetComponent")
+    local widgetComp = StaticConstructObject(widgetCompClass, gi, FName("MapWidgetComp"))
+
+    widgetComp:SetWidget(widget)
+    widgetComp:SetTickMode(2)
+    widgetComp:SetTickWhenOffscreen(true)
+
+
     --[[
     -- trying to tick
 
 -- widget:Initialize()
 -- widget.bCanEverTick = true
 -- widget:SetVisibility(0) -- Visible
+
+MyWidget:SetTickableWhenPaused(true)
+
 
 
     local widgetCompClass = StaticFindObject("/Script/UMG.WidgetComponent")
@@ -341,10 +352,16 @@ local function updatePoints(loc)
     end
 end
 
-local function updateMinimap()
-    if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
 
-    -- print("tick!")
+local throttleMs = 33
+local lastTime = 0
+
+local function updateMinimap(hook, name, param)
+    if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
+    -- print("tick!", hook, name, param)
+
+    if (os.clock() - (lastTime or 0)) * 1000 < throttleMs then return end
+    lastTime = os.clock()
 
     local bgLayer = FindObject("CanvasPanel", "DotLayer")
     local pc = getCameraController and getCameraController() or UEHelpers.GetPlayerController()
@@ -425,22 +442,32 @@ local function registerHooks()
         -- supraland
         { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" },
         { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc" },
+        { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:DestroyAllComponents" },
         { hook = "/Game/Blueprints/Levelobjects/CoinBig.CoinBig_C:Timeline_0__FinishedFunc" },
         { hook = "/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc" },
-        { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:DestroyAllComponents" },
         { hook = "/Game/Blueprints/Levelobjects/PhysicalCoin.PhysicalCoin_C:DestroyAllComponents" },
-        { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:ActivateOpenForever"},
-        { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Activate"},
-        { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:NPCStealsStuffFromChest"},
         { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Timeline_0__FinishedFunc" },
 
 
-        { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick', call=updateMinimap }, -- works when task text is in top right
+        { hook = "/Game/Blueprints/Levelobjects/DestroyablePots.DestroyablePots_C:ReceiveAnyDamage" },
 
-        { hook = '/Supraworld/Systems/Talk/Widgets/TextTalkBubbleWidget.TextTalkBubbleWidget_C:Tick', call=updateMinimap }, -- only works when bubbles
+
+        { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick', call=updateMinimap }, -- works in supraland and/or siu pretty reliably (not in supraworld)
+
+        --{ hook = '/Supraworld/Systems/Talk/Widgets/TextTalkBubbleWidget.TextTalkBubbleWidget_C:Tick', call=updateMinimap }, -- only works when bubbles
         --{ hook = '/Supraworld/Abilities/ToyCharacterIK_Toothpick.ToyCharacterIK_Toothpick_C:Tick_UpdateHandLocations', call=updateMinimap }, -- only works for toothpick
         --{ hook = '/SupraCore/Core/SupraRotationComponent.SupraRotationComponent_C:Tick_RotateToLocation', call=updateMinimap }, -- slow! super many objects
         --{hook = '/Supraworld/Core/PostProcessManagerControllerComponent.PostProcessManagerControllerComponent_C:ReceiveTick', call=updateMinimap}, -- never called
+        --{hook='/Script/SupraCore.PlayerStatSubsystem:TickPlaytime', call=updateMinimap},
+
+
+        --{hook='/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostUpdateWork_K2Node_ComponentBoundEvent_1_OnTick__DelegateSignature', call=function(hook,name,param) updateMinimap(hook,name,param) end},
+
+        --{hook='/SupraCore/Systems/CustomPhysicsHandleActor/PhysicsHandle_Control.PhysicsHandle_Control_C:BndEvt__CustomPhysicsHandleActor_Control_TickComponent_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature',call=updateMinimap},
+
+          {hook='Function /Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostPhysics_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature', call=updateMinimap}
+
+          --{hook='/Script/UMG.UserWidget:Tick', call=updateMinimap}
 
     }
 
@@ -466,19 +493,18 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
         return
     end
 
-    if not hooksRegistered then
-        registerHooks()
-        hooksRegistered = true
-    end
-
     -- need delay to load things
     ExecuteWithDelay(1000, function()
         createMinimap()
         updateMinimap()
+        registerHooks()
     end)
 
 end)
 
+LoopAsync(50, function()
+    -- ExecuteInGameThread(updateMinimap)
+end)
 
 LoopAsync(60000, function()  -- let's see if hooks work
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
@@ -513,10 +539,10 @@ local widgetPositions = {
     {align='topleft', size={X=400,Y=400}, tiles=false},
     {align='topright', size={X=400,Y=400}, tiles=false},
     {align='center', size={X=800,Y=800}, tiles=false},
-    {align='bottomright', size={X=400,Y=400}, tiles=false, spherify=true},
-    {align='bottomleft', size={X=400,Y=400}, tiles=false, spherify=true},
-    {align='topleft', size={X=400,Y=400}, tiles=false, spherify=true},
-    {align='topright', size={X=400,Y=400}, tiles=false, spherify=true},
+    {align='bottomright', size={X=320,Y=320}, tiles=false, spherify=true},
+    {align='bottomleft', size={X=320,Y=320}, tiles=false, spherify=true},
+    {align='topleft', size={X=320,Y=320}, tiles=false, spherify=true},
+    {align='topright', size={X=320,Y=320}, tiles=false, spherify=true},
     {align='center', size={X=800,Y=800}, tiles=false, spherify=true},
 }
 
