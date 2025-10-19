@@ -23,8 +23,8 @@ local mapSize = {X=200000, Y=200000}
 local scaling = 0.05
 local playerColor = FLinearColor(1,1,1,1)
 local dotSize = 5.0/scaling
-local tilesVisibility = true
-local spherify = false
+local showTiles = true
+local useSpherify = false
 
 local mapWidget = FindObject("UserWidget", "MinimapWidget")
 local hooksRegistered = false
@@ -147,24 +147,19 @@ local function updateTiles()
         return
     end
     -- print("### MAP ACTOR FOUND ###", mapBounds.MapWorldSize, mapBounds.MapWorldCenter.X, mapBounds.MapWorldCenter.Y)
-
     -- Calculate tile size based on container
 
     local tileSize = mapBounds.MapWorldSize / 2
-
     local cx, cy = mapBounds.MapWorldCenter.X - tileSize, mapBounds.MapWorldCenter.Y - tileSize
-
 
     local pos = {{0,0},{1,0},{0,1},{1,1}}
     for i = 1, 4 do
         local image = FindObject("Image", "mapTile"..i)
         if image:IsValid() then
             -- Position tile in grid (centered in the larger container)
-
             image.Slot:SetPosition({X = pos[i][1] * tileSize + cx, Y = pos[i][2] * tileSize + cy})
-
             image.Slot:SetSize({X = tileSize, Y = tileSize})
-            image:SetVisibility(tilesVisibility and VISIBLE or HIDDEN)
+            image:SetVisibility(showTiles and VISIBLE or HIDDEN)
             -- image:SetColorAndOpacity({R = 1, G = 1, B = 1, A = 0.5})
         end
     end
@@ -336,7 +331,7 @@ local function updatePoints(loc)
 
             local x, y = point.loc.X, point.loc.Y
 
-            if spherify and loc then
+            if useSpherify and loc then
                 local cx, cy = loc.X, loc.Y
 
                 local w = widgetSize.X / scaling
@@ -403,7 +398,7 @@ local function updateMinimap(hook, name, param)
                 Angle = angle
             })
 
-            if spherify then updatePoints(loc) end
+            if useSpherify then updatePoints(loc) end
 
             if playerImage and playerImage:IsValid() then
                 playerImage.Slot:SetPosition({X = loc.X, Y = loc.Y})
@@ -429,8 +424,10 @@ local function toggleMinimap()
 
     mapWidget:SetVisibility(visible and VISIBLE or HIDDEN)
     if visible then
-        updateCachedPoints()
-        updateMinimap()
+        ExecuteAsync(function()
+            updateCachedPoints()
+            updateMinimap()
+        end)
     end
 end
 
@@ -533,16 +530,6 @@ LoopAsync(60000, function()  -- let's see if hooks work
     updateMinimap()
 end)
 
-RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
-
-RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
-    Ar:Log(supraToolsAttribution)
-    Ar:Log("toggling minimap")
-    toggleMinimap()
-    return true
-end)
-
-
 print("-- mapWidget", mapWidget and mapWidget:IsValid())
 
 if mapWidget and mapWidget:IsValid() then
@@ -554,47 +541,53 @@ end
 local widgetPosition = 0
 
 local widgetPositions = {
-    {align='bottomright', size={X=400,Y=400}, tiles=true},
-    {align='bottomleft', size={X=400,Y=400}, tiles=true},
-    {align='topleft', size={X=400,Y=400}, tiles=true},
-    {align='topright', size={X=400,Y=400}, tiles=true},
-    {align='center', size={X=800,Y=800}, tiles=true},
-    {align='bottomright', size={X=400,Y=400}, tiles=false},
-    {align='bottomleft', size={X=400,Y=400}, tiles=false},
-    {align='topleft', size={X=400,Y=400}, tiles=false},
-    {align='topright', size={X=400,Y=400}, tiles=false},
-    {align='center', size={X=800,Y=800}, tiles=false},
-    {align='bottomright', size={X=400,Y=400}, tiles=false, spherify=true},
-    {align='bottomleft', size={X=400,Y=400}, tiles=false, spherify=true},
-    {align='topleft', size={X=400,Y=400}, tiles=false, spherify=true},
-    {align='topright', size={X=400,Y=400}, tiles=false, spherify=true},
-    {align='center', size={X=800,Y=800}, tiles=false, spherify=true},
+    {align='bottomright', size={X=400,Y=400}},
+    {align='bottomleft', size={X=400,Y=400}},
+    {align='topleft', size={X=400,Y=400}},
+    {align='topright', size={X=400,Y=400}},
+    {align='center', size={X=800,Y=800}},
 }
 
-local function cycleMinimap()
+local function updateMinimapWidget()
     if not mapWidget or not mapWidget:IsValid() then return end
-
-    --local obj = FindObject("CanvasPanel", "MinimapCanvas")
     local obj = FindObject("Border", "MinimapBG")
     if not obj:IsValid() then return end
-
-    widgetPosition = (widgetPosition + 1) % #widgetPositions
-    local p = widgetPositions[widgetPosition+1]
-
-    widgetAlignment = p.align
-    widgetSize = p.size
-    tilesVisibility = p.tiles
-    spherify = p.spherify and true or false
-
-    print("Setting minimap position to", widgetAlignment)
-
     obj.Slot:SetSize(widgetSize)
     setAlignment(obj.Slot, widgetAlignment)
     updateTiles()
     updatePoints()
 end
 
+local function cycleMinimapPosition()
+    widgetPosition = (widgetPosition + 1) % #widgetPositions
+    local p = widgetPositions[widgetPosition+1]
+    widgetAlignment = p.align
+    widgetSize = p.size
+    updateMinimapWidget()
+end
+
+local function toggleSpherify()
+    useSpherify = not useSpherify
+    updateMinimapWidget()
+end
+
+local function toggleTiles()
+    showTiles = not showTiles
+    updateMinimapWidget()
+end
+
 -- RegisterKeyBind(Key.R, {}, updateCachedPoints)
 
-RegisterKeyBind(Key.M, {ModifierKey.ALT, ModifierKey.CONTROL}, cycleMinimap)
+RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
+RegisterKeyBind(Key.M, {ModifierKey.ALT, ModifierKey.CONTROL}, cycleMinimapPosition)
+RegisterKeyBind(Key.M, {ModifierKey.SHIFT}, toggleTiles)
+RegisterKeyBind(Key.M, {ModifierKey.CONTROL}, toggleSpherify)
+
+RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
+    Ar:Log(supraToolsAttribution)
+    Ar:Log("toggling minimap")
+    toggleMinimap()
+    return true
+end)
+
 
