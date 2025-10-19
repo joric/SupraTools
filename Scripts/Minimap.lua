@@ -67,8 +67,6 @@ end
 
 
 local function updateCachedPoints()
-    print("-- Calling updateCachedPoints")
-
     local total = 0
     for type, color in pairs(pointTypes) do
         local count = 0
