@@ -434,11 +434,6 @@ local function toggleMinimap()
     end
 end
 
-local function filterCallback(self, p1)
-    --print("callback", p1 and p1:GetFullName())
-    updateMinimap()
-end
-
 local hookInfo = {}
 
 local function registerHooks()
@@ -452,14 +447,8 @@ local function registerHooks()
         { hook = "/Supraworld/Levelobjects/RespawnablePickupSpawner.RespawnablePickupSpawner_C:SetPickedUp", call = setFound },
         { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken", call = setFound },
 
-
-        -- this is called too often, more than once per frame
-        --{ hook = '/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostPhysics_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature', call=updateMinimap}, -- very slow
-
-        --{ hook = '/Supraworld/Systems/Talk/Widgets/TextTalkBubbleWidget.TextTalkBubbleWidget_C:Tick', call=updateMinimap }, -- only works in supraworld when bubbles
-
-        { hook = '/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostPhysics_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature', call=filterCallback}, -- very slow
-
+        -- this is very CPU intensive but the only I found. Needs checking if UseAndCarry works at start
+        { hook = '/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostPhysics_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature', call = updateMinimap},
 
         --[[
         -- neither of those fire
@@ -468,17 +457,16 @@ local function registerHooks()
         { hook = "/Supraworld/Core/UserInterface/HUD/W_EquipmentBarSlot.W_EquipmentBarSlot_C:Tick" },
         { hook = "/Supraworld/Abilities/BlowGun/UI/W_Reticle_BlowGun.W_Reticle_BlowGun_C:Tick" },
         { hook = "/SupraworldMenu/UI/Menu/W_UserWatermark.W_UserWatermark_C:Tick" },
-
         -- these fire ocasionally
+        { hook = '/Supraworld/Systems/Talk/Widgets/TextTalkBubbleWidget.TextTalkBubbleWidget_C:Tick', call=updateMinimap }, -- only works in supraworld when bubbles
         { hook = '/Supraworld/Abilities/ToyCharacterIK_Toothpick.ToyCharacterIK_Toothpick_C:Tick_UpdateHandLocations', call=updateMinimap }, -- only works for toothpick
         { hook = '/SupraCore/Core/SupraRotationComponent.SupraRotationComponent_C:Tick_RotateToLocation', call=updateMinimap }, -- slow! super many objects
         { hook = '/Supraworld/Core/PostProcessManagerControllerComponent.PostProcessManagerControllerComponent_C:ReceiveTick', call=updateMinimap}, -- never called
         { hook = '/Script/SupraCore.PlayerStatSubsystem:TickPlaytime', call=updateMinimap},
         { hook = '/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostUpdateWork_K2Node_ComponentBoundEvent_1_OnTick__DelegateSignature', call=function(hook,name,param) updateMinimap(hook,name,param) end},
         { hook = '/SupraCore/Systems/CustomPhysicsHandleActor/PhysicsHandle_Control.PhysicsHandle_Control_C:BndEvt__CustomPhysicsHandleActor_Control_TickComponent_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature',call=updateMinimap},
-        { hook = '/Script/UMG.UserWidget:Tick', call=updateMinimap} -- never fires, need to set up widget
+        { hook = '/Script/UMG.UserWidget:Tick', call=updateMinimap}, -- never fires, need to set up widget
         ]]
-
 
         -- supraland
         { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" }, -- Supraland
