@@ -32,8 +32,8 @@ Alt+H to Toggle Help
 
 useStats = false
 
-local HIDDEN = 2
 local VISIBLE = 4
+local HIDDEN = 2
 
 local statsWidget = FindObject("UserWidget", "StatsWidget")
 local textBlock = FindObject("TextBlock", "StatsTextBlock")
@@ -54,8 +54,10 @@ local function getVisibility()
 end
 
 local function setVisibility(visible)
+    print("settings stats widget visibility")
     if statsWidget and statsWidget:IsValid() then
-        widget:SetVisibility(visible and VISIBLE or HIDDEN)
+        print("visibility", visible)
+        statsWidget:SetVisibility(visible and VISIBLE or HIDDEN)
     end
 end
 
@@ -92,6 +94,8 @@ local function createTextWidget()
 
     if statsWidget and statsWidget:IsValid() then
         statsWidget:RemoveFromParent()
+        statsWidget:ConditionalBeginDestroy()
+        statsWidget = nil
     end
 
     print("#### CREATING STATS ####")
@@ -103,20 +107,29 @@ local function createTextWidget()
 
     local gi = UEHelpers.GetGameInstance()
     widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("StatsWidget"))
+    if not widget:IsValid() then print("failed creating widget") return end
+
     widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("StatsSimpleTree"))
+    if not widget.WidgetTree:IsValid() then print("failed creating tree") return end
 
     local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("StatsCanvas"))
+    if not canvas:IsValid() then print("failed creating canvas") return end
+
     widget.WidgetTree.RootWidget = canvas
 
     local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("StatsBG"))
+    if not bg:IsValid() then print("failed creating bg") return end
+
     bg:SetBrushColor(FLinearColor(0, 0, 0, 0.25))
     bg:SetPadding({Left = 15, Top = 10, Right = 15, Bottom = 10})
 
     local text = StaticConstructObject(StaticFindObject("/Script/UMG.TextBlock"), bg, FName("StatsTextBlock"))
+    if not text:IsValid() then print("failed creating text") return end
+
     text.Font.Size = 24
     text:SetColorAndOpacity(FSlateColor(1,1,1,1))
     text:SetShadowOffset({X = 1, Y = 1})
-    text:SetShadowColorAndOpacity(FLinearColor(0, 0, 0, 0.5))
+    text:SetShadowColorAndOpacity(FLinearColor(0,0,0,0.5))
     text:SetText(FText('Hello World!'))
 
     bg:SetContent(text)
@@ -126,11 +139,11 @@ local function createTextWidget()
 
     setAlignment(slot, alignment or "topleft")
 
-    widget:AddToViewport(99)
-
     bg:SetVisibility(VISIBLE)
     text:SetVisibility(VISIBLE)
     widget:SetVisibility(VISIBLE)
+
+    widget:AddToViewport(9999)
 
     statsWidget = widget
     textBlock = text
