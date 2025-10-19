@@ -15,12 +15,27 @@ end
 
 ]]
 
+local helpText = [[
+SupraTools 1.0.3 by Joric
+F for Fast Travel
+Alt+E for Remote Control
+MMB for Debug Camera
+LMB to Teleport
+Alt+P to Pickup All
+Alt+I to Equip All
+Alt+F to Fill Suit
+Alt+Z/X/C/V to Edit
+Alt+M to Toggle Minimap
+Alt+O to Toggle Stats
+Alt+H to Toggle Help
+]]
+
 useStats = false
 
 local HIDDEN = 2
 local VISIBLE = 4
 
-local textWidget = FindObject("UserWidget", "StatsWidget")
+local statsWidget = FindObject("UserWidget", "StatsWidget")
 local textBlock = FindObject("TextBlock", "StatsTextBlock")
 
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
@@ -33,13 +48,13 @@ local function setText(text)
 end
 
 local function getVisibility()
-    if textWidget and textWidget:IsValid() then
-        return textWidget:GetVisibility() ~= HIDDEN
+    if statsWidget and statsWidget:IsValid() then
+        return statsWidget:GetVisibility() ~= HIDDEN
     end
 end
 
 local function setVisibility(visible)
-    if textWidget and textWidget:IsValid() then
+    if statsWidget and statsWidget:IsValid() then
         widget:SetVisibility(visible and VISIBLE or HIDDEN)
     end
 end
@@ -75,10 +90,8 @@ end
 local function createTextWidget()
     useStats = false
 
-    textWidget = FindObject("UserWidget", "StatsWidget")
-
-    if textWidget and textWidget:IsValid() then
-        textWidget:RemoveFromParent()
+    if statsWidget and statsWidget:IsValid() then
+        statsWidget:RemoveFromParent()
     end
 
     print("#### CREATING STATS ####")
@@ -90,9 +103,9 @@ local function createTextWidget()
 
     local gi = UEHelpers.GetGameInstance()
     widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("StatsWidget"))
-    widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("SimpleTree"))
+    widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("StatsSimpleTree"))
 
-    local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("SimpleCanvas"))
+    local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("StatsCanvas"))
     widget.WidgetTree.RootWidget = canvas
 
     local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("StatsBG"))
@@ -119,22 +132,11 @@ local function createTextWidget()
     text:SetVisibility(VISIBLE)
     widget:SetVisibility(VISIBLE)
 
-    textWidget = widget
+    statsWidget = widget
     textBlock = text
-end
 
-local helpText = [[SupraTools 1.0.3 by Joric
-F for Fast Travel
-Alt+E for Remote Control
-MMB for Debug Camera
-LMB to Teleport
-Alt+P to Pickup All
-Alt+I to Equip All
-Alt+F to Fill Suit
-Alt+Z/X/C/V to Edit
-Alt+M to Toggle Minimap
-Alt+O to Toggle Stats
-Alt+H to Toggle Help]]
+    print("stats created", statsWidget:GetFullName(), textBlock:GetFullName())
+end
 
 local function toggleHelp()
     useStats = false
@@ -215,7 +217,6 @@ end
 
 --/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu Self: W_SupraPauseMenu_C_2147469280
 --/Script/LyraGame.LyraHUDLayout:HandleEscapeAction Self:
-
 
 -- search functions/scripts in Live View substring, e.g. W_SupraPauseMenu_C:CloseMenu
 
