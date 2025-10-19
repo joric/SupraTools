@@ -575,9 +575,9 @@ end
 -- RegisterKeyBind(Key.R, {}, updateCachedPoints)
 
 RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
-RegisterKeyBind(Key.M, {ModifierKey.ALT, ModifierKey.CONTROL}, cycleMinimapPosition)
-RegisterKeyBind(Key.M, {ModifierKey.SHIFT}, toggleTiles)
-RegisterKeyBind(Key.M, {ModifierKey.CONTROL}, toggleSpherify)
+RegisterKeyBind(Key.M, {ModifierKey.ALT, ModifierKey.CONTROL}, toggleTiles)
+RegisterKeyBind(Key.M, {ModifierKey.SHIFT}, toggleSpherify)
+RegisterKeyBind(Key.M, {ModifierKey.CONTROL}, cycleMinimapPosition)
 
 RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
     Ar:Log(supraToolsAttribution)
