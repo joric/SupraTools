@@ -3,7 +3,9 @@ local UEHelpers = require("UEHelpers")
 -- experimental, under construction
 
 --[[
-For FText to work in UE5.4+, add this to ue4ss/UE4SS_Signatures/FText_Constructor.lua:
+UE5.4+ needs FText AOB.
+
+ue4ss/UE4SS_Signatures/FText_Constructor.lua:
 
 function Register()
     return "40 53 57 48 83 EC 38 48 89 6C 24 ?? 48 8B FA 48 89 74 24 ?? 48 8B D9 33 F6 4C 89 74 24 30 ?? ?? ?? ?? ?? ?? ?? ?? 7F ?? E8 ?? ?? 00 00 48 8B F0"
@@ -277,5 +279,3 @@ RegisterKeyBind(Key.W, hideWidget)
 RegisterKeyBind(Key.A, hideWidget)
 RegisterKeyBind(Key.S, hideWidget)
 RegisterKeyBind(Key.D, hideWidget)
-
-
