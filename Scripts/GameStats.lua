@@ -266,7 +266,7 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
     end)
 end)
 
-LoopAsync(1000, updateWidget)
+LoopAsync(1000, updateWidget) -- this also re-adds widget to viewport (it's removed between reloads)
 
 RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleStats ) -- Onscreen Objectives, thus "O"
 RegisterKeyBind(Key.H, {ModifierKey.ALT}, toggleHelp)
