@@ -17,8 +17,7 @@ end
 
 ]]
 
-local helpText = [[
-SupraTools 1.0.3 by Joric
+local helpText = [[SupraTools 1.0.3 by Joric
 F for Fast Travel
 Alt+E for Remote Control
 MMB for Debug Camera
@@ -29,8 +28,7 @@ Alt+F to Fill Suit
 Alt+Z/X/C/V to Edit
 Alt+M to Toggle Minimap
 Alt+O to Toggle Stats
-Alt+H to Toggle Help
-]]
+Alt+H to Toggle Help]]
 
 useStats = false
 
@@ -94,12 +92,12 @@ local function createTextWidget()
 
     if statsWidget and statsWidget:IsValid() then
         statsWidget:RemoveFromParent()
-        statsWidget:ConditionalBeginDestroy()
+        --statsWidget:ConditionalBeginDestroy() -- this fucks up re-creating widget
         statsWidget = nil
+        --return
     end
 
     print("#### CREATING STATS ####")
-
     if not UnrealVersion:IsBelow(5, 4) and not hasFTextConstructor() then
         print("ERROR!!! ue4ss/UE4SS_Signatures/FText_Constructor.lua is not found!")
         return
@@ -113,8 +111,12 @@ local function createTextWidget()
     widget.WidgetTree.RootWidget = canvas
 
     local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("StatsBG"))
-    bg:SetBrushColor(FLinearColor(0, 0, 0, 0.25))
+    bg:SetBrushColor(FLinearColor(0,0,0,0.25))
     bg:SetPadding({Left = 15, Top = 10, Right = 15, Bottom = 10})
+
+    local slot = canvas:AddChildToCanvas(bg)
+    slot:SetAutoSize(true)
+    setAlignment(slot, alignment or "topleft")
 
     local text = StaticConstructObject(StaticFindObject("/Script/UMG.TextBlock"), bg, FName("StatsTextBlock"))
     text.Font.Size = 24
@@ -122,22 +124,16 @@ local function createTextWidget()
     text:SetShadowOffset({X = 1, Y = 1})
     text:SetShadowColorAndOpacity(FLinearColor(0,0,0,0.5))
     text:SetText(FText('Hello World!'))
-
+    text:SetVisibility(VISIBLE)
+    textBlock = text
     bg:SetContent(text)
 
-    local slot = canvas:AddChildToCanvas(bg)
-    slot:SetAutoSize(true)
-
-    setAlignment(slot, alignment or "topleft")
-
     bg:SetVisibility(VISIBLE)
-    text:SetVisibility(VISIBLE)
     widget:SetVisibility(VISIBLE)
 
-    widget:AddToViewport(9999)
+    widget:AddToViewport(99)
 
     statsWidget = widget
-    textBlock = text
 
     print("stats created", statsWidget:GetFullName(), textBlock:GetFullName())
 end
@@ -264,7 +260,7 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
         return
     end
 
-    ExecuteWithDelay(2000, function()
+    ExecuteWithDelay(2000, function() -- 2 is sec somehow critical to recreate widget
         createTextWidget()
         setText(helpText)
     end)
