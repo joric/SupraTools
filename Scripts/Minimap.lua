@@ -219,7 +219,7 @@ local function createMinimap()
         --return
     end
 
-    print("### CREATING MINIMAP ###")
+    print("#### CREATING MINIMAP ####")
 
     local gi = UEHelpers.GetGameInstance()
     local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("MinimapWidget"))

@@ -15,55 +15,37 @@ end
 
 ]]
 
-local Visibility_VISIBLE = 0
-local Visibility_COLLAPSED = 1
-local Visibility_HIDDEN = 2
-local Visibility_HITTESTINVISIBLE = 3
-local Visibility_SELFHITTESTINVISIBLE = 4
-local Visibility_ALL = 5
+useStats = false
 
-local widgetVisibilityMode = Visibility_SELFHITTESTINVISIBLE
+local HIDDEN = 2
+local VISIBLE = 4
+
+local textWidget = FindObject("UserWidget", "StatsWidget")
+local textBlock = FindObject("TextBlock", "StatsTextBlock")
 
 local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
 local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
 
-local function getBlock()
-    local obj = FindObject("TextBlock", "SimpleText")
-    if obj and obj:IsValid() then
-        return obj
-    end
-end
-
-local function getWidget()
-    local obj = FindObject("UserWidget", "SimpleWidget")
-    if obj and obj:IsValid() then
-        return obj
-    end
-end
-
 local function setText(text)
-    local block = getBlock()
-    if block then
-        block:SetText(FText(text))
+    if textBlock and textBlock:IsValid() then
+        textBlock:SetText(FText(text))
     end
 end
 
 local function getVisibility()
-    local widget = getWidget()
-    if widget then
-        return widget:GetVisibility()~=Visibility_HIDDEN
+    if textWidget and textWidget:IsValid() then
+        return textWidget:GetVisibility() ~= HIDDEN
     end
 end
 
 local function setVisibility(visible)
-    local widget = getWidget()
-    if widget then
-        widget:SetVisibility(visible and widgetVisibilityMode or Visibility_HIDDEN)
+    if textWidget and textWidget:IsValid() then
+        widget:SetVisibility(visible and VISIBLE or HIDDEN)
     end
 end
 
 local function showWidget() setVisibility(true) end
-local function hideWidget() if not showStats then setVisibility(false) end end
+local function hideWidget() if not useStats then setVisibility(false) end end -- do not hide stats
 local function toggleWidget() setVisibility(not getVisibility()) end
 
 local function hasFTextConstructor()
@@ -72,65 +54,74 @@ local function hasFTextConstructor()
     return f ~= nil
 end
 
-local textWidget = nil
+local function setAlignment(slot, alignment)
+    local b = 0
 
-local function createWidget(alignment)
-    if getWidget() then return end
+    local alignments = {
+        center = {anchor = {0.5, 0.5}, align = {0.5, 0.5}, pos = {0, 0}},
+        top = {anchor = {0.5, 0}, align = {0.5, 0}, pos = {0, b}},
+        bottom = {anchor = {0.5, 1}, align = {0.5, 1}, pos = {0, -b}},
+        topleft = {anchor = {0, 0}, align = {0, 0}, pos = {b, b}},
+        topright = {anchor = {1, 0}, align = {1, 0}, pos = {-b, b}},
+        bottomleft = {anchor = {0, 1}, align = {0, 1}, pos = {b, -b}},
+        bottomright = {anchor = {1, 1}, align = {1, 1}, pos = {-b, -b}}
+    }
+    local a = alignments[alignment] or alignments.center
+    slot:SetAnchors({Minimum = {X = a.anchor[1], Y = a.anchor[2]}, Maximum = {X = a.anchor[1], Y = a.anchor[2]}})
+    slot:SetAlignment({X = a.align[1], Y = a.align[2]})
+    slot:SetPosition({X = a.pos[1], Y = a.pos[2]})
+end
+
+local function createTextWidget()
+    useStats = false
+
+    textWidget = FindObject("UserWidget", "StatsWidget")
+
+    if textWidget and textWidget:IsValid() then
+        textWidget:RemoveFromParent()
+    end
+
+    print("#### CREATING STATS ####")
 
     if not UnrealVersion:IsBelow(5, 4) and not hasFTextConstructor() then
-        print("ERROR!!! ue4ss/UE4SS_Signatures/FText_Constructor.lua is not found! Use this AOB: 40 53 57 48 83 EC 38 48 89 6C 24 ?? 48 8B FA 48 89 74 24 ?? 48 8B D9 33 F6 4C 89 74 24 30 ?? ?? ?? ?? ?? ?? ?? ?? 7F ?? E8 ?? ?? 00 00 48 8B F0")
+        print("ERROR!!! ue4ss/UE4SS_Signatures/FText_Constructor.lua is not found!")
         return
     end
 
-    alignment = alignment or "center" -- "center", "top", "bottom", "topleft", "topright", "bottomleft", "bottomright"
-
     local gi = UEHelpers.GetGameInstance()
-    widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("SimpleWidget"))
+    widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("StatsWidget"))
     widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("SimpleTree"))
 
     local canvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("SimpleCanvas"))
     widget.WidgetTree.RootWidget = canvas
 
-    local border = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("SimpleBorder"))
-    border:SetBrushColor(FLinearColor(0, 0, 0, 0.25))
-    border:SetPadding({Left = 15, Top = 10, Right = 15, Bottom = 10})
+    local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), canvas, FName("StatsBG"))
+    bg:SetBrushColor(FLinearColor(0, 0, 0, 0.25))
+    bg:SetPadding({Left = 15, Top = 10, Right = 15, Bottom = 10})
 
-    local block = StaticConstructObject(StaticFindObject("/Script/UMG.TextBlock"), border, FName("SimpleText"))
-    block.Font.Size = 24
-    block:SetColorAndOpacity(FSlateColor(1,1,1,1))
-    block:SetShadowOffset({X = 1, Y = 1})
-    block:SetShadowColorAndOpacity(FLinearColor(0, 0, 0, 0.5))
-    block:SetText(FText('Hello World!'))
+    local text = StaticConstructObject(StaticFindObject("/Script/UMG.TextBlock"), bg, FName("StatsTextBlock"))
+    text.Font.Size = 24
+    text:SetColorAndOpacity(FSlateColor(1,1,1,1))
+    text:SetShadowOffset({X = 1, Y = 1})
+    text:SetShadowColorAndOpacity(FLinearColor(0, 0, 0, 0.5))
+    text:SetText(FText('Hello World!'))
 
-    border:SetContent(block)
+    bg:SetContent(text)
 
-    local slot = canvas:AddChildToCanvas(border)
+    local slot = canvas:AddChildToCanvas(bg)
     slot:SetAutoSize(true)
 
-    -- Alignment presets
-    local alignments = {
-        center = {anchor = {0.5, 0.5}, align = {0.5, 0.5}, pos = {0, 0}},
-        top = {anchor = {0.5, 0}, align = {0.5, 0}, pos = {0, 10}},
-        bottom = {anchor = {0.5, 1}, align = {0.5, 1}, pos = {0, -10}},
-        topleft = {anchor = {0, 0}, align = {0, 0}, pos = {10, 10}},
-        topright = {anchor = {1, 0}, align = {1, 0}, pos = {-10, 10}},
-        bottomleft = {anchor = {0, 1}, align = {0, 1}, pos = {10, -10}},
-        bottomright = {anchor = {1, 1}, align = {1, 1}, pos = {-10, -10}}
-    }
-    
-    local a = alignments[alignment] or alignments.center
-    slot:SetAnchors({Minimum = {X = a.anchor[1], Y = a.anchor[2]}, Maximum = {X = a.anchor[1], Y = a.anchor[2]}})
-    slot:SetAlignment({X = a.align[1], Y = a.align[2]})
-    slot:SetPosition({X = a.pos[1], Y = a.pos[2]})
+    setAlignment(slot, alignment or "topleft")
 
     widget:AddToViewport(99)
 
-    widget:SetVisibility(widgetVisibilityMode)
-end
+    bg:SetVisibility(VISIBLE)
+    text:SetVisibility(VISIBLE)
+    widget:SetVisibility(VISIBLE)
 
--- either show stats or help because we only have 1 widget
--- set to false on help because callback function overrides stats
-showStats = true
+    textWidget = widget
+    textBlock = text
+end
 
 local helpText = [[SupraTools 1.0.3 by Joric
 F for Fast Travel
@@ -146,7 +137,7 @@ Alt+O to Toggle Stats
 Alt+H to Toggle Help]]
 
 local function toggleHelp()
-    showStats = false
+    useStats = false
     setText(helpText)
     toggleWidget()
 end
@@ -213,36 +204,14 @@ end
 local function toggleStats()
     setText(getStats())
     toggleWidget()
-    showStats = true
+    useStats = true
 end
 
 local function updateStats()
-    if not showStats then return end
+    if not getVisibility() then return end
+    if not useStats then return end
     setText(getStats())
 end
-
-function checkObject()
-    local actor = getCameraHitObject()
-    if not actor or not actor:IsValid() then return end
-    setText(actor:GetOuter():GetFullName())
-end
-
-RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
-    createWidget('topleft')
-    setText(helpText)
-    showStats = false
-end)
-
-RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleStats ) -- Onscreen Objectives, thus "O"
-RegisterKeyBind(Key.H, {ModifierKey.ALT}, toggleHelp)
-
--- RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, hideWidget) -- fires too early
-
-RegisterKeyBind(Key.W, hideWidget)
-RegisterKeyBind(Key.A, hideWidget)
-RegisterKeyBind(Key.S, hideWidget)
-RegisterKeyBind(Key.D, hideWidget)
-
 
 --/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu Self: W_SupraPauseMenu_C_2147469280
 --/Script/LyraGame.LyraHUDLayout:HandleEscapeAction Self:
@@ -256,7 +225,7 @@ end
 
 local function onMenuOpen(self, ...)
     --setText(getStats())
-    --showStats = true
+    --useStats = true
     --showWidget()
     -- hook to closemenu here
 --    pcall(function()RegisterHook("/SupraworldMenu/UI/Menu/W_SupraPauseMenu.W_SupraPauseMenu_C:CloseMenu", onMenuClose)end)
@@ -284,13 +253,26 @@ for _, entry in ipairs(hooks) do
     end
 end
 
-ExecuteWithDelay(250, function()
-    ExecuteInGameThread(function()
-        -- LoopAsync(250, checkObject) -- crashes!
-        LoopAsync(1000, updateStats)
+RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
+    if pawn:get():GetFullName():find("DefaultPawn") then
+        print("--- ignoring default pawn ---")
+        return
+    end
+
+    ExecuteWithDelay(1000, function()
+        createTextWidget()
+        setText(helpText)
     end)
 end)
 
--- updateStats()
+LoopAsync(1000, updateStats)
+
+RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleStats ) -- Onscreen Objectives, thus "O"
+RegisterKeyBind(Key.H, {ModifierKey.ALT}, toggleHelp)
+
+RegisterKeyBind(Key.W, hideWidget)
+RegisterKeyBind(Key.A, hideWidget)
+RegisterKeyBind(Key.S, hideWidget)
+RegisterKeyBind(Key.D, hideWidget)
 
 
