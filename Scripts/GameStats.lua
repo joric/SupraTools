@@ -89,12 +89,8 @@ end
 
 local function createTextWidget()
     useStats = false
-
     if statsWidget and statsWidget:IsValid() then
-        statsWidget:RemoveFromParent()
-        --statsWidget:ConditionalBeginDestroy() -- this fucks up re-creating widget
-        statsWidget = nil
-        --return
+        return
     end
 
     print("#### CREATING STATS ####")
@@ -209,7 +205,11 @@ local function toggleStats()
     useStats = true
 end
 
-local function updateStats()
+local function updateWidget()
+    if statsWidget and statsWidget:IsValid() then
+        if not statsWidget:IsInViewport() then statsWidget:AddToViewport(99) end
+    end
+
     if not getVisibility() then return end
     if not useStats then return end
     setText(getStats())
@@ -260,13 +260,13 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
         return
     end
 
-    ExecuteWithDelay(2000, function() -- 2 is sec somehow critical to recreate widget
+    ExecuteWithDelay(1000, function()
         createTextWidget()
         setText(helpText)
     end)
 end)
 
-LoopAsync(1000, updateStats)
+LoopAsync(1000, updateWidget)
 
 RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleStats ) -- Onscreen Objectives, thus "O"
 RegisterKeyBind(Key.H, {ModifierKey.ALT}, toggleHelp)
