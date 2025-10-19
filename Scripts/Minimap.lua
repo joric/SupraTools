@@ -526,8 +526,6 @@ LoopAsync(60000, function()  -- let's see if hooks work
     updateMinimap()
 end)
 
-print("-- mapWidget", mapWidget and mapWidget:IsValid())
-
 if mapWidget and mapWidget:IsValid() then
     print("-- re-registering hooks -- ")
     registerHooks()
