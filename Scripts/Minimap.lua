@@ -48,6 +48,7 @@ local pointTypes = {
     CoinRed_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
     Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)},
     DestroyablePots_C = {FLinearColor(1,0,1,1),FLinearColor(1,0,0,0)},
+    Bones_C = {FLinearColor(0,0,1,1),FLinearColor(0,0,0,0)},
 }
 
 local function setFound(hook, name, found)
@@ -475,6 +476,7 @@ local function registerHooks()
 
         { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Timeline_0__FinishedFunc" }, -- Supraland
         { hook = "/Game/Blueprints/Levelobjects/Chest.Chest_C:Timeline_0__FinishedFunc" }, -- SIU
+        { hook = "/Game/Blueprints/Levelobjects/Bones.Bones_C:Timeline_0__FinishedFunc" }, -- Crash DLC
 
         { hook = "/Game/Blueprints/Levelobjects/DestroyablePots.DestroyablePots_C:ReceiveAnyDamage" },
         { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick', call=updateMinimap }, -- works in supraland and/or siu pretty reliably (not in supraworld)
