@@ -102,7 +102,7 @@ local function updateCachedPoints()
             end
         end
         if count>0 then
-            print(string.format("%s: %d", type, count))
+            -- print(string.format("%s: %d", type, count))
             total = total + count
         end
     end
@@ -192,7 +192,7 @@ local function loadImages(bgContainer)
             local path = string.format(template, i-1, i-1)
             local texture = StaticFindObject(path)
             if texture and texture:IsValid() then
-                print("Loaded " .. path, 'SRGB', texture.SRGB, 'Compression', texture.CompressionSettings)
+                -- print("Loaded " .. path, 'SRGB', texture.SRGB, 'Compression', texture.CompressionSettings)
                 local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer, FName("mapTile"..i))
                 if not texture.SRGB and dmi and dmi:IsValid() then
                     -- dmi:SetTextureParameterValue("Texture", texture) -- crashes here
