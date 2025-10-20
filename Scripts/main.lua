@@ -34,7 +34,9 @@ end
 
 inDebugCamera = false -- global variable
 
+local DebugCameraControllerCache  = CreateInvalidObject()
 function getDebugCameraController()
+    if DebugCameraControllerCache:IsValid() then return DebugCameraControllerCache end
     for _, Controller in ipairs(FindAllOf("DebugCameraController") or {}) do
         if Controller:IsValid() and (Controller.IsPlayerController and Controller:IsPlayerController() or Controller:IsLocalPlayerController()) then
             return Controller

@@ -568,7 +568,7 @@ end
 function tfind(t,v) for i,x in ipairs(t)do if x==v then return i end end end
 
 local function toggleSize()
-    local s = {320, 480, 640, 800, 1000}
+    local s = {320, 480, 640, 800, 960}
     local w = s[ (tfind(s,widgetSize.X) or 0) % #s + 1 ]
     print("set size to", w)
     widgetSize = {X=w,Y=w}
