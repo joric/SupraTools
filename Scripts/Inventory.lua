@@ -1,3 +1,7 @@
+-- a newer version of inventory manager, possibly universal for all games
+-- intended to replace grant and deploy commands with add/remove commands
+-- under construction
+
 local UEHelpers = require("UEHelpers")
 
 local function tagify(name)
