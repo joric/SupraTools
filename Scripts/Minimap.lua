@@ -48,8 +48,8 @@ local pointTypes = {
     CoinBig_C = { FLinearColor(1, 0.5, 0, 1), FLinearColor(0, 0, 0, 0) },
     CoinRed_C = { FLinearColor(1, 0.5, 0, 1), FLinearColor(0, 0, 0, 0) },
     Chest_C = { FLinearColor(1, 0, 0, 1), FLinearColor(1, 0, 0, 0) },
-    DestroyablePots_C = { FLinearColor(1, 0, 1, 1), FLinearColor(1, 0, 0, 0) },
-    Bones_C = { FLinearColor(0, 0, 1, 1), FLinearColor(0, 0, 0, 0) },
+    DestroyablePots_C = { FLinearColor(0.647, 0.165, 0.165, 1), FLinearColor(1, 0, 0, 0) },
+    Bones_C = { FLinearColor(0.741, 0.718, 0.420, 1), FLinearColor(0, 0, 0, 0) },
 }
 
 local function setFound(hook, name, found)
