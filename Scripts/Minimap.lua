@@ -18,7 +18,7 @@ local function FSlateColor(R, G, B, A) return { SpecifiedColor = FLinearColor(R,
 local widgetAlignment = 'bottomright'
 local widgetOpacity = 0.75
 local backgroundColor = FLinearColor(0, 0, 0, 0)
-local widgetSize = { X = 400, Y = 400 }
+local widgetSize = { X = 320, Y = 320 }
 local mapSize = { X = 200000, Y = 200000 }
 local scaling = 0.05
 local playerColor = FLinearColor(1, 1, 1, 1)
@@ -30,6 +30,7 @@ local mapWidget = FindObject("UserWidget", "MinimapWidget")
 local hooksRegistered = false
 local cachedPoints = {}
 local playerImage = FindObject("Image", "playerDot")
+local bgLayer = FindObject("CanvasPanel", "DotLayer")
 
 local pointTypes = {
     -- supraworld
@@ -274,7 +275,9 @@ local function createMinimap()
     widget:SetRenderOpacity(widgetOpacity)
 
     mapWidget = widget
+    bgLayer = dotLayer
 
+    --[[
     local widgetCompClass = StaticFindObject("/Script/UMG.WidgetComponent")
     local widgetComp = StaticConstructObject(widgetCompClass, gi, FName("MinimapWidgetComponent"))
 
@@ -283,7 +286,6 @@ local function createMinimap()
     widgetComp:SetTickWhenOffscreen(true)
 
 
-    --[[
     -- trying to tick
 
 -- widget:Initialize()
@@ -353,18 +355,13 @@ local function updatePoints(loc)
     end
 end
 
-
-local throttleMs = 33
-local lastTime = 0
-
 local function updateMinimap(hook, name, param)
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility() == HIDDEN then return end
-    -- print("tick!", hook, name, param)
 
-    --if (os.clock() - (lastTime or 0)) * 1000 < throttleMs then return end
-    --lastTime = os.clock()
+    if not bgLayer or not bgLayer:IsValid() then
+        bgLayer = FindObject("CanvasPanel", "DotLayer")
+    end
 
-    local bgLayer = FindObject("CanvasPanel", "DotLayer")
     local pc = getCameraController and getCameraController() or UEHelpers.GetPlayerController()
 
     if pc and pc:IsValid() then
@@ -505,7 +502,6 @@ end
 
 RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
     if pawn:get():GetFullName():find("DefaultPawn") then
-        print("--- ignoring default pawn ---")
         return
     end
 
@@ -532,10 +528,10 @@ end
 local widgetPosition = 0
 
 local widgetPositions = {
-    { align = 'bottomright', size = { X = 400, Y = 400 } },
-    { align = 'bottomleft', size = { X = 400, Y = 400 } },
-    { align = 'topleft',   size = { X = 400, Y = 400 } },
-    { align = 'topright',  size = { X = 400, Y = 400 } },
+    { align = 'bottomright', size = { X = 320, Y = 320 } },
+    { align = 'bottomleft', size = { X = 320, Y = 320 } },
+    { align = 'topleft',   size = { X = 320, Y = 320 } },
+    { align = 'topright',  size = { X = 320, Y = 320 } },
     { align = 'center',    size = { X = 800, Y = 800 } },
 }
 
@@ -559,11 +555,31 @@ end
 
 local function toggleSpherify()
     useSpherify = not useSpherify
+    print("toggling spherify", useSpherify)
     updateMinimapWidget()
 end
 
 local function toggleTiles()
     showTiles = not showTiles
+    print("toggling tiles", showTiles)
+    updateMinimapWidget()
+end
+
+function tfind(t,v) for i,x in ipairs(t)do if x==v then return i end end end
+
+local function toggleSize()
+    local s = {320, 480, 640, 800, 1000}
+    local w = s[ (tfind(s,widgetSize.X) or 0) % #s + 1 ]
+    print("set size to", w)
+    widgetSize = {X=w,Y=w}
+    updateMinimapWidget()
+end
+
+local function toggleScale()
+    local s = {1/100, 1/50, 1/25, 1/10}
+    local w = s[ (tfind(s, scaling) or 0) % #s + 1 ]
+    print("set scaling to", w)
+    scaling = w
     updateMinimapWidget()
 end
 
@@ -573,6 +589,7 @@ RegisterKeyBind(Key.M, { ModifierKey.ALT }, toggleMinimap)
 RegisterKeyBind(Key.M, { ModifierKey.ALT, ModifierKey.CONTROL }, cycleMinimapPosition)
 RegisterKeyBind(Key.M, { ModifierKey.SHIFT }, toggleTiles)
 RegisterKeyBind(Key.M, { ModifierKey.CONTROL }, toggleSpherify)
+RegisterKeyBind(Key.M, { ModifierKey.SHIFT, ModifierKey.ALT}, toggleSize)
 
 RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
     Ar:Log(supraToolsAttribution)

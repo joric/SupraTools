@@ -256,7 +256,6 @@ end
 
 RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", function(self, pawn)
     if pawn:get():GetFullName():find("DefaultPawn") then
-        print("--- ignoring default pawn ---")
         return
     end
 
