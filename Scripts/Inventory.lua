@@ -60,7 +60,7 @@ local function ToggleInventory(eq_name, pc, add)
     return true, "OK"
 end
 
-local function ToggleEqupment(name, pc, char, obj, add)
+local function ToggleEquipment(name, pc, char, obj, add)
     local comp = char:K2_GetComponentsByClass(StaticFindObject('/Script/LyraGame.LyraEquipmentManagerComponent'))
     local manager = #comp>0 and comp[1]:get()
     if not manager or not manager:IsValid() then
@@ -92,7 +92,7 @@ end
 
 local function ToggleItemInternal(name, pc, char, obj, add)
     if name:find("Equipment_") then
-        return ToggleEqupment(name, pc, char, obj, add)
+        return ToggleEquipment(name, pc, char, obj, add)
     end
 
     local delta = {X=15,Y=50,Z=-30} -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
