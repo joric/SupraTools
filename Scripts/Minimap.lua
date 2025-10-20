@@ -9,7 +9,7 @@ local UEHelpers = require("UEHelpers")
 local VISIBLE = 4
 local HIDDEN = 2
 
-local defaultVisibility = HIDDEN
+local defaultVisibility = VISIBLE
 
 local function FLinearColor(R, G, B, A) return { R = R, G = G, B = B, A = A } end
 local function FSlateColor(R, G, B, A) return { SpecifiedColor = FLinearColor(R, G, B, A), ColorUseRule = 0 } end
@@ -26,10 +26,9 @@ local showTiles = true
 local useSpherify = false
 
 local mapWidget = FindObject("UserWidget", "MinimapWidget")
-local hooksRegistered = false
-local cachedPoints = {}
 local playerImage = FindObject("Image", "playerDot")
 local bgLayer = FindObject("CanvasPanel", "DotLayer")
+local cachedPoints = {}
 
 local transparent = FLinearColor(0.5, 0.5, 0.5, 0.5)
 local green = FLinearColor(0, 1, 0, 1)
@@ -209,10 +208,12 @@ local function loadImages(bgContainer)
                 local slot = bgContainer:AddChildToCanvas(image)
                 slot:SetZOrder(-8000 + i)
                 image:SetVisibility(HIDDEN) -- hide images before positioning
+                image:SetColorAndOpacity(FLinearColor(1,1,1,widgetOpacity))
                 break
             end
         end
     end
+
 end
 
 local function createMinimap()
@@ -277,7 +278,7 @@ local function createMinimap()
     widget:SetVisibility(defaultVisibility)
     widget:AddToViewport(99)
 
-    widget:SetRenderOpacity(widgetOpacity)
+    -- widget:SetRenderOpacity(widgetOpacity)
 
     mapWidget = widget
     bgLayer = dotLayer
