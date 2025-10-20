@@ -1,6 +1,10 @@
 -- a newer version of inventory manager, possibly universal for all games
--- intended to replace grant and deploy commands with add/remove commands
--- under construction
+-- intended to replace grant and deploy commands with add/remove/list commands
+
+-- the issue with lyra managers is that they are unpopulated, e.g.
+-- pc.LyraInventoryManagerComponent and char.LyraEquipmentManagerComponent are not valid
+-- to get valid ones you have to iterate through attached components
+-- you can't even assign them, e.g. pc.LyraInventoryManagerComponent = manager becomes invalid
 
 local UEHelpers = require("UEHelpers")
 
@@ -17,6 +21,8 @@ local function ToggleInventory(eq_name, pc, add)
     if not manager or not manager:IsValid() then
         return false, "could not find inventory manager"
     end
+
+    -- print("Inventory Manager", manager:IsValid(), manager:IsValid(), pc.LyraInventoryManagerComponent:IsValid())
 
     local name = eq_name:gsub("Equipment", "Inventory")
 
@@ -41,14 +47,14 @@ local function ToggleInventory(eq_name, pc, add)
         if not newItem then
             return false, "AddItemDefinition failed"
         end
-        return true, "added inventory"
+        return true, "Inventory item added"
     else -- remove
         local item = manager:FindFirstItemStackByDefinition(obj)
         if not item or not item:IsValid() then
-            return false, "Inventory not found"
+            return false, "Inventory item not found"
         end
         manager:RemoveItemInstance(item)
-        return true, "Inventory removed"
+        return true, "Inventory item removed"
     end
 
     return true, "OK"
@@ -60,6 +66,8 @@ local function ToggleEqupment(name, pc, char, obj, add)
     if not manager or not manager:IsValid() then
         return false, "could not find equipment manager"
     end
+
+    -- print("Equipment Manager", manager:IsValid(), char.LyraEquipmentManagerComponent:IsValid())
 
     local items = manager:GetEquipmentInstancesOfDefinitionType(obj)or{}
 
@@ -228,7 +236,7 @@ local function processItemCommand(FullCommand, Parameters, Ar, callback)
     if name then
         ok, err = callback(name)
         if ok then
-            Ar:Log(string.format("%s %s (%s)", err or "command succeeded for", tagify(name), name))
+            Ar:Log(string.format("%s [%s] (%s)", err or "command succeeded", tagify(name), name))
         else
             Ar:Log(err)
         end
