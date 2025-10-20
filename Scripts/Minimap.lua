@@ -12,17 +12,17 @@ local HIDDEN = 2
 
 local defaultVisibility = HIDDEN
 
-local function FLinearColor(R,G,B,A) return {R=R,G=G,B=B,A=A} end
-local function FSlateColor(R,G,B,A) return {SpecifiedColor=FLinearColor(R,G,B,A), ColorUseRule=0} end
+local function FLinearColor(R, G, B, A) return { R = R, G = G, B = B, A = A } end
+local function FSlateColor(R, G, B, A) return { SpecifiedColor = FLinearColor(R, G, B, A), ColorUseRule = 0 } end
 
 local widgetAlignment = 'bottomright'
 local widgetOpacity = 0.75
-local backgroundColor = FLinearColor(0,0,0,0)
-local widgetSize = {X=400, Y=400}
-local mapSize = {X=200000, Y=200000}
+local backgroundColor = FLinearColor(0, 0, 0, 0)
+local widgetSize = { X = 400, Y = 400 }
+local mapSize = { X = 200000, Y = 200000 }
 local scaling = 0.05
-local playerColor = FLinearColor(1,1,1,1)
-local dotSize = 5.0/scaling
+local playerColor = FLinearColor(1, 1, 1, 1)
+local dotSize = 5.0 / scaling
 local showTiles = true
 local useSpherify = false
 
@@ -33,22 +33,22 @@ local playerImage = FindObject("Image", "playerDot")
 
 local pointTypes = {
     -- supraworld
-    SecretVolume_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    RealCoinPickup_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
-    PresentBox_Lootpools_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
-    ItemSpawner_C = {FLinearColor(1,0,0,1),FLinearColor(0,0,0,0)},
-    PresentBox_C = {FLinearColor(1,0,1,1),FLinearColor(0,0,0,0)},
-    PickupSpawner_C = {FLinearColor(0,0,1,1),FLinearColor(0,0,0,0)},
+    SecretVolume_C = { FLinearColor(0, 1, 0, 1), FLinearColor(0.5, 0.5, 0.5, 0.5) },
+    RealCoinPickup_C = { FLinearColor(1, 0.5, 0, 1), FLinearColor(0, 0, 0, 0) },
+    PresentBox_Lootpools_C = { FLinearColor(1, 0, 0, 1), FLinearColor(0, 0, 0, 0) },
+    ItemSpawner_C = { FLinearColor(1, 0, 0, 1), FLinearColor(0, 0, 0, 0) },
+    PresentBox_C = { FLinearColor(1, 0, 1, 1), FLinearColor(0, 0, 0, 0) },
+    PickupSpawner_C = { FLinearColor(0, 0, 1, 1), FLinearColor(0, 0, 0, 0) },
 
     -- supraland
-    SecretFound_C = {FLinearColor(0,1,0,1), FLinearColor(0.5, 0.5, 0.5, 0.5)},
-    Coin_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
-    PhysicalCoin_C = {FLinearColor(1,0.65,0,1),FLinearColor(0,0,0,0)},
-    CoinBig_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
-    CoinRed_C = {FLinearColor(1,0.5,0,1),FLinearColor(0,0,0,0)},
-    Chest_C = {FLinearColor(1,0,0,1),FLinearColor(1,0,0,0)},
-    DestroyablePots_C = {FLinearColor(1,0,1,1),FLinearColor(1,0,0,0)},
-    Bones_C = {FLinearColor(0,0,1,1),FLinearColor(0,0,0,0)},
+    SecretFound_C = { FLinearColor(0, 1, 0, 1), FLinearColor(0.5, 0.5, 0.5, 0.5) },
+    Coin_C = { FLinearColor(1, 0.5, 0, 1), FLinearColor(0, 0, 0, 0) },
+    PhysicalCoin_C = { FLinearColor(1, 0.65, 0, 1), FLinearColor(0, 0, 0, 0) },
+    CoinBig_C = { FLinearColor(1, 0.5, 0, 1), FLinearColor(0, 0, 0, 0) },
+    CoinRed_C = { FLinearColor(1, 0.5, 0, 1), FLinearColor(0, 0, 0, 0) },
+    Chest_C = { FLinearColor(1, 0, 0, 1), FLinearColor(1, 0, 0, 0) },
+    DestroyablePots_C = { FLinearColor(1, 0, 1, 1), FLinearColor(1, 0, 0, 0) },
+    Bones_C = { FLinearColor(0, 0, 1, 1), FLinearColor(0, 0, 0, 0) },
 }
 
 local function setFound(hook, name, found)
@@ -75,15 +75,15 @@ local function updateCachedPoints()
             if actor:IsValid() then
                 local name = actor:GetFullName()
 
-                local found = (actor.bFound == true)  -- SecretVolume_C (supraworld)
-                    or (actor.StartClosed == true) -- SecretFound_C (supraland)
+                local found = (actor.bFound == true) -- SecretVolume_C (supraworld)
+                    or (actor.StartClosed == true)   -- SecretFound_C (supraland)
                     or (actor.bItemIsTaken == true)
                     or (actor.bPickedUp == true)
                     or (actor.IsOpen == true)
                     or (actor.bHidden == true) -- some coins in Floortown are hidden
                     or (actor['Pickup has been collected'] == true)
 
-                if (type == "Coin_C" or type=="PhysicalCoin_C" or type=="CoinBig_C" or type=="CoinRed_C") 
+                if (type == "Coin_C" or type == "PhysicalCoin_C" or type == "CoinBig_C" or type == "CoinRed_C")
                     and not actor.Coin:IsValid() or (actor.Coin:IsValid() and not actor.Coin:IsVisible()) then -- the only reliable way I found
                     found = true
                 end
@@ -100,7 +100,7 @@ local function updateCachedPoints()
                 count = count + 1
             end
         end
-        if count>0 then
+        if count > 0 then
             -- print(string.format("%s: %d", type, count))
             total = total + count
         end
@@ -115,27 +115,27 @@ local function setAlignment(slot, alignment)
     local b = 0
 
     local alignments = {
-        center = {anchor = {0.5, 0.5}, align = {0.5, 0.5}, pos = {0, 0}},
-        top = {anchor = {0.5, 0}, align = {0.5, 0}, pos = {0, b}},
-        bottom = {anchor = {0.5, 1}, align = {0.5, 1}, pos = {0, -b}},
-        topleft = {anchor = {0, 0}, align = {0, 0}, pos = {b, b}},
-        topright = {anchor = {1, 0}, align = {1, 0}, pos = {-b, b}},
-        bottomleft = {anchor = {0, 1}, align = {0, 1}, pos = {b, -b}},
-        bottomright = {anchor = {1, 1}, align = {1, 1}, pos = {-b, -b}}
+        center = { anchor = { 0.5, 0.5 }, align = { 0.5, 0.5 }, pos = { 0, 0 } },
+        top = { anchor = { 0.5, 0 }, align = { 0.5, 0 }, pos = { 0, b } },
+        bottom = { anchor = { 0.5, 1 }, align = { 0.5, 1 }, pos = { 0, -b } },
+        topleft = { anchor = { 0, 0 }, align = { 0, 0 }, pos = { b, b } },
+        topright = { anchor = { 1, 0 }, align = { 1, 0 }, pos = { -b, b } },
+        bottomleft = { anchor = { 0, 1 }, align = { 0, 1 }, pos = { b, -b } },
+        bottomright = { anchor = { 1, 1 }, align = { 1, 1 }, pos = { -b, -b } }
     }
     local a = alignments[alignment] or alignments.center
-    slot:SetAnchors({Minimum = {X = a.anchor[1], Y = a.anchor[2]}, Maximum = {X = a.anchor[1], Y = a.anchor[2]}})
-    slot:SetAlignment({X = a.align[1], Y = a.align[2]})
-    slot:SetPosition({X = a.pos[1], Y = a.pos[2]})
+    slot:SetAnchors({ Minimum = { X = a.anchor[1], Y = a.anchor[2] }, Maximum = { X = a.anchor[1], Y = a.anchor[2] } })
+    slot:SetAlignment({ X = a.align[1], Y = a.align[2] })
+    slot:SetPosition({ X = a.pos[1], Y = a.pos[2] })
 end
 
 local function addPoint(layer, loc, color, size, name)
     local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), layer, FName(name))
     local slot = layer:AddChildToCanvas(image)
     image:SetColorAndOpacity(color)
-    image.Slot:SetAlignment({X = 0.5, Y = 0.5})
-    image.Slot:SetPosition({X = loc.X, Y = loc.Y})
-    image.Slot:SetSize({X = size, Y = size})
+    image.Slot:SetAlignment({ X = 0.5, Y = 0.5 })
+    image.Slot:SetPosition({ X = loc.X, Y = loc.Y })
+    image.Slot:SetSize({ X = size, Y = size })
     image.Slot:SetZOrder(math.floor(loc.Z))
     return image
 end
@@ -151,13 +151,13 @@ local function updateTiles()
     local tileSize = mapBounds.MapWorldSize / 2
     local cx, cy = mapBounds.MapWorldCenter.X - tileSize, mapBounds.MapWorldCenter.Y - tileSize
 
-    local pos = {{0,0},{1,0},{0,1},{1,1}}
+    local pos = { { 0, 0 }, { 1, 0 }, { 0, 1 }, { 1, 1 } }
     for i = 1, 4 do
-        local image = FindObject("Image", "mapTile"..i)
+        local image = FindObject("Image", "mapTile" .. i)
         if image:IsValid() then
             -- Position tile in grid (centered in the larger container)
-            image.Slot:SetPosition({X = pos[i][1] * tileSize + cx, Y = pos[i][2] * tileSize + cy})
-            image.Slot:SetSize({X = tileSize, Y = tileSize})
+            image.Slot:SetPosition({ X = pos[i][1] * tileSize + cx, Y = pos[i][2] * tileSize + cy })
+            image.Slot:SetSize({ X = tileSize, Y = tileSize })
             image:SetVisibility(showTiles and VISIBLE or HIDDEN)
             -- image:SetColorAndOpacity({R = 1, G = 1, B = 1, A = 0.5})
         end
@@ -187,12 +187,13 @@ local function loadImages(bgContainer)
     end
 
     for i = 1, 4 do
-        for _,template in ipairs(templates) do
-            local path = string.format(template, i-1, i-1)
+        for _, template in ipairs(templates) do
+            local path = string.format(template, i - 1, i - 1)
             local texture = StaticFindObject(path)
             if texture and texture:IsValid() then
                 -- print("Loaded " .. path, 'SRGB', texture.SRGB, 'Compression', texture.CompressionSettings)
-                local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer, FName("mapTile"..i))
+                local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer,
+                    FName("mapTile" .. i))
                 if not texture.SRGB and dmi and dmi:IsValid() then
                     -- dmi:SetTextureParameterValue("Texture", texture) -- crashes here
                     -- image:SetBrushFromMaterial(dmi)
@@ -209,7 +210,6 @@ local function loadImages(bgContainer)
 end
 
 local function createMinimap()
-
     mapWidget = FindObject("UserWidget", "MinimapWidget")
 
     if mapWidget and mapWidget:IsValid() then
@@ -224,12 +224,13 @@ local function createMinimap()
     local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("MinimapWidget"))
     widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("MinimapTree"))
 
-    local outerCanvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("MinimapOuterCanvas"))
+    local outerCanvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree,
+        FName("MinimapOuterCanvas"))
     widget.WidgetTree.RootWidget = outerCanvas
 
     local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), outerCanvas, FName("MinimapBG"))
     bg:SetBrushColor(backgroundColor)
-    bg:SetPadding({0,0,0,0})
+    bg:SetPadding({ 0, 0, 0, 0 })
 
     local slot = outerCanvas:AddChildToCanvas(bg)
     slot:SetSize(widgetSize)
@@ -241,9 +242,9 @@ local function createMinimap()
     local clipBox = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), canvas, FName("MinimapClipBox"))
     local clipSlot = canvas:AddChildToCanvas(clipBox)
     clipSlot:SetZOrder(-1000)
-    clipSlot:SetPosition({X = 0, Y = 0})
-    clipSlot:SetAnchors({Minimum = {X = 0, Y = 0}, Maximum = {X = 1, Y = 1}})
-    clipSlot:SetOffsets({Left = 0, Top = 0, Right = 0, Bottom = 0})
+    clipSlot:SetPosition({ X = 0, Y = 0 })
+    clipSlot:SetAnchors({ Minimum = { X = 0, Y = 0 }, Maximum = { X = 1, Y = 1 } })
+    clipSlot:SetOffsets({ Left = 0, Top = 0, Right = 0, Bottom = 0 })
     clipBox:SetClipping(1)
 
     -- Create a container for the map background that can be rotated and scaled
@@ -251,9 +252,9 @@ local function createMinimap()
     local containerSlot = clipBox:AddChildToCanvas(dotLayer)
     containerSlot:SetZOrder(0)
     containerSlot:SetSize(mapSize)
-    containerSlot:SetAnchors({ Minimum = {X=0.5, Y=0.5}, Maximum = {X=0.5, Y=0.5} })
-    containerSlot:SetAlignment({X=0.5, Y=0.5})
-    containerSlot:SetPosition({X = 0, Y = 0})
+    containerSlot:SetAnchors({ Minimum = { X = 0.5, Y = 0.5 }, Maximum = { X = 0.5, Y = 0.5 } })
+    containerSlot:SetAlignment({ X = 0.5, Y = 0.5 })
+    containerSlot:SetPosition({ X = 0, Y = 0 })
 
     loadImages(dotLayer)
     updateTiles()
@@ -264,7 +265,7 @@ local function createMinimap()
         cachedPoints[name].image = addPoint(dotLayer, point.loc, color, dotSize, name .. ".Dot")
     end
 
-    playerImage = addPoint(dotLayer, {X=0, Y=0, Z=0}, playerColor, dotSize, "playerDot")
+    playerImage = addPoint(dotLayer, { X = 0, Y = 0, Z = 0 }, playerColor, dotSize, "playerDot")
 
     bg:SetVisibility(VISIBLE)
     widget:SetVisibility(defaultVisibility)
@@ -320,14 +321,12 @@ MyWidget:SetTickableWhenPaused(true)
         --end
     end
     ]]
-
 end
 
 local function updatePoints(loc)
     for name, point in pairs(cachedPoints) do
         local image = cachedPoints[name].image
         if image and image:IsValid() and image.Slot and image.Slot:IsValid() then
-
             local x, y = point.loc.X, point.loc.Y
 
             if useSpherify and loc then
@@ -337,7 +336,7 @@ local function updatePoints(loc)
                 local h = widgetSize.Y / scaling
 
                 local relX, relY = x - cx, y - cy
-                local dist = math.sqrt(relX*relX + relY*relY)
+                local dist = math.sqrt(relX * relX + relY * relY)
                 local radius = math.min(w, h) / 2 - dotSize / 2
 
                 if dist > radius then
@@ -349,7 +348,7 @@ local function updatePoints(loc)
                 end
             end
 
-            image.Slot:SetPosition({X = x, Y = y})
+            image.Slot:SetPosition({ X = x, Y = y })
         end
     end
 end
@@ -359,7 +358,7 @@ local throttleMs = 33
 local lastTime = 0
 
 local function updateMinimap(hook, name, param)
-    if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
+    if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility() == HIDDEN then return end
     -- print("tick!", hook, name, param)
 
     --if (os.clock() - (lastTime or 0)) * 1000 < throttleMs then return end
@@ -385,33 +384,32 @@ local function updateMinimap(hook, name, param)
             local u = cx / size
             local v = cy / size
 
-            bgLayer:SetRenderTransformPivot({X = u, Y = v})
+            bgLayer:SetRenderTransformPivot({ X = u, Y = v })
 
             local tx = size * (0.5 - u)
             local ty = size * (0.5 - v)
 
             bgLayer:SetRenderTransform({
-                Translation = {X = tx, Y = ty},
-                Scale = {X = scale, Y = scale},
-                Shear = {X = 0, Y = 0}, 
+                Translation = { X = tx, Y = ty },
+                Scale = { X = scale, Y = scale },
+                Shear = { X = 0, Y = 0 },
                 Angle = angle
             })
 
             if useSpherify then updatePoints(loc) end
 
             if playerImage and playerImage:IsValid() then
-                playerImage.Slot:SetPosition({X = loc.X, Y = loc.Y})
+                playerImage.Slot:SetPosition({ X = loc.X, Y = loc.Y })
                 playerImage.Slot:SetZOrder(math.floor(loc.Z))
             end
         end
     end
 
---[[
+    --[[
     ExecuteWithDelay(33,function()
         ExecuteInGameThread(updateMinimap) -- almost stable but hangs on scripts reloading by Ctrl+R
     end)
 ]]
-
 end
 
 local function toggleMinimap()
@@ -419,7 +417,7 @@ local function toggleMinimap()
         createMinimap()
     end
 
-    local visible = mapWidget:GetVisibility()~=VISIBLE
+    local visible = mapWidget:GetVisibility() ~= VISIBLE
 
     mapWidget:SetVisibility(visible and VISIBLE or HIDDEN)
     if visible then
@@ -435,16 +433,16 @@ local hookInfo = {}
 local function registerHooks()
     local hooks = {
         -- supraworld
-        { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound", call = setFound },
-        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp", call = setFound },
-        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:ItemPickedup", call = setFound },
-        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:SetPickedUp", call = setFound },
-        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:OnSpawnedItemPickedUp", call = setFound }, -- works for hay
-        { hook = "/Supraworld/Levelobjects/RespawnablePickupSpawner.RespawnablePickupSpawner_C:SetPickedUp", call = setFound },
-        { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken", call = setFound },
+        { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound",                                                                                                        call = setFound },
+        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp",                                                                                                                 call = setFound },
+        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:ItemPickedup",                                                                                                                call = setFound },
+        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:SetPickedUp",                                                                                                           call = setFound },
+        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:OnSpawnedItemPickedUp",                                                                                                 call = setFound }, -- works for hay
+        { hook = "/Supraworld/Levelobjects/RespawnablePickupSpawner.RespawnablePickupSpawner_C:SetPickedUp",                                                                                     call = setFound },
+        { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken",                                                                                                    call = setFound },
 
         -- this is very CPU intensive but the only I found. Needs checking if UseAndCarry works at start
-        { hook = '/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostPhysics_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature', call = updateMinimap},
+        { hook = '/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostPhysics_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature', call = updateMinimap },
 
         --[[
         -- neither of those fire
@@ -465,7 +463,7 @@ local function registerHooks()
         ]]
 
         -- supraland
-        { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" }, -- Supraland
+        { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" },                                                                                   -- Supraland
         { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:BndEvt__Box_K2Node_ComponentBoundEvent_0_ComponentBeginOverlapSignature__DelegateSignature" }, -- SIU
 
         { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc" },
@@ -479,7 +477,7 @@ local function registerHooks()
         { hook = "/Game/Blueprints/Levelobjects/Bones.Bones_C:Timeline_0__FinishedFunc" }, -- Crash DLC
 
         { hook = "/Game/Blueprints/Levelobjects/DestroyablePots.DestroyablePots_C:ReceiveAnyDamage" },
-        { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick', call=updateMinimap }, -- works in supraland and/or siu pretty reliably (not in supraworld)
+        { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick',                                                                                                                      call = updateMinimap }, -- works in supraland and/or siu pretty reliably (not in supraworld)
     }
 
     for _, hook in ipairs(hooks) do
@@ -489,9 +487,6 @@ local function registerHooks()
                 UnregisterHook(hook.hook, preId, postId)
             end
             local preId, postId = RegisterHook(hook.hook, function(self, param, ...)
-                hookInfo[hook.hook] = {}
-                hookInfo[hook.hook].preId = preId
-                hookInfo[hook.hook].postId = postId
                 local name = self:get():GetFullName()
                 -- print("Hook fired:", hook.hook, "Self:", self:get():GetFName():ToString(), "param", param and param:get())
                 if hook.call then
@@ -500,6 +495,9 @@ local function registerHooks()
                     setFound(hook.hook, name, true)
                 end
             end)
+            hookInfo[hook.hook] = {}
+            hookInfo[hook.hook].preId = preId
+            hookInfo[hook.hook].postId = postId
         end)
         -- print(ok and "REGISTERED" or "NOT FOUND", hook.hook)
     end
@@ -517,11 +515,10 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
         updateMinimap()
         registerHooks()
     end)
-
 end)
 
-LoopAsync(60000, function()  -- let's see if hooks work
-    if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility()==HIDDEN then return end
+LoopAsync(60000, function() -- let's see if hooks work
+    if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility() == HIDDEN then return end
     updateCachedPoints()
     updateMinimap()
 end)
@@ -535,11 +532,11 @@ end
 local widgetPosition = 0
 
 local widgetPositions = {
-    {align='bottomright', size={X=400,Y=400}},
-    {align='bottomleft', size={X=400,Y=400}},
-    {align='topleft', size={X=400,Y=400}},
-    {align='topright', size={X=400,Y=400}},
-    {align='center', size={X=800,Y=800}},
+    { align = 'bottomright', size = { X = 400, Y = 400 } },
+    { align = 'bottomleft', size = { X = 400, Y = 400 } },
+    { align = 'topleft',   size = { X = 400, Y = 400 } },
+    { align = 'topright',  size = { X = 400, Y = 400 } },
+    { align = 'center',    size = { X = 800, Y = 800 } },
 }
 
 local function updateMinimapWidget()
@@ -554,7 +551,7 @@ end
 
 local function cycleMinimapPosition()
     widgetPosition = (widgetPosition + 1) % #widgetPositions
-    local p = widgetPositions[widgetPosition+1]
+    local p = widgetPositions[widgetPosition + 1]
     widgetAlignment = p.align
     widgetSize = p.size
     updateMinimapWidget()
@@ -572,10 +569,10 @@ end
 
 -- RegisterKeyBind(Key.R, {}, updateCachedPoints)
 
-RegisterKeyBind(Key.M, {ModifierKey.ALT}, toggleMinimap)
-RegisterKeyBind(Key.M, {ModifierKey.ALT, ModifierKey.CONTROL}, cycleMinimapPosition)
-RegisterKeyBind(Key.M, {ModifierKey.SHIFT}, toggleTiles)
-RegisterKeyBind(Key.M, {ModifierKey.CONTROL}, toggleSpherify)
+RegisterKeyBind(Key.M, { ModifierKey.ALT }, toggleMinimap)
+RegisterKeyBind(Key.M, { ModifierKey.ALT, ModifierKey.CONTROL }, cycleMinimapPosition)
+RegisterKeyBind(Key.M, { ModifierKey.SHIFT }, toggleTiles)
+RegisterKeyBind(Key.M, { ModifierKey.CONTROL }, toggleSpherify)
 
 RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
     Ar:Log(supraToolsAttribution)
@@ -583,5 +580,3 @@ RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
     toggleMinimap()
     return true
 end)
-
-
