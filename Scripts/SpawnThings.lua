@@ -294,80 +294,74 @@ local function rotateActor(Object, yaw)
 end
 
 local function applyAction(act, temporary)
-    ExecuteInGameThread(function()
-    ExecuteWithDelay(10, function()
-    ExecuteInGameThread(function()
-        if act.type == "spawn" then
-            local actor = getActorByName(act.name)
-            if not actor or not actor:IsValid() then return end
+    if act.type == "spawn" then
+        local actor = getActorByName(act.name)
+        if not actor or not actor:IsValid() then return end
 
-            local assetName = getAssetName(actor:GetClass():GetFullName())
-            local className = getName(actor:GetClass())
+        local assetName = getAssetName(actor:GetClass():GetFullName())
+        local className = getName(actor:GetClass())
 
-            if className == 'StaticMesh' or className == 'BlueprintGeneratedClass' then
-                assetName = getAssetName(actor:GetFullName())
-            elseif className == 'StaticMeshActor' then
-                assetName = getAssetName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
-            end
-
-            actor = SpawnActorFromAssetName(assetName, act.loc, act.rot, act.scale)
-            if not actor or not actor:IsValid() then return end
-
-            local tag = nil
-            if not temporary then
-                tag = getNextName()
-                addTag(actor, tag)
-            end
-
-            print("Action", serializeAction(act), "Tag", tag, "Spawned", actor:GetFullName(), "From", assetName)
-
-            act.result = actor
-
-            if act.name=="SecretVolume_C" then
-                actor:RegisterToStatSubsystem()
-                actor:ReceiveBeginPlay()
-            end
-
-            if act.name=='PuzzleCloud_C' then
-                print("--- updating cloud ---")
-                actor:CloudAppear()
-                actor:CloudWoobleLoopEnd() -- doesn't help?
-            end
-
-            -- each question mark gets its own secret volume (temporary item)
-            if assetName == '/SupraAssets/Meshes/Objects/Stuff/Plastic_Question_Mark.Plastic_Question_Mark' then
-                ExecuteWithDelay(250, function()
-                    ExecuteInGameThread(function()
-                        local act1 = {type="spawn", name='SecretVolume_C', loc=act.loc, rot=act.rot, scale={X=15, Y=15, Z=10}}
-                        applyAction(act1, true) -- comment this out to stop spawning secret volumes on each question mark
-                    end)
-                end)
-            end
-
-        elseif act.type == "hide" then
-            local Object = getActorByName(act.name)
-            if Object and Object:IsValid() and Object.SetActorHiddenInGame then
-                print("Action", serializeAction(act), "Hiding", Object:GetFullName())
-                Object:SetActorHiddenInGame(true)
-                Object:SetActorEnableCollision(false)
-            end
-        elseif act.type == "unhide" then
-            local Object = getActorByName(act.name)
-            if Object and Object:IsValid() and Object.SetActorHiddenInGame then
-                print("Action", serializeAction(act), "Unhiding", Object:GetFullName())
-                Object:SetActorHiddenInGame(false)
-                Object:SetActorEnableCollision(true)
-            end
-        elseif act.type == "rotate" then
-            local Object = getActorByName(act.name)
-            if Object and Object:IsValid() then
-                print("Action", serializeAction(act), "Rotating", Object:GetFullName())
-                rotateActor(Object, act.yaw)
-            end
+        if className == 'StaticMesh' or className == 'BlueprintGeneratedClass' then
+            assetName = getAssetName(actor:GetFullName())
+        elseif className == 'StaticMeshActor' then
+            assetName = getAssetName(actor:K2_GetRootComponent().StaticMesh:GetFullName())
         end
-    end)
-    end)
-    end)
+
+        actor = SpawnActorFromAssetName(assetName, act.loc, act.rot, act.scale)
+        if not actor or not actor:IsValid() then return end
+
+        local tag = nil
+        if not temporary then
+            tag = getNextName()
+            addTag(actor, tag)
+        end
+
+        print("Action", serializeAction(act), "Tag", tag, "Spawned", actor:GetFullName(), "From", assetName)
+
+        act.result = actor
+
+        if act.name=="SecretVolume_C" then
+            actor:RegisterToStatSubsystem()
+            actor:ReceiveBeginPlay()
+        end
+
+        if act.name=='PuzzleCloud_C' then
+            print("--- updating cloud ---")
+            actor:CloudAppear()
+            actor:CloudWoobleLoopEnd() -- doesn't help?
+        end
+
+        -- each question mark gets its own secret volume (temporary item)
+        if assetName == '/SupraAssets/Meshes/Objects/Stuff/Plastic_Question_Mark.Plastic_Question_Mark' then
+            ExecuteWithDelay(250, function()
+                ExecuteInGameThread(function()
+                    local act1 = {type="spawn", name='SecretVolume_C', loc=act.loc, rot=act.rot, scale={X=15, Y=15, Z=10}}
+                    applyAction(act1, true) -- comment this out to stop spawning secret volumes on each question mark
+                end)
+            end)
+        end
+
+    elseif act.type == "hide" then
+        local Object = getActorByName(act.name)
+        if Object and Object:IsValid() and Object.SetActorHiddenInGame then
+            print("Action", serializeAction(act), "Hiding", Object:GetFullName())
+            Object:SetActorHiddenInGame(true)
+            Object:SetActorEnableCollision(false)
+        end
+    elseif act.type == "unhide" then
+        local Object = getActorByName(act.name)
+        if Object and Object:IsValid() and Object.SetActorHiddenInGame then
+            print("Action", serializeAction(act), "Unhiding", Object:GetFullName())
+            Object:SetActorHiddenInGame(false)
+            Object:SetActorEnableCollision(true)
+        end
+    elseif act.type == "rotate" then
+        local Object = getActorByName(act.name)
+        if Object and Object:IsValid() then
+            print("Action", serializeAction(act), "Rotating", Object:GetFullName())
+            rotateActor(Object, act.yaw)
+        end
+    end
 end
 
 local function applyActions()
@@ -381,6 +375,7 @@ end
 -- ==============================================================
 
 local function undoLastAction(skipSave)
+
     if #actions == 0 then
         print("No more actions to undo.")
         return
@@ -392,12 +387,12 @@ local function undoLastAction(skipSave)
 
     if act.type == "hide" then
         act.type = "unhide"
-        applyAction(act)
+        ExecuteInGameThread(function() applyAction(act) end)
     end
 
     if act.type == "rotate" then
         act.yaw = -act.yaw
-        applyAction(act)
+        ExecuteInGameThread(function() applyAction(act) end)
     end
 
     if act.type == "spawn" then
