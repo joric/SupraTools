@@ -208,7 +208,6 @@ local function loadImages(bgContainer)
                 local slot = bgContainer:AddChildToCanvas(image)
                 slot:SetZOrder(-8000 + i)
                 image:SetVisibility(HIDDEN) -- hide images before positioning
-                image:SetColorAndOpacity(FLinearColor(1,1,1,widgetOpacity))
                 break
             end
         end
@@ -267,6 +266,8 @@ local function createMinimap()
     updateTiles()
     updateCachedPoints()
 
+
+
     for name, point in pairs(cachedPoints) do
         local color = pointTypes[point.type][point.found and 2 or 1] or FLinearColor(0,0,0,0)
         cachedPoints[name].image = addPoint(dotLayer, point.loc, color, dotSize, name .. ".Dot")
@@ -278,10 +279,11 @@ local function createMinimap()
     widget:SetVisibility(defaultVisibility)
     widget:AddToViewport(99)
 
-    -- widget:SetRenderOpacity(widgetOpacity)
+    widget:SetRenderOpacity(widgetOpacity)
 
     mapWidget = widget
     bgLayer = dotLayer
+
 
     --[[
     local widgetCompClass = StaticFindObject("/Script/UMG.WidgetComponent")
