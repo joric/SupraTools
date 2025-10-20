@@ -1,6 +1,5 @@
 -- a newer version of inventory manager, possibly universal for all games
 -- intended to replace grant and deploy commands with add/remove/list commands
-
 -- the issue with lyra managers is that they are unpopulated, e.g.
 -- pc.LyraInventoryManagerComponent and char.LyraEquipmentManagerComponent are not valid
 -- to get valid ones you have to iterate through attached components
