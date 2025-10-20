@@ -1,8 +1,5 @@
 -- map that uses 1:1 scaling and doesn't update point coordinates, just rotates the layer
--- I am currently having troubles with HDR textures in Supraworld
--- SW_PlayerMapWidget displays them somehow (probably uses HDR material)
--- I cannot find the way to display HDR images in widgets just yet
--- May be Package /PlayerMap/Materials/TextureBrush/M_TextureBrush
+-- Transparency is not supported for HDR textures in Supraworld (needs RT)
 
 local UEHelpers = require("UEHelpers")
 
