@@ -1,5 +1,4 @@
 -- map that uses 1:1 scaling and doesn't update point coordinates, just rotates the layer
-
 -- I am currently having troubles with HDR textures in Supraworld
 -- SW_PlayerMapWidget displays them somehow (probably uses HDR material)
 -- I cannot find the way to display HDR images in widgets just yet
@@ -180,16 +179,14 @@ local function loadImages(bgContainer)
         "/PlayerMap/Textures/T_SupraworldMapV4Q%d.T_SupraworldMapV4Q%d",
     }
 
+    local dmi = nil
     local material = StaticFindObject("/PlayerMap/Materials/TextureBrush/M_TextureBrush.M_TextureBrush")
     if material then
         print("-- loaded material", material and material:GetFullName())
-
         local matlib = StaticFindObject("/Script/Engine.Default__KismetMaterialLibrary")
         print("-- loaded library", matlib:GetFullName(), matlib.CreateDynamicMaterialInstance)
-
         local world = UEHelpers.GetWorld()
-        local dmi = matlib:CreateDynamicMaterialInstance(world, material, FName("mapMaterial"), 0)
-
+        dmi = matlib:CreateDynamicMaterialInstance(world, material, FName("mapMaterial"), 0)
         if dmi and dmi:IsValid() then
             print("-- loaded dynamic material", dmi:GetFullName())
         end
@@ -200,12 +197,12 @@ local function loadImages(bgContainer)
             local path = string.format(template, i - 1, i - 1)
             local texture = StaticFindObject(path)
             if texture and texture:IsValid() then
-                -- print("Loaded " .. path, 'SRGB', texture.SRGB, 'Compression', texture.CompressionSettings)
-                local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer,
-                    FName("mapTile" .. i))
-                if not texture.SRGB and dmi and dmi:IsValid() then
-                    -- dmi:SetTextureParameterValue("Texture", texture) -- crashes here
-                    -- image:SetBrushFromMaterial(dmi)
+                print("Loaded " .. path, 'SRGB', texture.SRGB, 'Compression', texture.CompressionSettings, 'dmi', dmi and dmi:IsValid())
+                local image = StaticConstructObject(StaticFindObject("/Script/UMG.Image"), bgContainer, FName("mapTile" .. i))
+                if dmi and dmi:IsValid() and not texture.SRGB then
+                    -- print("setting HDR material")
+                    dmi:SetTextureParameterValue(FName("Texture"), texture)
+                    image:SetBrushFromMaterial(dmi)
                 else
                     image:SetBrushFromTexture(texture, false)
                 end
@@ -425,6 +422,8 @@ local function toggleMinimap()
 
     local visible = mapWidget:GetVisibility() ~= VISIBLE
 
+    defaultVisibility = visible and VISIBLE or HIDDEN
+
     mapWidget:SetVisibility(visible and VISIBLE or HIDDEN)
     if visible then
         ExecuteAsync(function()
@@ -592,13 +591,12 @@ local function toggleScale()
     updateMinimapWidget()
 end
 
--- RegisterKeyBind(Key.R, {}, updateCachedPoints)
-
 RegisterKeyBind(Key.M, { ModifierKey.ALT }, toggleMinimap)
 RegisterKeyBind(Key.M, { ModifierKey.ALT, ModifierKey.CONTROL }, cycleMinimapPosition)
+RegisterKeyBind(Key.M, { ModifierKey.ALT, ModifierKey.SHIFT, }, toggleSize)
 RegisterKeyBind(Key.M, { ModifierKey.SHIFT }, toggleTiles)
 RegisterKeyBind(Key.M, { ModifierKey.CONTROL }, toggleSpherify)
-RegisterKeyBind(Key.M, { ModifierKey.SHIFT, ModifierKey.ALT}, toggleSize)
+RegisterKeyBind(Key.M, { ModifierKey.CONTROL, ModifierKey.SHIFT }, createMinimap)
 
 RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
     Ar:Log(supraToolsAttribution)
