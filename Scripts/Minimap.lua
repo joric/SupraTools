@@ -32,24 +32,31 @@ local cachedPoints = {}
 local playerImage = FindObject("Image", "playerDot")
 local bgLayer = FindObject("CanvasPanel", "DotLayer")
 
+local transparent = FLinearColor(0.5, 0.5, 0.5, 0.5)
+local green = FLinearColor(0, 1, 0, 1)
+local red = FLinearColor(1, 0, 0, 1)
+local orange = FLinearColor(1, 0.5, 0, 1)
+local beige = FLinearColor(0.741, 0.718, 0.420, 1)
+local brown = FLinearColor(0.647, 0.165, 0.165, 1)
+
 local pointTypes = {
     -- supraworld
-    SecretVolume_C = { FLinearColor(0, 1, 0, 1), FLinearColor(0.5, 0.5, 0.5, 0.5) },
-    RealCoinPickup_C = { FLinearColor(1, 0.5, 0, 1), FLinearColor(0, 0, 0, 0) },
-    PresentBox_Lootpools_C = { FLinearColor(1, 0, 0, 1), FLinearColor(0, 0, 0, 0) },
-    ItemSpawner_C = { FLinearColor(1, 0, 0, 1), FLinearColor(0, 0, 0, 0) },
-    PresentBox_C = { FLinearColor(1, 0, 0, 1), FLinearColor(0, 0, 0, 0) },
-    PickupSpawner_C = { FLinearColor(0.647, 0.165, 0.165, 1), FLinearColor(0, 0, 0, 0) },
+    SecretVolume_C = { green, transparent },
+    RealCoinPickup_C = { orange, nil },
+    PresentBox_Lootpools_C = { red, nil },
+    ItemSpawner_C = { red, nil },
+    PresentBox_C = { red, nil },
+    PickupSpawner_C = { brown, nil },
 
     -- supraland
-    SecretFound_C = { FLinearColor(0, 1, 0, 1), FLinearColor(0.5, 0.5, 0.5, 0.5) },
-    Coin_C = { FLinearColor(1, 0.5, 0, 1), FLinearColor(0, 0, 0, 0) },
-    PhysicalCoin_C = { FLinearColor(1, 0.65, 0, 1), FLinearColor(0, 0, 0, 0) },
-    CoinBig_C = { FLinearColor(1, 0.5, 0, 1), FLinearColor(0, 0, 0, 0) },
-    CoinRed_C = { FLinearColor(1, 0.5, 0, 1), FLinearColor(0, 0, 0, 0) },
-    Chest_C = { FLinearColor(1, 0, 0, 1), FLinearColor(1, 0, 0, 0) },
-    DestroyablePots_C = { FLinearColor(0.647, 0.165, 0.165, 1), FLinearColor(1, 0, 0, 0) },
-    Bones_C = { FLinearColor(0.741, 0.718, 0.420, 1), FLinearColor(0, 0, 0, 0) },
+    SecretFound_C = { green, transparent },
+    Coin_C = { orange, nil },
+    PhysicalCoin_C = { orange, nil },
+    CoinBig_C = { orange, nil },
+    CoinRed_C = { red, nil },
+    Chest_C = { green, nil },
+    Bones_C = { beige, nil },
+    DestroyablePots_C = { brown, nil },
 }
 
 local function setFound(hook, name, found)
@@ -61,6 +68,7 @@ local function setFound(hook, name, found)
             local image = FindObject("Image", name .. ".Dot")
             if image:IsValid() then
                 -- print("removing point", image:GetFullName())
+                -- maybe do not remove completely just set color but it's faster
                 image:RemoveFromParent()
             end
         end
@@ -262,7 +270,7 @@ local function createMinimap()
     updateCachedPoints()
 
     for name, point in pairs(cachedPoints) do
-        local color = pointTypes[point.type][point.found and 2 or 1]
+        local color = pointTypes[point.type][point.found and 2 or 1] or FLinearColor(0,0,0,0)
         cachedPoints[name].image = addPoint(dotLayer, point.loc, color, dotSize, name .. ".Dot")
     end
 
@@ -332,6 +340,7 @@ local function updatePoints(loc)
             local x, y = point.loc.X, point.loc.Y
 
             if useSpherify and loc then
+
                 local cx, cy = loc.X, loc.Y
 
                 local w = widgetSize.X / scaling
