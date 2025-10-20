@@ -38,8 +38,8 @@ local pointTypes = {
     RealCoinPickup_C = { FLinearColor(1, 0.5, 0, 1), FLinearColor(0, 0, 0, 0) },
     PresentBox_Lootpools_C = { FLinearColor(1, 0, 0, 1), FLinearColor(0, 0, 0, 0) },
     ItemSpawner_C = { FLinearColor(1, 0, 0, 1), FLinearColor(0, 0, 0, 0) },
-    PresentBox_C = { FLinearColor(1, 0, 1, 1), FLinearColor(0, 0, 0, 0) },
-    PickupSpawner_C = { FLinearColor(0, 0, 1, 1), FLinearColor(0, 0, 0, 0) },
+    PresentBox_C = { FLinearColor(1, 0, 0, 1), FLinearColor(0, 0, 0, 0) },
+    PickupSpawner_C = { FLinearColor(0.647, 0.165, 0.165, 1), FLinearColor(0, 0, 0, 0) },
 
     -- supraland
     SecretFound_C = { FLinearColor(0, 1, 0, 1), FLinearColor(0.5, 0.5, 0.5, 0.5) },
