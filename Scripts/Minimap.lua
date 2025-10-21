@@ -607,12 +607,12 @@ RegisterKeyBind(Key.M, { ModifierKey.ALT, ModifierKey.SHIFT}, toggleSize)
 RegisterKeyBind(Key.M, { ModifierKey.CONTROL }, toggleSpherify)
 RegisterKeyBind(Key.M, { ModifierKey.CONTROL, ModifierKey.SHIFT }, toggleScale)
 
-local minimapHelp=[[minimap [on|off|toggle] (Alt+M)
-minimap position [bottomleft|topleft|topright|bottomright|center|toggle] (Alt+Ctrl+M)
-minimap background [on|off|toggle] (Shift+M)
-minimap spherify [on|off|toggle] (Ctrl+M)
-minimap scale [<scale>|toggle] (Alt+Shift+M)
-minimap size [<size>|toggle] (Ctrl+Shift+M)
+local minimapHelp=[[minimap <on|off> (Alt+M)
+minimap position <bottomleft|topleft|topright|bottomright|center> (Alt+Ctrl+M)
+minimap background <on|off> (Shift+M)
+minimap spherify <on|off> (Ctrl+M)
+minimap scale <scale> (Alt+Shift+M)
+minimap size <size> (Ctrl+Shift+M)
 ]]
 
 RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
