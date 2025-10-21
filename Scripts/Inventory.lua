@@ -48,7 +48,7 @@ local function ToggleInventory(eq_name, pc, add)
     else -- remove
         local item = manager:FindFirstItemStackByDefinition(obj)
         if not item or not item:IsValid() then
-            return false, "Inventory item not found"
+            return false, "Not wearing this item"
         end
         manager:RemoveItemInstance(item)
         return true, "Inventory item removed"
@@ -63,8 +63,11 @@ local function ToggleEquipment(name, pc, char, obj, add)
     if not manager or not manager:IsValid() then
         return false, "could not find equipment manager"
     end
+    -- print("pc", pc:GetFullName())
+    -- print("comp", char.LyraEquipmentManagerComponent, char.randomPropertyName)
 
-    -- print("Equipment Manager", manager:IsValid(), char.LyraEquipmentManagerComponent:IsValid())
+    -- local m = StaticFindObject(char:GetFullName():match("%s+(.*)")..".LyraEquipmentManagerComponent") -- this works
+    -- print("Equipment Manager", manager:IsValid(), char.LyraEquipmentManagerComponent:IsValid()) -- this doesn't work
 
     local items = manager:GetEquipmentInstancesOfDefinitionType(obj)or{}
 
