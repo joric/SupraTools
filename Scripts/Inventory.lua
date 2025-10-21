@@ -200,7 +200,7 @@ local function GetItems(filter)
     -- UE4 objects apparently don't have _C postfix
 
     for _, obj in pairs(FindObjects(65536, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
-        if obj and obj:isValid() then
+        if obj and obj:IsValid() then
             local path = getPath(obj:GetFullName())
             if hasSubstring(path, {"/Buy", "/BP_Purchase", "/Purchase"}) then
                 local name = obj:GetFName():ToString()
