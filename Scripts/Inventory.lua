@@ -5,26 +5,6 @@
 
 local UEHelpers = require("UEHelpers")
 
-local AssetRegistryHelpers = nil
-local AssetRegistry = nil
-
-local function CacheAssetRegistry()
-    if AssetRegistryHelpers and AssetRegistry then return end
-
-    AssetRegistryHelpers = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryHelpers")
-    if not AssetRegistryHelpers:IsValid() then Log("AssetRegistryHelpers is not valid\n") end
-
-    if AssetRegistryHelpers then
-        AssetRegistry = AssetRegistryHelpers:GetAssetRegistry()
-        if AssetRegistry:IsValid() then return end
-    end
-
-    AssetRegistry = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryImpl")
-    if AssetRegistry:IsValid() then return end
-
-    error("AssetRegistry is not valid\n")
-end
-
 local function getName(fullpath)
     return fullpath:match("([^.]+)$")
 end
@@ -174,6 +154,26 @@ local function hasSubstring(str, substrings)
         end
     end
     return false
+end
+
+local AssetRegistryHelpers = nil
+local AssetRegistry = nil
+
+local function CacheAssetRegistry()
+    if AssetRegistryHelpers and AssetRegistry then return end
+
+    AssetRegistryHelpers = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryHelpers")
+    if not AssetRegistryHelpers:IsValid() then Log("AssetRegistryHelpers is not valid\n") end
+
+    if AssetRegistryHelpers then
+        AssetRegistry = AssetRegistryHelpers:GetAssetRegistry()
+        if AssetRegistry:IsValid() then return end
+    end
+
+    AssetRegistry = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryImpl")
+    if AssetRegistry:IsValid() then return end
+
+    error("AssetRegistry is not valid\n")
 end
 
 local function GetItems(filter)
