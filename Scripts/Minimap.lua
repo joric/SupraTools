@@ -521,7 +521,7 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
     end)
 end)
 
-LoopAsync(60000, function() -- let's see if hooks work
+LoopAsync(120000, function() -- let's see if hooks work
     if not mapWidget or not mapWidget:IsValid() or mapWidget:GetVisibility() == HIDDEN then return end
     updateCachedPoints()
     updateMinimap()
