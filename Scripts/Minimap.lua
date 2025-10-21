@@ -620,6 +620,7 @@ RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
         Ar:Log(minimapHelp)
         return true
     end
+    -- todo more commands
     Ar:Log("toggling minimap")
     toggleMinimap()
     return true
