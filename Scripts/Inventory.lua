@@ -197,7 +197,7 @@ local function GetItems(filter)
         end
     end
 
-    -- UE4 objects apparently don't have _C postfix
+    -- UE4 registry apparently doesn't have _C postfix, so load items from runtime
 
     for _, obj in pairs(FindObjects(65536, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
         if obj and obj:IsValid() then
