@@ -219,11 +219,8 @@ end
 
 local function findExactMatch(tbl, value)
     for _, v in ipairs(tbl) do
-        if tagify(v) == value then
-            return v
-        end
+        if tagify(v) == value then return v end
     end
-    return nil
 end
 
 RegisterConsoleCommandHandler("list", function(FullCommand, Parameters, Ar)
