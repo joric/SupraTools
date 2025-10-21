@@ -25,16 +25,16 @@ local function CacheAssetRegistry()
     error("AssetRegistry is not valid\n")
 end
 
-local function getName(path)
-    return path:match("([^.]+)$")
+local function getName(fullpath)
+    return fullpath:match("([^.]+)$")
 end
 
 local function getPath(fullpath)
     return fullpath:match("%s(.+)")
 end
 
-local function namefy(name)
-    return getName(name)
+local function namefy(path)
+    return getName(path)
 end
 
 local function tagify(name)
@@ -176,22 +176,10 @@ local function hasSubstring(str, substrings)
     return false
 end
 
-local function addItem(out, obj, filter, substrings)
-    if not obj or not obj:IsValid() then return end
-    local path = getPath(obj:GetFullName())
-    if not hasSubstring(path, substrings) then return end
-    local name = obj:GetFName():ToString()
-    if name and (not filter or name:lower():find(filter:lower())) then
-        table.insert(out, name)
-    end
-end
-
 local function GetItems(filter)
     local out = {}
 
-    for _, obj in pairs(FindObjects(65536, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
-        addItem(out, obj, filter, {"/Buy", "/BP_Purchase", "/Purchase"})
-    end
+    -- load inventory items from registry (may not be loaded)
 
     CacheAssetRegistry()
     local assets = {}
@@ -208,6 +196,19 @@ local function GetItems(filter)
             end
         end
     end
+
+    -- UE4 objects apparently don't have _C postfix
+
+    for _, obj in pairs(FindObjects(65536, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
+        if obj and obj:isValid() then
+            local path = getPath(obj:GetFullName())
+            if hasSubstring(path, {"/Buy", "/BP_Purchase", "/Purchase"}) then
+                local name = obj:GetFName():ToString()
+                if name and (not filter or name:lower():find(filter:lower())) then
+                    table.insert(out, name)
+                end
+            end
+        end
 
     table.sort(out, function(a, b)
         return tagify(a) < tagify(b)
