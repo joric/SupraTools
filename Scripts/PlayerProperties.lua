@@ -165,8 +165,10 @@ local function GetPlayerProperties()
 
     local data = {}
     for name, value in pairs(player.Status) do
-        local str = string.format("%s: %s [%s]", name, tostring(obj[name]), type(obj[name]))
-        table.insert(data, str)
+        if type(obj[name])~='userdata' then
+            local str = string.format("%s: %s [%s]", name, tostring(obj[name]), type(obj[name]))
+            table.insert(data, str)
+        end
     end
     table.sort(data)
     return data

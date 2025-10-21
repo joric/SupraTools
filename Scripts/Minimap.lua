@@ -263,8 +263,6 @@ local function createMinimap()
     updateTiles()
     updateCachedPoints()
 
-
-
     for name, point in pairs(cachedPoints) do
         local color = pointTypes[point.type][point.found and 2 or 1] or FLinearColor(0,0,0,0)
         cachedPoints[name].image = addPoint(dotLayer, point.loc, color, dotSize, name .. ".Dot")
@@ -333,11 +331,11 @@ end
 local function updatePoints(loc)
     for name, point in pairs(cachedPoints) do
         local image = cachedPoints[name].image
+
         if image and image:IsValid() and image.Slot and image.Slot:IsValid() then
             local x, y = point.loc.X, point.loc.Y
 
             if useSpherify and loc then
-
                 local cx, cy = loc.X, loc.Y
 
                 local w = widgetSize.X / scaling
@@ -399,7 +397,9 @@ local function updateMinimap(hook, name, param)
                 Angle = angle
             })
 
-            if useSpherify then updatePoints(loc) end
+            if useSpherify then
+                updatePoints(loc)
+            end
 
             if playerImage and playerImage:IsValid() then
                 playerImage.Slot:SetPosition({ X = loc.X, Y = loc.Y })
@@ -530,7 +530,16 @@ end)
 if mapWidget and mapWidget:IsValid() then
     print("-- re-registering hooks -- ")
     registerHooks()
-    ExecuteAsync(updateCachedPoints)
+
+    ExecuteAsync(function()
+        updateCachedPoints()
+
+        -- repopulate images on reload
+        for name, point in pairs(cachedPoints) do
+            cachedPoints[name].image = FindObject("Image", name .. ".Dot")
+        end
+    end)
+
 end
 
 local widgetPosition = 0
@@ -604,3 +613,4 @@ RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
     toggleMinimap()
     return true
 end)
+
