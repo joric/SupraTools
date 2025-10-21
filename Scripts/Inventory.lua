@@ -179,7 +179,7 @@ end
 local function GetItems(filter)
     local out = {}
 
-    -- load inventory items from registry (may not be loaded)
+    -- load UE5 Lyra inventory items from registry (may not be loaded)
 
     CacheAssetRegistry()
     local assets = {}
