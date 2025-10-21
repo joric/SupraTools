@@ -5,20 +5,16 @@
 
 local UEHelpers = require("UEHelpers")
 
-local function getName(fullpath)
-    return fullpath:match("([^.]+)$")
-end
-
 local function getPath(fullpath)
     return fullpath:match("%s(.+)")
 end
 
 local function namefy(path)
-    return getName(path)
+    return path:match("([^.]+)$")
 end
 
-local function tagify(name)
-    name = namefy(name)
+local function tagify(path)
+    name = namefy(path)
     for _, sub in ipairs({"Buy", "BP_Purchase", "Purchase", "Equipment", "Inventory", "_C$", "^_"}) do
         name = name:gsub(sub, "")
     end
@@ -42,7 +38,7 @@ local function ToggleEquipment(obj, pc, add)
     end
 end
 
-local function ToggleInventory(name, obj, pc, add)
+local function ToggleInventory(obj, pc, add)
     local inv = pc:K2_GetComponentsByClass(StaticFindObject('/Script/LyraGame.LyraInventoryManagerComponent'))[1]:get()
 
     local cdo = obj:GetCDO()
@@ -59,35 +55,38 @@ local function ToggleInventory(name, obj, pc, add)
 
     if add then
         if item:IsValid() then
-            return false, "Already wearing this inventory"
+            return false, "Already wearing"
         end
         inv:AddItemDefinition(obj, 1)
+        return true, "Added"
     else -- remove
         if not item:IsValid() then
-            return false, "Not wearing this inventory"
+            return false, "Not wearing"
         end
         inv:RemoveItemInstance(item)
+        return true, "Removed"
     end
 
     return true, "OK"
 end
 
-local function ToggleItem(name, add)
+local function ToggleItem(path, add)
     local pc = UEHelpers.GetPlayerController()
     if not pc:IsValid() or not pc.Pawn:IsValid() or not pc.Character:IsValid() then
         return false, "could not find valid player controller"
     end
 
-    print("loading " .. name)
-    LoadAsset(name)
+    print("-- loading", path, namefy(path))
 
-    local obj = FindObject('BlueprintGeneratedClass', namefy(name))
+    LoadAsset(path)
+
+    local obj = FindObject('BlueprintGeneratedClass', namefy(path))
     if not obj:IsValid() then
         return false, "could not find object"
     end
 
-    if name:find("Inventory_") then
-        return ToggleInventory(name, obj, pc, add)
+    if path:find("Inventory_") then
+        return ToggleInventory(obj, pc, add)
     end
 
     local delta = {X=15,Y=50,Z=-30} -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
@@ -112,12 +111,12 @@ local function ToggleItem(name, add)
 end
 
 
-local function RemoveItem(name)
-    return ToggleItem(name, false)
+local function RemoveItem(path)
+    return ToggleItem(path, false)
 end
 
-local function AddItem(name)
-    return ToggleItem(name, true)
+local function AddItem(path)
+    return ToggleItem(path, true)
 end
 
 local function consolefy2(data)
@@ -190,7 +189,7 @@ local function GetItems(filter)
         local p_name = data:get().PackageName:ToString()
         local path = p_name .. "." .. a_name
         if path:find("_C$") and path:find("/Inventory") then
-            local name = path:match("([^.]+)$")
+            local name = namefy(path)
             if name and (not filter or name:lower():find(filter:lower())) then
                 table.insert(out, path)
             end
@@ -203,9 +202,9 @@ local function GetItems(filter)
         if obj and obj:IsValid() then
             local path = getPath(obj:GetFullName())
             if hasSubstring(path, {"/Buy", "/BP_Purchase", "/Purchase"}) then
-                local name = obj:GetFName():ToString()
+                local name = namefy(path)
                 if name and (not filter or name:lower():find(filter:lower())) then
-                    table.insert(out, name)
+                    table.insert(out, path)
                 end
             end
         end
@@ -229,8 +228,8 @@ end
 
 RegisterConsoleCommandHandler("list", function(FullCommand, Parameters, Ar)
     local items = GetItems()
-    for _,name in ipairs(items) do
-        Ar:Log(string.format("%s (%s)", tagify(name), namefy(name)))
+    for _, path in ipairs(items) do
+        Ar:Log(string.format("%s (%s)", tagify(path), namefy(path)))
     end
     return true
 end)
@@ -245,15 +244,11 @@ local function processItemCommand(FullCommand, Parameters, Ar, callback)
     end
 
     local items = GetItems(filter)
-    local name = #items==1 and items[1] or findExactMatch(items, filter)
+    local path = #items==1 and items[1] or findExactMatch(items, filter)
 
-    if name then
-        ok, err = callback(name)
-        if ok then
-            Ar:Log(string.format("%s [%s] (%s)", err or "command succeeded", tagify(name), name))
-        else
-            Ar:Log(err)
-        end
+    if path then
+        ok, err = callback(path)
+        Ar:Log(string.format("%s [%s] (%s)", err or "OK", tagify(path), namefy(path)))
     else
         Ar:Log(consolefy2(items))
     end
@@ -276,5 +271,3 @@ end)
 RegisterConsoleCommandHandler("drop", function(FullCommand, Parameters, Ar)
     return processItemCommand(FullCommand, Parameters, Ar, RemoveItem)
 end)
-
-
