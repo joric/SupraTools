@@ -77,6 +77,8 @@ function print(...)
   old_print(("[%s] %s"):format(name, table.concat(args, " ")))
 end
 
+local dev = os.getenv("dev") and "_dev" or ""
+
 require("UnblockEA")
 require("DebugCamera")
 require("SuitRefill")
@@ -93,4 +95,5 @@ require("GameSettings")
 require("DeployItems")
 require("PlayerProperties")
 require("Minimap")
-require("Inventory")
+require("Inventory" .. dev)
+

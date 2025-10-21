@@ -6,93 +6,82 @@
 local UEHelpers = require("UEHelpers")
 
 local function tagify(name)
-    for _, sub in ipairs({"Buy", "BP_Purchase", "Purchase", "Equipment", "_C$", "^_"}) do
+    for _, sub in ipairs({"Buy", "BP_Purchase", "Purchase", "Equipment", "Inventory", "_C$", "^_"}) do
         name = name:gsub(sub, "")
     end
     return name:lower()
 end
 
-local function ToggleInventory(eq_name, pc, add)
-    local comp = pc:K2_GetComponentsByClass(StaticFindObject('/Script/LyraGame.LyraInventoryManagerComponent'))
-    local manager = #comp>0 and comp[1]:get()
-    if not manager or not manager:IsValid() then
-        return false, "could not find inventory manager"
+local function ToggleEquipment(eqDef, pc, add)
+    local eqm = pc.Character:K2_GetComponentsByClass(StaticFindObject('/Script/LyraGame.LyraEquipmentManagerComponent'))[1]:get()
+
+    local instances = eqm:GetEquipmentInstancesOfDefinitionType(eqDef)
+
+    if add then
+        local eqInst = eqm:EquipItem(eqDef)
+        print("equipped", eqInst:GetFullName())
+    else
+        for _,param in ipairs(instances or {}) do
+            local eqInst = param:get()
+            eqm:UnequipItem(eqInst)
+            print("unequipped", eqInst:GetFullName())
+        end
     end
+end
 
-    -- print("Inventory Manager", manager:IsValid(), manager:IsValid(), pc.LyraInventoryManagerComponent:IsValid())
-
-    local name = eq_name:gsub("Equipment", "Inventory")
-
-    LoadAsset(name)
+local function ToggleInventory(name, pc, add)
+    local inv = pc:K2_GetComponentsByClass(StaticFindObject('/Script/LyraGame.LyraInventoryManagerComponent'))[1]:get()
 
     local obj = FindObject('BlueprintGeneratedClass', name)
     if not obj:IsValid() then
-        return false, "could not find inventory"
+        return false, "could not find object"
     end
 
+    local cdo = StaticFindObject(obj:GetFullName():gsub(name, "Default__" .. name):match("%s+(.*)")) -- maybe try GetDefaultObject instead
+    if not cdo:IsValid() then
+        return false, "could not find cdo"
+    end
+
+    local eqDef = nil
+    for i = 1, #cdo.Fragments do
+        local frag = cdo.Fragments[i]
+        if frag.EquipmentDefinition:IsValid() then
+            ToggleEquipment(frag.EquipmentDefinition, pc, add)
+        end
+    end
+
+    local invInst = inv:FindFirstItemStackByDefinition(obj)
+
     if add then
-        local item = manager:FindFirstItemStackByDefinition(obj)
-        if item and item:IsValid() then
-            print(name .. " already granted, re-applying (effects may double)...")
+        if invInst:IsValid() then
+            return false, "Already wearing this inventory"
         end
-
-        if not manager:CanAddItemDefinition(obj, 1) then
-            return false, "Cannot add item, CanAddItemDefinition returned false"
-        end
-
-        local newItem = manager:AddItemDefinition(obj, 1)
-        if not newItem then
-            return false, "AddItemDefinition failed"
-        end
-        return true, "Inventory item added"
+        inv:AddItemDefinition(obj, 1)
     else -- remove
-        local item = manager:FindFirstItemStackByDefinition(obj)
-        if not item or not item:IsValid() then
-            return false, "Not wearing this item"
+        if not invInst:IsValid() then
+            return false, "Not wearing this inventory"
         end
-        manager:RemoveItemInstance(item)
-        return true, "Inventory item removed"
+        inv:RemoveItemInstance(invInst)
     end
 
     return true, "OK"
 end
 
-local function ToggleEquipment(name, pc, char, obj, add)
-    local comp = char:K2_GetComponentsByClass(StaticFindObject('/Script/LyraGame.LyraEquipmentManagerComponent'))
-    local manager = #comp>0 and comp[1]:get()
-    if not manager or not manager:IsValid() then
-        return false, "could not find equipment manager"
-    end
-    -- print("pc", pc:GetFullName())
-    -- print("comp", char.LyraEquipmentManagerComponent, char.randomPropertyName)
-
-    -- local m = StaticFindObject(char:GetFullName():match("%s+(.*)")..".LyraEquipmentManagerComponent") -- this works
-    -- print("Equipment Manager", manager:IsValid(), char.LyraEquipmentManagerComponent:IsValid()) -- this doesn't work
-
-    local items = manager:GetEquipmentInstancesOfDefinitionType(obj)or{}
-
-    if add then
-        local item = manager:EquipItem(obj)
-        if not item:IsValid() then
-            return false, "Could not equip, invalid item"
-        end
-    else -- remove
-        if #items>0 then
-            for _,obj in ipairs(items) do
-                local item = obj:get()
-                if item:IsValid() then
-                    manager:UnequipItem(item)
-                end
-            end
-        end
+local function ToggleItem(name, add)
+    local pc = UEHelpers.GetPlayerController()
+    if not pc:IsValid() or not pc.Pawn:IsValid() or not pc.Character:IsValid() then
+        return false, "could not find valid player controller"
     end
 
-    return ToggleInventory(name, pc, add)
-end
+    if name:find("Inventory_") then
+        return ToggleInventory(name, pc, add)
+    end
 
-local function ToggleItemInternal(name, pc, char, obj, add)
-    if name:find("Equipment_") then
-        return ToggleEquipment(name, pc, char, obj, add)
+    LoadAsset(name)
+
+    local obj = FindObject('BlueprintGeneratedClass', name)
+    if not obj:IsValid() then
+        return false, "could not find object"
     end
 
     local delta = {X=15,Y=50,Z=-30} -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
@@ -106,34 +95,14 @@ local function ToggleItemInternal(name, pc, char, obj, add)
     loc.Z = loc.Z + delta.Z
 
     local actor = UEHelpers.GetWorld():SpawnActor(obj, loc, rot)
+
     actor:SetActorScale3D({X=1,Y=1,Z=1}) -- optionally make actor BIG so it has more surface to autoselect
 
-    char:Using() -- and pick up item! this is very unreliable (object shapes are very different) but sometimes works
+    pc.Character:Using() -- and pick up item! this is very unreliable (object shapes are very different) but sometimes works
 
-    ExecuteWithDelay(250, function() self:UseReleased() end)
+    ExecuteWithDelay(250, function() pc.Character:UseReleased() end)
 
     return true
-end
-
-local function ToggleItem(name, add)
-    local pc = UEHelpers.GetPlayerController()
-    if not pc:IsValid() or not pc.CheatManager or not pc.CheatManager:IsValid() or not pc.Pawn or not pc.Pawn:IsValid() then
-        return false, "could not find valid player controller"
-    end
-
-    local char = pc.Character
-    if not char or not char:IsValid() then
-        return false, "could not find character"
-    end
-
-    LoadAsset(name)
-
-    local obj = FindObject('BlueprintGeneratedClass', name)
-    if not obj:IsValid() then
-        return false, "could not find object"
-    end
-
-    return ToggleItemInternal(name, pc, char, obj, add)
 end
 
 
@@ -181,20 +150,21 @@ local function hasSubstring(str, substrings)
     return false
 end
 
+local function addItem(out, obj, filter, substrings)
+    if not obj or not obj:IsValid() then return end
+    if not hasSubstring(obj:GetFullName(), substrings) then return end
+    local name = obj:GetFName():ToString()
+    if name and (not filter or name:lower():find(filter:lower())) then
+        table.insert(out, name)
+    end
+end
+
 local function GetItems(filter)
+    local maxobj = 65535
     local out = {}
-    for _, obj in pairs(FindObjects(30000, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
-        if obj and obj:IsValid() then
-            local path = tostring(obj:GetFullName())
-            if hasSubstring(path, {"/Buy", "/BP_Purchase", "/Purchase", ".Equipment_"}) then
-                local name = obj:GetFName():ToString()
-                if name then
-                    if not filter or name:lower():find(filter:lower()) then
-                        table.insert(out, name)
-                    end
-                end
-            end
-        end
+
+    for _, obj in pairs(FindObjects(maxobj, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
+        addItem(out, obj, filter, {"/Buy", "/BP_Purchase", "/Purchase", "/Inventory"})
     end
 
     table.sort(out, function(a, b)
