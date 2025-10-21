@@ -576,7 +576,7 @@ local function toggleSpherify()
     updateMinimapWidget()
 end
 
-local function toggleTiles()
+local function toggleBackground()
     showTiles = not showTiles
     print("toggling tiles", showTiles)
     updateMinimapWidget()
@@ -602,13 +602,24 @@ end
 
 RegisterKeyBind(Key.M, { ModifierKey.ALT }, toggleMinimap)
 RegisterKeyBind(Key.M, { ModifierKey.ALT, ModifierKey.CONTROL }, cycleMinimapPosition)
-RegisterKeyBind(Key.M, { ModifierKey.ALT, ModifierKey.SHIFT, }, toggleSize)
-RegisterKeyBind(Key.M, { ModifierKey.SHIFT }, toggleTiles)
+RegisterKeyBind(Key.M, { ModifierKey.SHIFT }, toggleBackground)
+RegisterKeyBind(Key.M, { ModifierKey.ALT, ModifierKey.SHIFT}, toggleSize)
 RegisterKeyBind(Key.M, { ModifierKey.CONTROL }, toggleSpherify)
-RegisterKeyBind(Key.M, { ModifierKey.CONTROL, ModifierKey.SHIFT }, createMinimap)
+RegisterKeyBind(Key.M, { ModifierKey.CONTROL, ModifierKey.SHIFT }, toggleScale)
+
+local minimapHelp=[[minimap [on|off|toggle] (Alt+M)
+minimap position [bottomleft|topleft|topright|bottomright|center|toggle] (Alt+Ctrl+M)
+minimap background [on|off|toggle] (Shift+M)
+minimap spherify [on|off|toggle] (Ctrl+M)
+minimap scale [<scale>|toggle] (Alt+Shift+M)
+minimap size [<size>|toggle] (Ctrl+Shift+M)
+]]
 
 RegisterConsoleCommandHandler("minimap", function(FullCommand, Parameters, Ar)
-    Ar:Log(supraToolsAttribution)
+    if #Parameters == 0 then
+        Ar:Log(minimapHelp)
+        return true
+    end
     Ar:Log("toggling minimap")
     toggleMinimap()
     return true
