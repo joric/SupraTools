@@ -25,63 +25,60 @@ local function CacheAssetRegistry()
     error("AssetRegistry is not valid\n")
 end
 
+local function namefy(name)
+    return name:match("([^.]+)$")
+end
+
 local function tagify(name)
+    name = namefy(name)
     for _, sub in ipairs({"Buy", "BP_Purchase", "Purchase", "Equipment", "Inventory", "_C$", "^_"}) do
         name = name:gsub(sub, "")
     end
     return name:lower()
 end
 
-local function ToggleEquipment(eqDef, pc, add)
+local function ToggleEquipment(obj, pc, add)
     local eqm = pc.Character:K2_GetComponentsByClass(StaticFindObject('/Script/LyraGame.LyraEquipmentManagerComponent'))[1]:get()
 
-    local instances = eqm:GetEquipmentInstancesOfDefinitionType(eqDef)
+    print("equipping", obj:GetFullName())
 
     if add then
-        local eqInst = eqm:EquipItem(eqDef)
-        print("equipped", eqInst:GetFullName())
+        local item = eqm:EquipItem(obj)
+        print("equipped", item:GetFullName())
     else
-        for _,param in ipairs(instances or {}) do
-            local eqInst = param:get()
-            eqm:UnequipItem(eqInst)
-            print("unequipped", eqInst:GetFullName())
+        for _,param in ipairs(eqm:GetEquipmentInstancesOfDefinitionType(obj) or {}) do
+            local item = param:get()
+            eqm:UnequipItem(item)
+            print("unequipped", item:GetFullName())
         end
     end
 end
 
-local function ToggleInventory(name, pc, add)
+local function ToggleInventory(name, obj, pc, add)
     local inv = pc:K2_GetComponentsByClass(StaticFindObject('/Script/LyraGame.LyraInventoryManagerComponent'))[1]:get()
 
-    local obj = FindObject('BlueprintGeneratedClass', name)
-    if not obj:IsValid() then
-        return false, "could not find object"
-    end
-
-    local cdo = StaticFindObject(obj:GetFullName():gsub(name, "Default__" .. name):match("%s+(.*)")) -- maybe try GetDefaultObject instead
-    if not cdo:IsValid() then
-        return false, "could not find cdo"
-    end
-
-    local eqDef = nil
-    for i = 1, #cdo.Fragments do
-        local frag = cdo.Fragments[i]
-        if frag.EquipmentDefinition:IsValid() then
-            ToggleEquipment(frag.EquipmentDefinition, pc, add)
+    local cdo = obj:GetCDO()
+    if cdo:IsValid() then
+        for i = 1, #cdo.Fragments do
+            local frag = cdo.Fragments[i]
+            if frag.EquipmentDefinition:IsValid() then
+                ToggleEquipment(frag.EquipmentDefinition, pc, add)
+            end
         end
     end
 
-    local invInst = inv:FindFirstItemStackByDefinition(obj)
+    local item = inv:FindFirstItemStackByDefinition(obj)
 
     if add then
-        if invInst:IsValid() then
+        if item:IsValid() then
             return false, "Already wearing this inventory"
         end
         inv:AddItemDefinition(obj, 1)
     else -- remove
-        if not invInst:IsValid() then
+        if not item:IsValid() then
             return false, "Not wearing this inventory"
         end
-        inv:RemoveItemInstance(invInst)
+        inv:RemoveItemInstance(item)
     end
 
     return true, "OK"
@@ -93,15 +90,16 @@ local function ToggleItem(name, add)
         return false, "could not find valid player controller"
     end
 
-    if name:find("Inventory_") then
-        return ToggleInventory(name, pc, add)
-    end
-
+    print("loading " .. name)
     LoadAsset(name)
 
-    local obj = FindObject('BlueprintGeneratedClass', name)
+    local obj = FindObject('BlueprintGeneratedClass', namefy(name))
     if not obj:IsValid() then
         return false, "could not find object"
+    end
+
+    if name:find("Inventory_") then
+        return ToggleInventory(name, obj, pc, add)
     end
 
     local delta = {X=15,Y=50,Z=-30} -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
@@ -180,11 +178,31 @@ local function addItem(out, obj, filter, substrings)
 end
 
 local function GetItems(filter)
-    local maxobj = 65535
     local out = {}
+    local substrings = {"/Buy", "/BP_Purchase", "/Purchase", "/Inventory"}
 
-    for _, obj in pairs(FindObjects(maxobj, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
-        addItem(out, obj, filter, {"/Buy", "/BP_Purchase", "/Purchase", "/Inventory"})
+    --[[
+    for _, obj in pairs(FindObjects(65536, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
+        addItem(out, obj, filter, substrings)
+    end
+    ]]
+
+    CacheAssetRegistry()
+    local assets = {}
+    AssetRegistry:GetAllAssets(assets, false)
+
+    for _, data in ipairs(assets) do
+        local a_name  = data:get().AssetName:ToString()
+        local p_name = data:get().PackageName:ToString()
+        local path = p_name .. "." .. a_name
+        if path:find("_C$") then
+            if hasSubstring(path, substrings) then
+                local name = path:match("([^.]+)$")
+                if name and (not filter or name:lower():find(filter:lower())) then
+                    table.insert(out, path)
+                end
+            end
+        end
     end
 
     table.sort(out, function(a, b)
@@ -206,7 +224,7 @@ end
 RegisterConsoleCommandHandler("list", function(FullCommand, Parameters, Ar)
     local items = GetItems()
     for _,name in ipairs(items) do
-        Ar:Log(string.format("%s (%s)", tagify(name), name))
+        Ar:Log(string.format("%s (%s)", tagify(name), namefy(name)))
     end
     return true
 end)
