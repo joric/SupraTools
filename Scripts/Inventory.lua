@@ -25,8 +25,16 @@ local function CacheAssetRegistry()
     error("AssetRegistry is not valid\n")
 end
 
+local function getName(path)
+    return path:match("([^.]+)$")
+end
+
+local function getPath(fullpath)
+    return fullpath:match("%s(.+)")
+end
+
 local function namefy(name)
-    return name:match("([^.]+)$")
+    return getName(name)
 end
 
 local function tagify(name)
@@ -170,7 +178,8 @@ end
 
 local function addItem(out, obj, filter, substrings)
     if not obj or not obj:IsValid() then return end
-    if not hasSubstring(obj:GetFullName(), substrings) then return end
+    local path = getPath(obj:GetFullName())
+    if not hasSubstring(path, substrings) then return end
     local name = obj:GetFName():ToString()
     if name and (not filter or name:lower():find(filter:lower())) then
         table.insert(out, name)
@@ -179,13 +188,10 @@ end
 
 local function GetItems(filter)
     local out = {}
-    local substrings = {"/Buy", "/BP_Purchase", "/Purchase", "/Inventory"}
 
-    --[[
     for _, obj in pairs(FindObjects(65536, "BlueprintGeneratedClass", "", 0, 0, false) or {}) do
-        addItem(out, obj, filter, substrings)
+        addItem(out, obj, filter, {"/Buy", "/BP_Purchase", "/Purchase"})
     end
-    ]]
 
     CacheAssetRegistry()
     local assets = {}
@@ -195,12 +201,10 @@ local function GetItems(filter)
         local a_name  = data:get().AssetName:ToString()
         local p_name = data:get().PackageName:ToString()
         local path = p_name .. "." .. a_name
-        if path:find("_C$") then
-            if hasSubstring(path, substrings) then
-                local name = path:match("([^.]+)$")
-                if name and (not filter or name:lower():find(filter:lower())) then
-                    table.insert(out, path)
-                end
+        if path:find("_C$") and path:find("/Inventory") then
+            local name = path:match("([^.]+)$")
+            if name and (not filter or name:lower():find(filter:lower())) then
+                table.insert(out, path)
             end
         end
     end
