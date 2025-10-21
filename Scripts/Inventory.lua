@@ -40,7 +40,7 @@ end
 local function ToggleEquipment(obj, pc, add)
     local eqm = pc.Character:K2_GetComponentsByClass(StaticFindObject('/Script/LyraGame.LyraEquipmentManagerComponent'))[1]:get()
 
-    print("equipping", obj:GetFullName())
+    print("equipment", obj:GetFullName())
 
     if add then
         local item = eqm:EquipItem(obj)
