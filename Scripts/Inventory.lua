@@ -209,6 +209,7 @@ local function GetItems(filter)
                 end
             end
         end
+    end
 
     table.sort(out, function(a, b)
         return tagify(a) < tagify(b)
