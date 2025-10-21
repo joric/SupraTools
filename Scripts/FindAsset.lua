@@ -77,9 +77,9 @@ local function FindAssetsByKeywords(keywords)
     i = 0
     for _, data in ipairs(assets) do
         local a_name  = data:get().AssetName:ToString()
-        local a_class = data:get().AssetClass:ToString()
+        local a_class = data:get().AssetClass:ToString() -- always None
         local p_name = data:get().PackageName:ToString()
-        local p_path = data:get().PackagePath:ToString()
+        local p_path = data:get().PackagePath:ToString() -- same as p_path
 
         local path = p_name .. "." .. a_name
 

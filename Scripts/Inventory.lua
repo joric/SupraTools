@@ -5,6 +5,26 @@
 
 local UEHelpers = require("UEHelpers")
 
+local AssetRegistryHelpers = nil
+local AssetRegistry = nil
+
+local function CacheAssetRegistry()
+    if AssetRegistryHelpers and AssetRegistry then return end
+
+    AssetRegistryHelpers = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryHelpers")
+    if not AssetRegistryHelpers:IsValid() then Log("AssetRegistryHelpers is not valid\n") end
+
+    if AssetRegistryHelpers then
+        AssetRegistry = AssetRegistryHelpers:GetAssetRegistry()
+        if AssetRegistry:IsValid() then return end
+    end
+
+    AssetRegistry = StaticFindObject("/Script/AssetRegistry.Default__AssetRegistryImpl")
+    if AssetRegistry:IsValid() then return end
+
+    error("AssetRegistry is not valid\n")
+end
+
 local function tagify(name)
     for _, sub in ipairs({"Buy", "BP_Purchase", "Purchase", "Equipment", "Inventory", "_C$", "^_"}) do
         name = name:gsub(sub, "")
