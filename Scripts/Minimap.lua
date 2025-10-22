@@ -527,17 +527,29 @@ LoopAsync(5*60*1000, function() -- let's see if hooks work
     updateMinimap()
 end)
 
+local function remapImages()
+    if not bgLayer or not bgLayer:IsValid() then return end
+    local childCount = bgLayer:GetChildrenCount()
+    for i = 0, childCount - 1 do
+        local image = bgLayer:GetChildAt(i)
+        if image:IsValid() and image.Slot:IsValid() then
+            local name = image:GetFName():ToString():gsub(".Dot","")
+            local point = cachedPoints[name]
+            if point then
+                point.image = image
+            end
+        end
+    end
+end
+
 if mapWidget and mapWidget:IsValid() then
     print("-- re-registering hooks -- ")
     registerHooks()
 
     ExecuteAsync(function()
         updateCachedPoints()
-
-        -- repopulate images on reload
-        for name, point in pairs(cachedPoints) do
-            cachedPoints[name].image = FindObject("Image", name .. ".Dot")
-        end
+        remapImages()
+        updatePoints()
     end)
 
 end
