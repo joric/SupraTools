@@ -34,22 +34,29 @@ end
 
 inDebugCamera = false -- global variable
 
-local DebugCameraControllerCache  = CreateInvalidObject()
+local PlayerControllerCache = CreateInvalidObject()
+
+function getPlayerController()
+    if PlayerControllerCache:IsValid() then return PlayerControllerCache end
+    PlayerControllerCache = UEHelpers.GetPlayerController()
+    return PlayerControllerCache
+end
+
+local DebugCameraControllerCache = CreateInvalidObject()
+
 function getDebugCameraController()
     if DebugCameraControllerCache:IsValid() then return DebugCameraControllerCache end
     for _, Controller in ipairs(FindAllOf("DebugCameraController") or {}) do
         if Controller:IsValid() and (Controller.IsPlayerController and Controller:IsPlayerController() or Controller:IsLocalPlayerController()) then
-            return Controller
+            DebugCameraControllerCache = Controller
+            return DebugCameraControllerCache
         end
     end
-    return UEHelpers.GetPlayerController()
+    return getPlayerController()
 end
 
 function getCameraController()
-    if inDebugCamera then
-        return getDebugCameraController()
-    end
-    return UEHelpers.GetPlayerController()
+    if inDebugCamera then return getDebugCameraController() else return getPlayerController() end
 end
 
 function getCameraHitObject()
