@@ -54,11 +54,13 @@ local function ToggleInventory(obj, pc, add)
     local item = inv:FindFirstItemStackByDefinition(obj)
 
     if add then
-        if item:IsValid() then
-            return false, "Already wearing"
+        local wearing = item:IsValid()
+        inv:AddItemDefinition(obj, 1) -- allow stacking
+        if wearing then
+            return true, "Already wearing, added to stack"
+        else
+            return true, "Added new item"
         end
-        inv:AddItemDefinition(obj, 1)
-        return true, "Added"
     else -- remove
         if not item:IsValid() then
             return false, "Not wearing"
