@@ -265,12 +265,12 @@ local function SpawnChip(inventoryName, iconName)
 
     print("chip", obj:GetFullName())
 
-    local inv = FindObject('BlueprintGeneratedClass', inventoryName)
-    if not inv:IsValid() then
+    local Inventory = FindObject('BlueprintGeneratedClass', inventoryName)
+    if not Inventory:IsValid() then
         return false, "can't find inventory item"
     end
 
-    print("inventory", inv:GetFullName())
+    print("inventory", Inventory:GetFullName())
 
     local Texture = FindObject('Texture2D', iconName)
     if not Texture:IsValid() then
@@ -296,7 +296,7 @@ local function SpawnChip(inventoryName, iconName)
 
     local actor = UEHelpers.GetWorld():SpawnActor(obj, loc, rot)
 
-    actor.GrantInventoryItems = {inv}
+    actor.GrantInventoryItems = {Inventory}
 
     -- actor:SetChipColor()
     -- actor.Texture = Texture
@@ -315,12 +315,12 @@ local function SpawnEgg(inventoryName, iconName)
         return false, "could not find object"
     end
 
-    local inv = FindObject('BlueprintGeneratedClass', inventoryName)
-    if not inv:IsValid() then
+    local Inventory = FindObject('BlueprintGeneratedClass', inventoryName)
+    if not Inventory:IsValid() then
         return false, "can't find inventory item"
     end
 
-    print("inventory", inv:GetFullName())
+    print("inventory", Inventory:GetFullName())
 
     local pc = UEHelpers.GetPlayerController()
     if not pc:IsValid() or not pc.Pawn:IsValid() or not pc.Character:IsValid() then
@@ -339,7 +339,59 @@ local function SpawnEgg(inventoryName, iconName)
 
     local actor = UEHelpers.GetWorld():SpawnActor(obj, loc, rot)
 
-    actor.InventoryItem = inv -- crashes here
+    actor:SetActorScale3D({X=0.5,Y=0.5,Z=0.5}) -- eggs are huge!
+
+--[[
+---@enum EShopItemGrouping
+local EShopItemGrouping = {
+    None = 0,
+    Minor = 1,
+    Major = 2,
+    EShopItemGrouping_MAX = 3,
+}
+]]
+---@class AShopEgg_C : AGrabObjectBase_C
+---@field UberGraphFrame FPointerToUberGraphFrame
+---@field InventoryItem TSoftClassPtr<ULyraInventoryItemDefinition>
+---@field bUseCustomShopItem boolean
+---@field CustomShopItem TSoftClassPtr<AShopItem_C>
+---@field CustomShopItemGrouping EShopItemGrouping
+---@field CustomShopItemSlotIndex int32
+---@field SavedRattleRotator FRotator
+---@field SavedRattleLocation FVector
+---@field RattleHandle FTimerHandle
+---@field TriggerRattle boolean
+---@field SoundSpacingIncrement int32
+---@field TotalSpacingSound int32
+---@field RattleLocationDelta FVector
+---@field RattleRotationDelta FRotator
+---@field OnRattle FShopEgg_COnRattle
+---@field OnOpened FShopEgg_COnOpened
+---@field ItemCost int32
+---@field bDragRotateFollowPlayerForward boolean
+
+
+    local function SoftClassPtr(path)
+        local KismetSystem = UEHelpers.GetKismetSystemLibrary()
+        local SoftObjectPath = path
+        local SoftObjectPathStruct = KismetSystem:MakeSoftObjectPath(SoftObjectPath)
+        local SoftObjectRef = KismetSystem:Conv_SoftObjPathToSoftObjRef(SoftObjectPathStruct)
+        return SoftObjectRef
+    end
+
+    local path = '/Supraworld/Abilities/Shield/Inventory_Shield.Inventory_Shield_C'
+    local shop = '/Supraworld/Abilities/PlayerMap/ShopItem_PlayerMap.ShopItem_PlayerMap_C'
+
+    --ok this works
+    actor.InventoryItem = SoftClassPtr(path)
+
+    actor.bUseCustomShopItem = true
+    actor.CustomShopItem = SoftClassPtr(shop)
+
+    actor.ItemCost = 1
+
+    actor.CustomShopItemGrouping = 2
+
 end
 
 RegisterConsoleCommandHandler("add", function(FullCommand, Parameters, Ar)
