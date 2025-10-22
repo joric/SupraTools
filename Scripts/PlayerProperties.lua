@@ -200,9 +200,11 @@ RegisterConsoleCommandHandler("poke", function(FullCommand, Parameters, Ar)
             print(str)
             Ar:Log(str)
         end
-        Ar:Log("Usage: poke <PropertyName> <Value>")
+        Ar:Log("Usage: poke <PropertyName> <Value> (use underscores as spaces)")
         return true
     end
+
+    name = name:gsub("_"," ")
 
     local stringValue = table.concat(Parameters, " ", 2)
     local ok, err = SetPlayerProperty(name, stringValue)
@@ -225,7 +227,7 @@ RegisterConsoleCommandHandler("peek", function(FullCommand, Parameters, Ar)
             print(str)
             Ar:Log(str)
         end
-        Ar:Log("Usage: peek <PropertyName>")
+        Ar:Log("Usage: peek <PropertyName> (use underscores as spaces)")
         return true
     end
 
@@ -234,6 +236,8 @@ RegisterConsoleCommandHandler("peek", function(FullCommand, Parameters, Ar)
         Ar:Log("Character not found")
         return true
     end
+
+    name = name:gsub("_"," ")
 
     if obj[name] ~= nil then
         Ar:Log(string.format("%s is %s", name, obj[name]))

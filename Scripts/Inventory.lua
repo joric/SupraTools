@@ -255,6 +255,93 @@ local function processItemCommand(FullCommand, Parameters, Ar, callback)
     return true
 end
 
+local function SpawnChip(inventoryName, iconName)
+    local name = "ShopItemChip_C"
+
+    local obj = FindObject('BlueprintGeneratedClass', name)
+    if not obj:IsValid() then
+        return false, "could not find object"
+    end
+
+    print("chip", obj:GetFullName())
+
+    local inv = FindObject('BlueprintGeneratedClass', inventoryName)
+    if not inv:IsValid() then
+        return false, "can't find inventory item"
+    end
+
+    print("inventory", inv:GetFullName())
+
+    local Texture = FindObject('Texture2D', iconName)
+    if not Texture:IsValid() then
+        return false, "can't find texture item"
+    end
+
+    print("texture", Texture:GetFullName())
+
+    local pc = UEHelpers.GetPlayerController()
+    if not pc:IsValid() or not pc.Pawn:IsValid() or not pc.Character:IsValid() then
+        return false, "could not find valid player controller"
+    end
+    local delta = {X=15,Y=50,Z=-30} -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
+    local cam = pc.PlayerCameraManager
+    local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
+    local dv = UEHelpers.GetKismetMathLibrary():Multiply_VectorInt(UEHelpers.GetKismetMathLibrary():GetForwardVector(rot), delta.Y)
+    local loc = UEHelpers.GetKismetMathLibrary():Add_VectorVector(pos, dv)
+
+    rot = {Pitch=0, Yaw=0, Roll=0}
+
+    loc.X = loc.X + delta.X
+    loc.Z = loc.Z + delta.Z
+
+    local actor = UEHelpers.GetWorld():SpawnActor(obj, loc, rot)
+
+    actor.GrantInventoryItems = {inv}
+
+    -- actor:SetChipColor()
+    -- actor.Texture = Texture
+    -- actor:SetupVisuals() -- only call if texture set manually
+
+    local Color = {R=1,G=0,B=0,A=1}
+    actor["Set Chip Icon Texture And Visuals"](actor, Texture, Color, {})
+
+    return true
+end
+
+local function SpawnEgg(inventoryName, iconName)
+    local name = "ShopEgg_C"
+    local obj = FindObject('BlueprintGeneratedClass', name)
+    if not obj:IsValid() then
+        return false, "could not find object"
+    end
+
+    local inv = FindObject('BlueprintGeneratedClass', inventoryName)
+    if not inv:IsValid() then
+        return false, "can't find inventory item"
+    end
+
+    print("inventory", inv:GetFullName())
+
+    local pc = UEHelpers.GetPlayerController()
+    if not pc:IsValid() or not pc.Pawn:IsValid() or not pc.Character:IsValid() then
+        return false, "could not find valid player controller"
+    end
+    local delta = {X=15,Y=50,Z=-30} -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
+    local cam = pc.PlayerCameraManager
+    local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
+    local dv = UEHelpers.GetKismetMathLibrary():Multiply_VectorInt(UEHelpers.GetKismetMathLibrary():GetForwardVector(rot), delta.Y)
+    local loc = UEHelpers.GetKismetMathLibrary():Add_VectorVector(pos, dv)
+
+    rot = {Pitch=0, Yaw=0, Roll=0}
+
+    loc.X = loc.X + delta.X
+    loc.Z = loc.Z + delta.Z
+
+    local actor = UEHelpers.GetWorld():SpawnActor(obj, loc, rot)
+
+    actor.InventoryItem = inv -- crashes here
+end
+
 RegisterConsoleCommandHandler("add", function(FullCommand, Parameters, Ar)
     return processItemCommand(FullCommand, Parameters, Ar, AddItem)
 end)
@@ -270,3 +357,21 @@ end)
 RegisterConsoleCommandHandler("drop", function(FullCommand, Parameters, Ar)
     return processItemCommand(FullCommand, Parameters, Ar, RemoveItem)
 end)
+
+RegisterConsoleCommandHandler("spawn_chip", function(FullCommand, Parameters, Ar)
+    local name = "Inventory_Shield_C"
+    local icon = "shield"
+    local ok, err= SpawnChip(name, icon)
+    Ar:Log(string.format("%s [%s] (%s)", err or "OK", name, icon))
+    return true
+end)
+
+
+RegisterConsoleCommandHandler("spawn_egg", function(FullCommand, Parameters, Ar)
+    local name = "Inventory_Shield_C"
+    local icon = "shield"
+    local ok, err= SpawnEgg(name, icon)
+    Ar:Log(string.format("%s [%s] (%s)", err or "OK", name, icon))
+    return true
+end)
+
