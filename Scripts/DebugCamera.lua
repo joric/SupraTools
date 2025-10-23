@@ -33,6 +33,7 @@ local function teleportToTrace(PlayerPawn)
     loc.Z = loc.Z + 100 -- above the ground
     --PlayerPawn:K2_SetActorLocation(loc, false, {}, true)
     if not PlayerPawn or not PlayerPawn:IsValid() then
+        -- see https://github.com/UE4SS-RE/RE-UE4SS/pull/1050
         print("INVALID PAWN, CAN'T TELEPORT!!!")
         return
     end
@@ -43,8 +44,6 @@ local lastTime = 0
 
 local function teleportPlayer()
     if not inDebugCamera then return end
-
-    -- see https://github.com/UE4SS-RE/RE-UE4SS/pull/1050 about why always getting camera controller is bad
 
     local pc = UEHelpers.GetPlayerController()
     local cc = getDebugCameraController()
