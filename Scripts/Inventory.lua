@@ -1,6 +1,36 @@
 -- a newer version of inventory manager, possibly universal for all games
 -- intended to replace grant and deploy commands with add/remove/list commands
 
+---@class AShopEgg_C : AGrabObjectBase_C
+---@field UberGraphFrame FPointerToUberGraphFrame
+---@field InventoryItem TSoftClassPtr<ULyraInventoryItemDefinition>
+---@field bUseCustomShopItem boolean
+---@field CustomShopItem TSoftClassPtr<AShopItem_C>
+---@field CustomShopItemGrouping EShopItemGrouping
+---@field CustomShopItemSlotIndex int32
+---@field SavedRattleRotator FRotator
+---@field SavedRattleLocation FVector
+---@field RattleHandle FTimerHandle
+---@field TriggerRattle boolean
+---@field SoundSpacingIncrement int32
+---@field TotalSpacingSound int32
+---@field RattleLocationDelta FVector
+---@field RattleRotationDelta FRotator
+---@field OnRattle FShopEgg_COnRattle
+---@field OnOpened FShopEgg_COnOpened
+---@field ItemCost int32
+---@field bDragRotateFollowPlayerForward boolean
+
+-- TODO
+-- maybe I can make custom shop items and then get their reference? via CDO?
+-- though shop item definition is very different from shop item
+-- there are also these calls
+---@param DefinitionToCheck FShopItemDefinition
+---@param Success boolean
+---function AShopEgg_C:ValidateItemDefinition(DefinitionToCheck, Success) end
+---@param Definition FShopItemDefinition
+---function AShopEgg_C:GetShopItemPropagationDefinition(Definition) end
+
 local UEHelpers = require("UEHelpers")
 
 local function spawnObject(args)
@@ -73,8 +103,6 @@ local function ToggleEquipment(obj, pc, add)
 end
 
 local function ToggleInventory(obj, pc, add)
-    local inv = pc:K2_GetComponentsByClass(StaticFindObject('/Script/LyraGame.LyraInventoryManagerComponent'))[1]:get()
-
     local cdo = obj:GetCDO()
     if cdo:IsValid() then
         for i = 1, #cdo.Fragments do
@@ -85,6 +113,7 @@ local function ToggleInventory(obj, pc, add)
         end
     end
 
+    local inv = pc:K2_GetComponentsByClass(StaticFindObject('/Script/LyraGame.LyraInventoryManagerComponent'))[1]:get()
     local item = inv:FindFirstItemStackByDefinition(obj)
 
     if add then
@@ -275,9 +304,16 @@ local function processItemCommand(FullCommand, Parameters, Ar, callback)
     return true
 end
 
-local function SpawnChip(path)
+local function SoftClassPtr(path)
+    local KismetSystem = UEHelpers.GetKismetSystemLibrary()
+    local SoftObjectPath = path
+    local SoftObjectPathStruct = KismetSystem:MakeSoftObjectPath(SoftObjectPath)
+    local SoftObjectRef = KismetSystem:Conv_SoftObjPathToSoftObjRef(SoftObjectPathStruct)
+    return SoftObjectRef
+end
+
+local function getInventoryChip(path)
     local inventoryName = namefy(path)
-    local iconName = tagify(path)
 
     local Inventory = FindObject('BlueprintGeneratedClass', inventoryName)
     if not Inventory:IsValid() then
@@ -286,11 +322,41 @@ local function SpawnChip(path)
 
     print("inventory", Inventory:GetFullName())
 
+    -- texture can be extracted from shopitem (if any)
     -- Supraworld/Plugins/Supra/SupraAssets/Content/Materials/Icons/shield.uasset
+
+    local iconName = tagify(path)
+
+    --[[
+    local cdo = Inventory:GetCDO()
+    if cdo:IsValid() then
+        for i = 1, #cdo.Fragments do
+            local frag = cdo.Fragments[i]
+            local name = frag:GetFName():ToString()
+            if name == 'InvFrag_SupraworldShopItem_0' then
+                if frag.Icon then
+                    -- TODO: neither of this shit works
+                    local iconPath = frag.Icon.AssetPathName
+                    print("iconPath", iconPath)
+
+                    print("frag is", tostring(frag), frag:GetFullName())
+                    print("frag.Icon is", frag.Icon)
+                    print("frag.Cost is", frag.Cost)
+                    print("frag.ShopSlotPosition is", frag.ShopSlotPosition)
+
+                    local KSLib = UEHelpers.GetKismetSystemLibrary()
+                    --local class = KSLib:Conv_SoftClassReferenceToClass(frag.Icon)
+                    local class = KSLib:Conv_SoftObjectReferenceToObject(frag.Icon.AssetPathName)
+                    print("class", class, class:GetFullName()) -- nil
+                end
+            end
+        end
+    end
+    ]]
 
     local Texture = FindObject('Texture2D', iconName)
     if not Texture:IsValid() then
-        Texture = FindObject('Texture2D', 'Spark')
+        Texture = FindObject('Texture2D', "Spark")
         if not Texture:IsValid() then
             return false, "can't find texture item"
         end
@@ -313,70 +379,35 @@ local function SpawnChip(path)
         actor:SetupVisuals()
     end
 
-    return true
+    return actor, "OK"
 end
 
-local function SoftClassPtr(path)
-    local KismetSystem = UEHelpers.GetKismetSystemLibrary()
-    local SoftObjectPath = path
-    local SoftObjectPathStruct = KismetSystem:MakeSoftObjectPath(SoftObjectPath)
-    local SoftObjectRef = KismetSystem:Conv_SoftObjPathToSoftObjRef(SoftObjectPathStruct)
-    return SoftObjectRef
+local function SpawnChip(path)
+    return getInventoryChip(path)
 end
 
 local function SpawnEgg(path)
-    local inventoryName = namefy(path)
-    local iconName = tagify(path)
-
-    local Inventory = FindObject('BlueprintGeneratedClass', inventoryName)
-    if not Inventory:IsValid() then
-        return false, "can't find inventory item"
+    local actor, err = getInventoryChip(path)
+    if not actor then
+        return false, err
     end
 
-    print("inventory", Inventory:GetFullName())
+    actor:SetActorHiddenInGame(true)
+    actor:SetActorEnableCollision(false)
 
-    local actor = spawnObject({name="ShopEgg_C", size=0.5})
+    local egg = spawnObject({name="ShopEgg_C", size=0.5})
 
----@class AShopEgg_C : AGrabObjectBase_C
----@field UberGraphFrame FPointerToUberGraphFrame
----@field InventoryItem TSoftClassPtr<ULyraInventoryItemDefinition>
----@field bUseCustomShopItem boolean
----@field CustomShopItem TSoftClassPtr<AShopItem_C>
----@field CustomShopItemGrouping EShopItemGrouping
----@field CustomShopItemSlotIndex int32
----@field SavedRattleRotator FRotator
----@field SavedRattleLocation FVector
----@field RattleHandle FTimerHandle
----@field TriggerRattle boolean
----@field SoundSpacingIncrement int32
----@field TotalSpacingSound int32
----@field RattleLocationDelta FVector
----@field RattleRotationDelta FRotator
----@field OnRattle FShopEgg_COnRattle
----@field OnOpened FShopEgg_COnOpened
----@field ItemCost int32
----@field bDragRotateFollowPlayerForward boolean
+    -- egg.InventoryItem = SoftClassPtr(path) -- doesn't seem to work
 
-    actor.InventoryItem = SoftClassPtr(path) -- doesn't seem to work
+    local shopPath = '/Supraworld/Abilities/PlayerMap/ShopItem_PlayerMap.ShopItem_PlayerMap_C'
+    -- shopPath = getPath(actor:GetFullName()) -- nope that doesn't work
+    print("shopPath", shopPath)
 
-    actor.bUseCustomShopItem = true
-    local shop = '/Supraworld/Abilities/PlayerMap/ShopItem_PlayerMap.ShopItem_PlayerMap_C'
-    actor.CustomShopItem = SoftClassPtr(shop) -- this works but no description
+    egg.bUseCustomShopItem = true
+    egg.CustomShopItem = SoftClassPtr(shopPath) -- this works but no description
 
-    -- TODO
-    -- maybe I can make custom shop items and then get their reference? via CDO?
-    -- though shop item definition is very different from shop item
-    -- there are also these calls
-    ---@param DefinitionToCheck FShopItemDefinition
-    ---@param Success boolean
-    ---function AShopEgg_C:ValidateItemDefinition(DefinitionToCheck, Success) end
-    ---@param Definition FShopItemDefinition
-    ---function AShopEgg_C:GetShopItemPropagationDefinition(Definition) end
-
-
-    actor.ItemCost = 1
-    actor.CustomShopItemGrouping = 0
-
+    egg.ItemCost = 1
+    egg.CustomShopItemGrouping = 0
 end
 
 RegisterConsoleCommandHandler("add", function(FullCommand, Parameters, Ar)
