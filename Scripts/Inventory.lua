@@ -5,26 +5,6 @@
 
 local UEHelpers = require("UEHelpers")
 
----@class AShopEgg_C : AGrabObjectBase_C
----@field UberGraphFrame FPointerToUberGraphFrame
----@field InventoryItem TSoftClassPtr<ULyraInventoryItemDefinition>
----@field bUseCustomShopItem boolean
----@field CustomShopItem TSoftClassPtr<AShopItem_C>
----@field CustomShopItemGrouping EShopItemGrouping
----@field CustomShopItemSlotIndex int32
----@field SavedRattleRotator FRotator
----@field SavedRattleLocation FVector
----@field RattleHandle FTimerHandle
----@field TriggerRattle boolean
----@field SoundSpacingIncrement int32
----@field TotalSpacingSound int32
----@field RattleLocationDelta FVector
----@field RattleRotationDelta FRotator
----@field OnRattle FShopEgg_COnRattle
----@field OnOpened FShopEgg_COnOpened
----@field ItemCost int32
----@field bDragRotateFollowPlayerForward boolean
-
 local function spawnObject(args)
     local obj = FindObject('BlueprintGeneratedClass', args.name)
     if not obj:IsValid() then
@@ -356,19 +336,45 @@ local function SpawnEgg(path)
 
     local actor = spawnObject({name="ShopEgg_C", size=0.5})
 
-    -- local path = '/Supraworld/Abilities/Shield/Inventory_Shield.Inventory_Shield_C'
+---@class AShopEgg_C : AGrabObjectBase_C
+---@field UberGraphFrame FPointerToUberGraphFrame
+---@field InventoryItem TSoftClassPtr<ULyraInventoryItemDefinition>
+---@field bUseCustomShopItem boolean
+---@field CustomShopItem TSoftClassPtr<AShopItem_C>
+---@field CustomShopItemGrouping EShopItemGrouping
+---@field CustomShopItemSlotIndex int32
+---@field SavedRattleRotator FRotator
+---@field SavedRattleLocation FVector
+---@field RattleHandle FTimerHandle
+---@field TriggerRattle boolean
+---@field SoundSpacingIncrement int32
+---@field TotalSpacingSound int32
+---@field RattleLocationDelta FVector
+---@field RattleRotationDelta FRotator
+---@field OnRattle FShopEgg_COnRattle
+---@field OnOpened FShopEgg_COnOpened
+---@field ItemCost int32
+---@field bDragRotateFollowPlayerForward boolean
 
-    local shop = '/Supraworld/Abilities/PlayerMap/ShopItem_PlayerMap.ShopItem_PlayerMap_C'
-
-    
-    -- actor.InventoryItem = SoftClassPtr(path) -- doesn't seem to workd
+    actor.InventoryItem = SoftClassPtr(path) -- doesn't seem to work
 
     actor.bUseCustomShopItem = true
-    actor.CustomShopItem = SoftClassPtr(shop)
+    local shop = '/Supraworld/Abilities/PlayerMap/ShopItem_PlayerMap.ShopItem_PlayerMap_C'
+    actor.CustomShopItem = SoftClassPtr(shop) -- this works but no description
+
+    -- TODO
+    -- maybe I can make custom shop items and then get their reference? via CDO?
+    -- though shop item definition is very different from shop item
+    -- there are also these calls
+    ---@param DefinitionToCheck FShopItemDefinition
+    ---@param Success boolean
+    ---function AShopEgg_C:ValidateItemDefinition(DefinitionToCheck, Success) end
+    ---@param Definition FShopItemDefinition
+    ---function AShopEgg_C:GetShopItemPropagationDefinition(Definition) end
+
 
     actor.ItemCost = 1
-
-    actor.CustomShopItemGrouping = 2
+    actor.CustomShopItemGrouping = 0
 
 end
 
