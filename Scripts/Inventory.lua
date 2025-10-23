@@ -5,6 +5,59 @@
 
 local UEHelpers = require("UEHelpers")
 
+---@class AShopEgg_C : AGrabObjectBase_C
+---@field UberGraphFrame FPointerToUberGraphFrame
+---@field InventoryItem TSoftClassPtr<ULyraInventoryItemDefinition>
+---@field bUseCustomShopItem boolean
+---@field CustomShopItem TSoftClassPtr<AShopItem_C>
+---@field CustomShopItemGrouping EShopItemGrouping
+---@field CustomShopItemSlotIndex int32
+---@field SavedRattleRotator FRotator
+---@field SavedRattleLocation FVector
+---@field RattleHandle FTimerHandle
+---@field TriggerRattle boolean
+---@field SoundSpacingIncrement int32
+---@field TotalSpacingSound int32
+---@field RattleLocationDelta FVector
+---@field RattleRotationDelta FRotator
+---@field OnRattle FShopEgg_COnRattle
+---@field OnOpened FShopEgg_COnOpened
+---@field ItemCost int32
+---@field bDragRotateFollowPlayerForward boolean
+
+local function spawnObject(args)
+    local obj = FindObject('BlueprintGeneratedClass', args.name)
+    if not obj:IsValid() then
+        return false, "could not find object"
+    end
+
+    local pc = UEHelpers.GetPlayerController()
+    if not pc:IsValid() or not pc.Pawn:IsValid() or not pc.Character:IsValid() then
+        return false, "could not find valid player controller"
+    end
+
+    local delta = args.loc or {X=15,Y=50,Z=-30} -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
+
+    local cam = pc.PlayerCameraManager
+    local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
+    local dv = UEHelpers.GetKismetMathLibrary():Multiply_VectorInt(UEHelpers.GetKismetMathLibrary():GetForwardVector(rot), delta.Y)
+    local loc = UEHelpers.GetKismetMathLibrary():Add_VectorVector(pos, dv)
+
+    rot = args.rot or {Pitch=0, Yaw=0, Roll=0}
+
+    loc.X = loc.X + delta.X
+    loc.Z = loc.Z + delta.Z
+
+    local actor = UEHelpers.GetWorld():SpawnActor(obj, loc, rot)
+
+    local size = args.size or 1
+    scale = args.scale or {X=size,Y=size,Z=size}
+
+    actor:SetActorScale3D(scale)
+
+    return actor
+end
+
 local function getPath(fullpath)
     return fullpath:match("%s(.+)")
 end
@@ -78,32 +131,18 @@ local function ToggleItem(path, add)
         return false, "could not find valid player controller"
     end
 
-    print("-- loading", path, namefy(path))
-
-    LoadAsset(path)
-
     local obj = FindObject('BlueprintGeneratedClass', namefy(path))
     if not obj:IsValid() then
         return false, "could not find object"
     end
 
+    LoadAsset(path)
+
     if path:find("Inventory_") then
         return ToggleInventory(obj, pc, add)
     end
 
-    local delta = {X=15,Y=50,Z=-30} -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
-
-    local cam = pc.PlayerCameraManager
-    local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
-    local dv = UEHelpers.GetKismetMathLibrary():Multiply_VectorInt(UEHelpers.GetKismetMathLibrary():GetForwardVector(rot), delta.Y)
-    local loc = UEHelpers.GetKismetMathLibrary():Add_VectorVector(pos, dv)
-
-    loc.X = loc.X + delta.X
-    loc.Z = loc.Z + delta.Z
-
-    local actor = UEHelpers.GetWorld():SpawnActor(obj, loc, rot)
-
-    actor:SetActorScale3D({X=1,Y=1,Z=1}) -- optionally make actor BIG so it has more surface to autoselect
+    local actor = spawnObject({name=namefy(path)})
 
     pc.Character:Using() -- and pick up item! this is very unreliable (object shapes are very different) but sometimes works
 
@@ -256,15 +295,6 @@ local function processItemCommand(FullCommand, Parameters, Ar, callback)
 end
 
 local function SpawnChip(inventoryName, iconName)
-    local name = "ShopItemChip_C"
-
-    local obj = FindObject('BlueprintGeneratedClass', name)
-    if not obj:IsValid() then
-        return false, "could not find object"
-    end
-
-    print("chip", obj:GetFullName())
-
     local Inventory = FindObject('BlueprintGeneratedClass', inventoryName)
     if not Inventory:IsValid() then
         return false, "can't find inventory item"
@@ -279,22 +309,7 @@ local function SpawnChip(inventoryName, iconName)
 
     print("texture", Texture:GetFullName())
 
-    local pc = UEHelpers.GetPlayerController()
-    if not pc:IsValid() or not pc.Pawn:IsValid() or not pc.Character:IsValid() then
-        return false, "could not find valid player controller"
-    end
-    local delta = {X=15,Y=50,Z=-30} -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
-    local cam = pc.PlayerCameraManager
-    local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
-    local dv = UEHelpers.GetKismetMathLibrary():Multiply_VectorInt(UEHelpers.GetKismetMathLibrary():GetForwardVector(rot), delta.Y)
-    local loc = UEHelpers.GetKismetMathLibrary():Add_VectorVector(pos, dv)
-
-    rot = {Pitch=0, Yaw=0, Roll=0}
-
-    loc.X = loc.X + delta.X
-    loc.Z = loc.Z + delta.Z
-
-    local actor = UEHelpers.GetWorld():SpawnActor(obj, loc, rot)
+    local actor = spawnObject({name="ShopItemChip_C"})
 
     actor.GrantInventoryItems = {Inventory}
 
@@ -304,17 +319,10 @@ local function SpawnChip(inventoryName, iconName)
 
     local Color = {R=1,G=0,B=0,A=1}
     actor["Set Chip Icon Texture And Visuals"](actor, Texture, Color, {})
-
     return true
 end
 
 local function SpawnEgg(inventoryName, iconName)
-    local name = "ShopEgg_C"
-    local obj = FindObject('BlueprintGeneratedClass', name)
-    if not obj:IsValid() then
-        return false, "could not find object"
-    end
-
     local Inventory = FindObject('BlueprintGeneratedClass', inventoryName)
     if not Inventory:IsValid() then
         return false, "can't find inventory item"
@@ -322,54 +330,7 @@ local function SpawnEgg(inventoryName, iconName)
 
     print("inventory", Inventory:GetFullName())
 
-    local pc = UEHelpers.GetPlayerController()
-    if not pc:IsValid() or not pc.Pawn:IsValid() or not pc.Character:IsValid() then
-        return false, "could not find valid player controller"
-    end
-    local delta = {X=15,Y=50,Z=-30} -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
-    local cam = pc.PlayerCameraManager
-    local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
-    local dv = UEHelpers.GetKismetMathLibrary():Multiply_VectorInt(UEHelpers.GetKismetMathLibrary():GetForwardVector(rot), delta.Y)
-    local loc = UEHelpers.GetKismetMathLibrary():Add_VectorVector(pos, dv)
-
-    rot = {Pitch=0, Yaw=0, Roll=0}
-
-    loc.X = loc.X + delta.X
-    loc.Z = loc.Z + delta.Z
-
-    local actor = UEHelpers.GetWorld():SpawnActor(obj, loc, rot)
-
-    actor:SetActorScale3D({X=0.5,Y=0.5,Z=0.5}) -- eggs are huge!
-
---[[
----@enum EShopItemGrouping
-local EShopItemGrouping = {
-    None = 0,
-    Minor = 1,
-    Major = 2,
-    EShopItemGrouping_MAX = 3,
-}
-]]
----@class AShopEgg_C : AGrabObjectBase_C
----@field UberGraphFrame FPointerToUberGraphFrame
----@field InventoryItem TSoftClassPtr<ULyraInventoryItemDefinition>
----@field bUseCustomShopItem boolean
----@field CustomShopItem TSoftClassPtr<AShopItem_C>
----@field CustomShopItemGrouping EShopItemGrouping
----@field CustomShopItemSlotIndex int32
----@field SavedRattleRotator FRotator
----@field SavedRattleLocation FVector
----@field RattleHandle FTimerHandle
----@field TriggerRattle boolean
----@field SoundSpacingIncrement int32
----@field TotalSpacingSound int32
----@field RattleLocationDelta FVector
----@field RattleRotationDelta FRotator
----@field OnRattle FShopEgg_COnRattle
----@field OnOpened FShopEgg_COnOpened
----@field ItemCost int32
----@field bDragRotateFollowPlayerForward boolean
-
+    local actor = spawnObject({name="ShopEgg_C", size=0.5})
 
     local function SoftClassPtr(path)
         local KismetSystem = UEHelpers.GetKismetSystemLibrary()
@@ -396,10 +357,6 @@ end
 
 RegisterConsoleCommandHandler("add", function(FullCommand, Parameters, Ar)
     return processItemCommand(FullCommand, Parameters, Ar, AddItem)
-end)
-
-RegisterConsoleCommandHandler("remove", function(FullCommand, Parameters, Ar)
-    return processItemCommand(FullCommand, Parameters, Ar, RemoveItem)
 end)
 
 RegisterConsoleCommandHandler("give", function(FullCommand, Parameters, Ar)
