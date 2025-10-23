@@ -52,8 +52,8 @@ local function tagify(path)
     return name:lower()
 end
 
--- pc.LyraInventoryManagerComponent and char.LyraEquipmentManagerComponent are nil accessors
--- to get valid ones you have to iterate through attached components
+-- pc.LyraInventoryManagerComponent and char.LyraEquipmentManagerComponent do not exist
+-- to get valid managers you have to iterate through attached components
 
 local function ToggleEquipment(obj, pc, add)
     local eqm = pc.Character:K2_GetComponentsByClass(StaticFindObject('/Script/LyraGame.LyraEquipmentManagerComponent'))[1]:get()
