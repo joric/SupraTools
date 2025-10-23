@@ -294,7 +294,10 @@ local function processItemCommand(FullCommand, Parameters, Ar, callback)
     return true
 end
 
-local function SpawnChip(inventoryName, iconName)
+local function SpawnChip(path)
+    local inventoryName = namefy(path)
+    local iconName = tagify(path)
+
     local Inventory = FindObject('BlueprintGeneratedClass', inventoryName)
     if not Inventory:IsValid() then
         return false, "can't find inventory item"
@@ -304,7 +307,10 @@ local function SpawnChip(inventoryName, iconName)
 
     local Texture = FindObject('Texture2D', iconName)
     if not Texture:IsValid() then
-        return false, "can't find texture item"
+        Texture = FindObject('Texture2D', 'shield')
+        if not Texture:IsValid() then
+            return false, "can't find texture item"
+        end
     end
 
     print("texture", Texture:GetFullName())
@@ -313,16 +319,32 @@ local function SpawnChip(inventoryName, iconName)
 
     actor.GrantInventoryItems = {Inventory}
 
-    -- actor:SetChipColor()
-    -- actor.Texture = Texture
-    -- actor:SetupVisuals() -- only call if texture set manually
+    local customColor = false
 
-    local Color = {R=1,G=0,B=0,A=1}
-    actor["Set Chip Icon Texture And Visuals"](actor, Texture, Color, {})
+    if customColor then
+        local Color = {R=1,G=0,B=0,A=1}
+        local Tags = {}
+        actor["Set Chip Icon Texture And Visuals"](actor, Texture, Color, Tags)
+    else
+        actor.Texture = Texture
+        actor:SetupVisuals()
+    end
+
     return true
 end
 
-local function SpawnEgg(inventoryName, iconName)
+local function SoftClassPtr(path)
+    local KismetSystem = UEHelpers.GetKismetSystemLibrary()
+    local SoftObjectPath = path
+    local SoftObjectPathStruct = KismetSystem:MakeSoftObjectPath(SoftObjectPath)
+    local SoftObjectRef = KismetSystem:Conv_SoftObjPathToSoftObjRef(SoftObjectPathStruct)
+    return SoftObjectRef
+end
+
+local function SpawnEgg(path)
+    local inventoryName = namefy(path)
+    local iconName = tagify(path)
+
     local Inventory = FindObject('BlueprintGeneratedClass', inventoryName)
     if not Inventory:IsValid() then
         return false, "can't find inventory item"
@@ -332,19 +354,12 @@ local function SpawnEgg(inventoryName, iconName)
 
     local actor = spawnObject({name="ShopEgg_C", size=0.5})
 
-    local function SoftClassPtr(path)
-        local KismetSystem = UEHelpers.GetKismetSystemLibrary()
-        local SoftObjectPath = path
-        local SoftObjectPathStruct = KismetSystem:MakeSoftObjectPath(SoftObjectPath)
-        local SoftObjectRef = KismetSystem:Conv_SoftObjPathToSoftObjRef(SoftObjectPathStruct)
-        return SoftObjectRef
-    end
+    -- local path = '/Supraworld/Abilities/Shield/Inventory_Shield.Inventory_Shield_C'
 
-    local path = '/Supraworld/Abilities/Shield/Inventory_Shield.Inventory_Shield_C'
     local shop = '/Supraworld/Abilities/PlayerMap/ShopItem_PlayerMap.ShopItem_PlayerMap_C'
 
-    --ok this works
-    actor.InventoryItem = SoftClassPtr(path)
+    
+    -- actor.InventoryItem = SoftClassPtr(path) -- doesn't seem to workd
 
     actor.bUseCustomShopItem = true
     actor.CustomShopItem = SoftClassPtr(shop)
@@ -367,20 +382,10 @@ RegisterConsoleCommandHandler("drop", function(FullCommand, Parameters, Ar)
     return processItemCommand(FullCommand, Parameters, Ar, RemoveItem)
 end)
 
-RegisterConsoleCommandHandler("spawn_chip", function(FullCommand, Parameters, Ar)
-    local name = "Inventory_Shield_C"
-    local icon = "shield"
-    local ok, err= SpawnChip(name, icon)
-    Ar:Log(string.format("%s [%s] (%s)", err or "OK", name, icon))
-    return true
+RegisterConsoleCommandHandler("make", function(FullCommand, Parameters, Ar)
+    return processItemCommand(FullCommand, Parameters, Ar, SpawnChip)
 end)
 
-
-RegisterConsoleCommandHandler("spawn_egg", function(FullCommand, Parameters, Ar)
-    local name = "Inventory_Shield_C"
-    local icon = "shield"
-    local ok, err= SpawnEgg(name, icon)
-    Ar:Log(string.format("%s [%s] (%s)", err or "OK", name, icon))
-    return true
+RegisterConsoleCommandHandler("egg", function(FullCommand, Parameters, Ar)
+    return processItemCommand(FullCommand, Parameters, Ar, SpawnEgg)
 end)
-
