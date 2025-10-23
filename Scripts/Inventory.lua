@@ -384,7 +384,7 @@ RegisterConsoleCommandHandler("drop", function(FullCommand, Parameters, Ar)
     return processItemCommand(FullCommand, Parameters, Ar, RemoveItem)
 end)
 
-RegisterConsoleCommandHandler("make", function(FullCommand, Parameters, Ar)
+RegisterConsoleCommandHandler("chip", function(FullCommand, Parameters, Ar)
     return processItemCommand(FullCommand, Parameters, Ar, SpawnChip)
 end)
 
