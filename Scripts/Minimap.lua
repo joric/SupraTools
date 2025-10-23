@@ -482,7 +482,7 @@ local function registerHooks()
         { hook = "/Game/Blueprints/Levelobjects/Bones.Bones_C:Timeline_0__FinishedFunc" }, -- Crash DLC
 
         { hook = "/Game/Blueprints/Levelobjects/DestroyablePots.DestroyablePots_C:ReceiveAnyDamage" },
-        { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick',                                                                                                                      call = updateMinimap }, -- works in supraland and/or siu pretty reliably (not in supraworld)
+        { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick', call = updateMinimap }, -- works in supraland and/or siu pretty reliably (not in supraworld)
     }
 
     for _, hook in ipairs(hooks) do
