@@ -36,14 +36,14 @@ local function spawnObject(args)
         return false, "could not find valid player controller"
     end
 
-    local delta = args.loc or {X=15,Y=50,Z=-30} -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
+    local delta = args.delta or {X=0,Y=100,Z=0}
 
     local cam = pc.PlayerCameraManager
     local pos, rot = cam:GetCameraLocation(), cam:GetCameraRotation()
     local dv = UEHelpers.GetKismetMathLibrary():Multiply_VectorInt(UEHelpers.GetKismetMathLibrary():GetForwardVector(rot), delta.Y)
     local loc = UEHelpers.GetKismetMathLibrary():Add_VectorVector(pos, dv)
 
-    rot = args.rot or {Pitch=0, Yaw=0, Roll=0}
+    rot = args.rot or {Pitch=0, Yaw=rot.Yaw-180, Roll=0}
 
     loc.X = loc.X + delta.X
     loc.Z = loc.Z + delta.Z
@@ -142,7 +142,7 @@ local function ToggleItem(path, add)
         return ToggleInventory(obj, pc, add)
     end
 
-    local actor = spawnObject({name=namefy(path)})
+    local actor = spawnObject({name=namefy(path), delta={X=15,Y=50,Z=-30}}) -- shift object a little ({X=15,Y=50,Z=-30} works for shell and stomp)
 
     pc.Character:Using() -- and pick up item! this is very unreliable (object shapes are very different) but sometimes works
 
@@ -305,9 +305,11 @@ local function SpawnChip(path)
 
     print("inventory", Inventory:GetFullName())
 
+    -- Supraworld/Plugins/Supra/SupraAssets/Content/Materials/Icons/shield.uasset
+
     local Texture = FindObject('Texture2D', iconName)
     if not Texture:IsValid() then
-        Texture = FindObject('Texture2D', 'shield')
+        Texture = FindObject('Texture2D', 'Spark')
         if not Texture:IsValid() then
             return false, "can't find texture item"
         end
