@@ -304,14 +304,6 @@ local function processItemCommand(FullCommand, Parameters, Ar, callback)
     return true
 end
 
-local function SoftClassPtr(path)
-    local KismetSystem = UEHelpers.GetKismetSystemLibrary()
-    local SoftObjectPath = path
-    local SoftObjectPathStruct = KismetSystem:MakeSoftObjectPath(SoftObjectPath)
-    local SoftObjectRef = KismetSystem:Conv_SoftObjPathToSoftObjRef(SoftObjectPathStruct)
-    return SoftObjectRef
-end
-
 local function getInventoryChip(path)
     local inventoryName = namefy(path)
 
@@ -386,46 +378,22 @@ local function SpawnChip(path)
     return getInventoryChip(path)
 end
 
-local function SpawnEgg(path)
-    local actor, err = getInventoryChip(path)
-    if not actor then
-        return false, err
-    end
-
-    actor:SetActorHiddenInGame(true)
-    actor:SetActorEnableCollision(false)
-
-    local egg = spawnObject({name="ShopEgg_C", size=0.5})
-
-    -- egg.InventoryItem = SoftClassPtr(path) -- doesn't seem to work
-
-    local shopPath = '/Supraworld/Abilities/PlayerMap/ShopItem_PlayerMap.ShopItem_PlayerMap_C'
-    -- shopPath = getPath(actor:GetFullName()) -- nope that doesn't work
-    print("shopPath", shopPath)
-
-    egg.bUseCustomShopItem = true
-    egg.CustomShopItem = SoftClassPtr(shopPath) -- this works but no description
-
-    egg.ItemCost = 1
-    egg.CustomShopItemGrouping = 0
+local function getSoftClassPtr(path)
+    local KismetSystem = UEHelpers.GetKismetSystemLibrary()
+    local SoftObjectPath = path
+    local SoftObjectPathStruct = KismetSystem:MakeSoftObjectPath(SoftObjectPath)
+    local SoftObjectRef = KismetSystem:Conv_SoftObjPathToSoftObjRef(SoftObjectPathStruct)
+    return SoftObjectRef
 end
 
-RegisterConsoleCommandHandler("add", function(FullCommand, Parameters, Ar)
-    return processItemCommand(FullCommand, Parameters, Ar, AddItem)
-end)
+local function SpawnEgg(path)
+    local egg = spawnObject({name="ShopEgg_C", size=0.5})
+    egg.InventoryItem = getSoftClassPtr(path)
+    egg.ItemCost = 1
+end
 
-RegisterConsoleCommandHandler("give", function(FullCommand, Parameters, Ar)
-    return processItemCommand(FullCommand, Parameters, Ar, AddItem)
-end)
-
-RegisterConsoleCommandHandler("drop", function(FullCommand, Parameters, Ar)
-    return processItemCommand(FullCommand, Parameters, Ar, RemoveItem)
-end)
-
-RegisterConsoleCommandHandler("chip", function(FullCommand, Parameters, Ar)
-    return processItemCommand(FullCommand, Parameters, Ar, SpawnChip)
-end)
-
-RegisterConsoleCommandHandler("egg", function(FullCommand, Parameters, Ar)
-    return processItemCommand(FullCommand, Parameters, Ar, SpawnEgg)
-end)
+for cmd,fn in pairs({add=AddItem, give=AddItem, drop=RemoveItem, remove=RemoveItem, chip=SpawnChip, egg=SpawnEgg}) do
+    RegisterConsoleCommandHandler(cmd, function(FullCommand, Parameters, Ar)
+        return processItemCommand(FullCommand, Parameters, Ar, fn)
+    end)
+end
