@@ -103,6 +103,7 @@ local function ToggleEquipment(obj, pc, add)
 end
 
 local function ToggleInventory(obj, pc, add)
+    -- toggle eqipment from inventory fragments
     local cdo = obj:GetCDO()
     if cdo:IsValid() then
         for i = 1, #cdo.Fragments do
