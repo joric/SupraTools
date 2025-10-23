@@ -31,12 +31,12 @@ local function teleportToTrace(PlayerPawn)
     local rot = cam:GetCameraRotation()
     local loc = getImpactPoint(PlayerPawn, cam:GetCameraLocation(), rot)
     loc.Z = loc.Z + 100 -- above the ground
-    --PlayerPawn:K2_SetActorLocation(loc, false, {}, true)
     if not PlayerPawn or not PlayerPawn:IsValid() then
         -- see https://github.com/UE4SS-RE/RE-UE4SS/pull/1050
         print("INVALID PAWN, CAN'T TELEPORT!!!")
         return
     end
+    --PlayerPawn:K2_SetActorLocation(loc, false, {}, true)
     PlayerPawn:K2_TeleportTo(loc, { Pitch = 0, Yaw = rot.Yaw, Roll = 0 }) -- also updates physics
 end
 
