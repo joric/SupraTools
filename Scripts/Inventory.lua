@@ -267,6 +267,14 @@ local function processItemCommand(FullCommand, Parameters, Ar, callback)
     return true
 end
 
+local function getSoftObjectPath(SoftObjectRef)
+    local KismetSystem = UEHelpers.GetKismetSystemLibrary()
+    local SoftObjectPath = KismetSystem:Conv_SoftObjRefToSoftObjPath(SoftObjectRef)
+    local packageName = SoftObjectPath.AssetPath.PackageName:ToString()
+    local assetName = SoftObjectPath.AssetPath.AssetName:ToString()
+    return packageName .. "." .. assetName
+end
+
 local function getInventoryChip(path)
     local inventoryName = namefy(path)
 
@@ -277,37 +285,18 @@ local function getInventoryChip(path)
 
     print("inventory", Inventory:GetFullName())
 
-    -- texture can be extracted from shopitem (if any)
-    -- Supraworld/Plugins/Supra/SupraAssets/Content/Materials/Icons/shield.uasset
-
     local iconName = tagify(path)
-
-    --[[
     local cdo = Inventory:GetCDO()
     if cdo:IsValid() then
         for i = 1, #cdo.Fragments do
             local frag = cdo.Fragments[i]
-            local name = frag:GetFName():ToString()
-            if name == 'InvFrag_SupraworldShopItem_0' then
-                if frag.Icon then
-                    -- TODO: neither of this shit works
-                    local iconPath = frag.Icon.AssetPathName
-                    print("iconPath", iconPath)
-
-                    print("frag is", tostring(frag), frag:GetFullName())
-                    print("frag.Icon is", frag.Icon)
-                    print("frag.Cost is", frag.Cost)
-                    print("frag.ShopSlotPosition is", frag.ShopSlotPosition)
-
-                    local KSLib = UEHelpers.GetKismetSystemLibrary()
-                    --local class = KSLib:Conv_SoftClassReferenceToClass(frag.Icon)
-                    local class = KSLib:Conv_SoftObjectReferenceToObject(frag.Icon.AssetPathName)
-                    print("class", class, class:GetFullName()) -- nil
-                end
+            if frag:GetFullName():find('InvFrag_SupraworldShopItem') then
+                local iconPath = getSoftObjectPath(frag.Icon)
+                print("found icon", iconPath)
+                iconName = tagify(iconPath)
             end
         end
     end
-    ]]
 
     local Texture = FindObject('Texture2D', iconName)
     if not Texture:IsValid() then
