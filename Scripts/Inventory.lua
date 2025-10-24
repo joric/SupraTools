@@ -245,14 +245,6 @@ local function findExactMatch(tbl, value)
     end
 end
 
-RegisterConsoleCommandHandler("list", function(FullCommand, Parameters, Ar)
-    local items = GetItems()
-    for _, path in ipairs(items) do
-        Ar:Log(string.format("%s (%s)", tagify(path), namefy(path)))
-    end
-    return true
-end)
-
 local function processItemCommand(FullCommand, Parameters, Ar, callback)
     local filter = Parameters[1]
     if not filter then
@@ -368,3 +360,11 @@ for cmd,fn in pairs({add=AddItem, give=AddItem, drop=RemoveItem, remove=RemoveIt
         return processItemCommand(FullCommand, Parameters, Ar, fn)
     end)
 end
+
+RegisterConsoleCommandHandler("list", function(FullCommand, Parameters, Ar)
+    local items = GetItems()
+    for _, path in ipairs(items) do
+        Ar:Log(string.format("%s (%s)", tagify(path), namefy(path)))
+    end
+    return true
+end)
