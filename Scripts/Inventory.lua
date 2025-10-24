@@ -270,9 +270,7 @@ end
 local function getSoftObjectPath(SoftObjectRef)
     local KismetSystem = UEHelpers.GetKismetSystemLibrary()
     local SoftObjectPath = KismetSystem:Conv_SoftObjRefToSoftObjPath(SoftObjectRef)
-    local packageName = SoftObjectPath.AssetPath.PackageName:ToString()
-    local assetName = SoftObjectPath.AssetPath.AssetName:ToString()
-    return packageName .. "." .. assetName
+    return SoftObjectPath.AssetPath.PackageName:ToString() .. "." .. SoftObjectPath.AssetPath.AssetName:ToString()
 end
 
 local function getInventoryChip(path)
@@ -286,11 +284,13 @@ local function getInventoryChip(path)
     print("inventory", Inventory:GetFullName())
 
     local iconName = tagify(path)
+
     local cdo = Inventory:GetCDO()
     if cdo:IsValid() then
-        for i = 1, #cdo.Fragments do
+        local InvFrag_SupraworldShopItemClass = StaticFindObject("/Script/SupraworldRuntime.InvFrag_SupraworldShopItem")
+        for i = 1, (cdo.Fragments and cdo.Fragments:IsValid() and #cdo.Fragments or 0) do
             local frag = cdo.Fragments[i]
-            if frag:GetFullName():find('InvFrag_SupraworldShopItem') then
+            if frag:IsA(InvFrag_SupraworldShopItemClass) then
                 local iconPath = getSoftObjectPath(frag.Icon)
                 print("found icon", iconPath)
                 iconName = tagify(iconPath)
@@ -300,6 +300,7 @@ local function getInventoryChip(path)
 
     local Texture = FindObject('Texture2D', iconName)
     if not Texture:IsValid() then
+        print("Can't find texture (fallback to Spark)", iconName)
         Texture = FindObject('Texture2D', "Spark")
         if not Texture:IsValid() then
             return false, "can't find texture item"
