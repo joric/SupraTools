@@ -1,36 +1,6 @@
 -- a newer version of inventory manager, possibly universal for all games
 -- intended to replace grant and deploy commands with add/remove/list commands
 
----@class AShopEgg_C : AGrabObjectBase_C
----@field UberGraphFrame FPointerToUberGraphFrame
----@field InventoryItem TSoftClassPtr<ULyraInventoryItemDefinition>
----@field bUseCustomShopItem boolean
----@field CustomShopItem TSoftClassPtr<AShopItem_C>
----@field CustomShopItemGrouping EShopItemGrouping
----@field CustomShopItemSlotIndex int32
----@field SavedRattleRotator FRotator
----@field SavedRattleLocation FVector
----@field RattleHandle FTimerHandle
----@field TriggerRattle boolean
----@field SoundSpacingIncrement int32
----@field TotalSpacingSound int32
----@field RattleLocationDelta FVector
----@field RattleRotationDelta FRotator
----@field OnRattle FShopEgg_COnRattle
----@field OnOpened FShopEgg_COnOpened
----@field ItemCost int32
----@field bDragRotateFollowPlayerForward boolean
-
--- TODO
--- maybe I can make custom shop items and then get their reference? via CDO?
--- though shop item definition is very different from shop item
--- there are also these calls
----@param DefinitionToCheck FShopItemDefinition
----@param Success boolean
----function AShopEgg_C:ValidateItemDefinition(DefinitionToCheck, Success) end
----@param Definition FShopItemDefinition
----function AShopEgg_C:GetShopItemPropagationDefinition(Definition) end
-
 local UEHelpers = require("UEHelpers")
 
 local function spawnObject(args)
