@@ -18,7 +18,7 @@ end)
 
 local function toggleDebugCamera()
     if not inDebugCamera then
-        pcall(function() cheatable(UEHelpers.GetPlayerController()).CheatManager:EnableDebugCamera() end)
+        pcall(function() cheatable(getPlayerController()).CheatManager:EnableDebugCamera() end)
         inDebugCamera = true
     else
         pcall(function() cheatable(getDebugCameraController()).CheatManager:DisableDebugCamera() end)
@@ -45,7 +45,7 @@ local lastTime = 0
 local function teleportPlayer()
     if not inDebugCamera then return end
 
-    local pc = UEHelpers.GetPlayerController()
+    local pc = getPlayerController()
     local cc = getDebugCameraController()
     local cam = cc.PlayerCameraManager
 
