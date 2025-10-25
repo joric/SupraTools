@@ -1,6 +1,7 @@
 local UEHelpers = require("UEHelpers")
 
--- uses getPlayerController(), getDebugCameraController() from main.lua
+-- https://github.com/UE4SS-RE/RE-UE4SS/pull/1050 is about to introduce a breaking change
+-- so now it uses getPlayerController(), getDebugCameraController() from main.lua
 
 -- fixes ue4ss toggledebugcamera issue, see https://github.com/UE4SS-RE/RE-UE4SS/issues/514
 local function cheatable(PlayerController)
