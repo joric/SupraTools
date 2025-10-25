@@ -112,12 +112,12 @@ local function ToggleItem(path, add)
         return false, "could not find valid player controller"
     end
 
+    LoadAsset(path)
+
     local obj = FindObject('BlueprintGeneratedClass', namefy(path))
     if not obj:IsValid() then
         return false, "could not find object"
     end
-
-    LoadAsset(path)
 
     if path:find("Inventory_") then
         return ToggleInventory(obj, pc, add)
