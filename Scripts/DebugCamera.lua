@@ -14,14 +14,15 @@ local function cheatable(PlayerController)
     return PlayerController
 end
 
---[[
 -- this hook fixes the toggledebugcamera issue, see https://github.com/UE4SS-RE/RE-UE4SS/issues/514
 -- crashes UE4SS_v3.0.1-596-g96c34c5.zip no matter the return value (object/true/false/nil/empty body)
 -- it's supposed to return true/false? https://docs.ue4ss.com/dev/lua-api/global-functions/notifyonnewobject.html
 -- as opposed to stable version that returns object https://docs.ue4ss.com/lua-api/global-functions/notifyonnewobject.html
 -- I don't really need it, so it can be commented out for now
+--[[
 NotifyOnNewObject("/Script/Engine.PlayerController", function(PlayerController)
-    return cheatable(PlayerController)
+    cheatable(PlayerController)
+    return false
 end)
 ]]
 
