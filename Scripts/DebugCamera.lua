@@ -15,9 +15,14 @@ local function cheatable(PlayerController)
     return PlayerController
 end
 
+--[[
+-- this crashes UE4SS_v3.0.1-596-g96c34c5.zip
+-- also it's supposed to return true/false? https://docs.ue4ss.com/dev/lua-api/global-functions/notifyonnewobject.html
+-- as opposed to stable version that returns object https://docs.ue4ss.com/lua-api/global-functions/notifyonnewobject.html
 NotifyOnNewObject("/Script/Engine.PlayerController", function(PlayerController)
     return cheatable(PlayerController)
 end)
+]]
 
 local function toggleDebugCamera()
     if not inDebugCamera then
