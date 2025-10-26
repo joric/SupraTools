@@ -3,7 +3,6 @@ local UEHelpers = require("UEHelpers")
 -- https://github.com/UE4SS-RE/RE-UE4SS/pull/1050 may introduce a breaking change
 -- so it uses getPlayerController(), getDebugCameraController() from main.lua
 
--- fixes ue4ss toggledebugcamera issue, see https://github.com/UE4SS-RE/RE-UE4SS/issues/514
 local function cheatable(PlayerController)
     if not PlayerController.CheatManager:IsValid() then
         print("Restoring CheatManager")
@@ -16,7 +15,8 @@ local function cheatable(PlayerController)
 end
 
 --[[
--- this hook crashes UE4SS_v3.0.1-596-g96c34c5.zip no matter the return value (object/true/false/nil/empty body)
+-- this hook fixes the toggledebugcamera issue, see https://github.com/UE4SS-RE/RE-UE4SS/issues/514
+-- crashes UE4SS_v3.0.1-596-g96c34c5.zip no matter the return value (object/true/false/nil/empty body)
 -- it's supposed to return true/false? https://docs.ue4ss.com/dev/lua-api/global-functions/notifyonnewobject.html
 -- as opposed to stable version that returns object https://docs.ue4ss.com/lua-api/global-functions/notifyonnewobject.html
 -- I don't really need it (I think so it can be commented out)
