@@ -19,6 +19,7 @@ end
 -- it's supposed to return true/false? https://docs.ue4ss.com/dev/lua-api/global-functions/notifyonnewobject.html
 -- as opposed to stable version that returns object https://docs.ue4ss.com/lua-api/global-functions/notifyonnewobject.html
 -- I don't really need it, so it can be commented out for now
+
 --[[
 NotifyOnNewObject("/Script/Engine.PlayerController", function(PlayerController)
     cheatable(PlayerController)
