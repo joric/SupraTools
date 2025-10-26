@@ -16,7 +16,7 @@ local function cheatable(PlayerController)
 end
 
 --[[
--- this crashes UE4SS_v3.0.1-596-g96c34c5.zip no matter the return value (object/true/false/nil/empty body)
+-- this hook crashes UE4SS_v3.0.1-596-g96c34c5.zip no matter the return value (object/true/false/nil/empty body)
 -- it's supposed to return true/false? https://docs.ue4ss.com/dev/lua-api/global-functions/notifyonnewobject.html
 -- as opposed to stable version that returns object https://docs.ue4ss.com/lua-api/global-functions/notifyonnewobject.html
 -- I don't really need it (I think so it can be commented out)
