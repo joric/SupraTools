@@ -278,54 +278,6 @@ local function createMinimap()
 
     mapWidget = widget
     bgLayer = dotLayer
-
-
-    --[[
-    local widgetCompClass = StaticFindObject("/Script/UMG.WidgetComponent")
-    local widgetComp = StaticConstructObject(widgetCompClass, gi, FName("MinimapWidgetComponent"))
-
-    widgetComp:SetWidget(widget)
-    widgetComp:SetTickMode(2)
-    widgetComp:SetTickWhenOffscreen(true)
-
-
-    -- trying to tick
-
--- widget:Initialize()
--- widget.bCanEverTick = true
--- widget:SetVisibility(0) -- Visible
-
-MyWidget:SetTickableWhenPaused(true)
-
-
-
-    local widgetCompClass = StaticFindObject("/Script/UMG.WidgetComponent")
-    local widgetComp = StaticConstructObject(widgetCompClass, gi, FName("MapWidgetComp"))
-
-        -- widget:SetTickMode(2)  -- Try different values: 0=Disabled, 1=Enabled, 2=Automatic?
-
-    widgetComp:SetDrawSize({X=512,Y=512})
-    widgetComp:SetWidgetSpace(1)     -- 1 = screen space, 0 = world space
-    widgetComp:SetTickMode(1)        -- ETickMode::Automatic (if exposed)
-    widgetComp:SetTwoSided(true)
-
-    -- 4. Assign your manually created widget
-
-
-    -- 5. Register and attach
-    -- gi:AddInstanceComponent(widgetComp)
-    -- widgetComp:RegisterComponent()
-
-    widgetComp:SetTickWhenOffscreen(true)
-
-    widgetComp:SetWidget(widget)
-
-    for _, comp in ipairs(FindAllOf("WidgetComponent")or{}) do
-        --if comp:GetWidget() == widget then
-            print("Found component", comp:GetFullName(), comp:GetWidget():GetFullName())
-        --end
-    end
-    ]]
 end
 
 local function updatePoints(loc)
