@@ -390,50 +390,29 @@ local hookInfo = {}
 local function registerHooks()
     local hooks = {
         -- supraworld
-        { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound",                                                                                                        call = setFound },
-        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp",                                                                                                                 call = setFound },
-        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:ItemPickedup",                                                                                                                call = setFound },
-        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:SetPickedUp",                                                                                                           call = setFound },
-        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:OnSpawnedItemPickedUp",                                                                                                 call = setFound }, -- works for hay
-        { hook = "/Supraworld/Levelobjects/RespawnablePickupSpawner.RespawnablePickupSpawner_C:SetPickedUp",                                                                                     call = setFound },
-        { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken",                                                                                                    call = setFound },
-
+        { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound",                     call = setFound },
+        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp",                              call = setFound },
+        { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:ItemPickedup",                             call = setFound },
+        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:SetPickedUp",                        call = setFound },
+        { hook = "/Supraworld/Levelobjects/PickupSpawner.PickupSpawner_C:OnSpawnedItemPickedUp",              call = setFound }, -- works for hay
+        { hook = "/Supraworld/Levelobjects/RespawnablePickupSpawner.RespawnablePickupSpawner_C:SetPickedUp",  call = setFound },
+        { hook = "/Supraworld/Systems/Shop/ShopItemSpawner.ShopItemSpawner_C:SetItemIsTaken",                 call = setFound },
         -- this is very CPU intensive but the only I found. Needs checking if UseAndCarry works at start
         { hook = '/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostPhysics_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature', call = updateMinimap },
 
-        --[[
-        -- neither of those fire
-        { hook = "/Supraworld/Systems/Talk/Widgets/TalkTextWidget.TalkTextWidget_C:Tick" },
-        { hook = "/PlayerMap/SW_PlayerMapWidget.SW_PlayerMapWidget_C:Tick" },
-        { hook = "/Supraworld/Core/UserInterface/HUD/W_EquipmentBarSlot.W_EquipmentBarSlot_C:Tick" },
-        { hook = "/Supraworld/Abilities/BlowGun/UI/W_Reticle_BlowGun.W_Reticle_BlowGun_C:Tick" },
-        { hook = "/SupraworldMenu/UI/Menu/W_UserWatermark.W_UserWatermark_C:Tick" },
-        -- these fire ocasionally
-        { hook = '/Supraworld/Systems/Talk/Widgets/TextTalkBubbleWidget.TextTalkBubbleWidget_C:Tick', call=updateMinimap }, -- only works in supraworld when bubbles
-        { hook = '/Supraworld/Abilities/ToyCharacterIK_Toothpick.ToyCharacterIK_Toothpick_C:Tick_UpdateHandLocations', call=updateMinimap }, -- only works for toothpick
-        { hook = '/SupraCore/Core/SupraRotationComponent.SupraRotationComponent_C:Tick_RotateToLocation', call=updateMinimap }, -- slow! super many objects
-        { hook = '/Supraworld/Core/PostProcessManagerControllerComponent.PostProcessManagerControllerComponent_C:ReceiveTick', call=updateMinimap}, -- never called
-        { hook = '/Script/SupraCore.PlayerStatSubsystem:TickPlaytime', call=updateMinimap},
-        { hook = '/Supraworld/Abilities/Interact/Ability_UseAndCarry.Ability_UseAndCarry_C:BndEvt__Ability_UseAndCarry_Tick_PostUpdateWork_K2Node_ComponentBoundEvent_1_OnTick__DelegateSignature', call=function(hook,name,param) updateMinimap(hook,name,param) end},
-        { hook = '/SupraCore/Systems/CustomPhysicsHandleActor/PhysicsHandle_Control.PhysicsHandle_Control_C:BndEvt__CustomPhysicsHandleActor_Control_TickComponent_K2Node_ComponentBoundEvent_0_OnTick__DelegateSignature',call=updateMinimap},
-        { hook = '/Script/UMG.UserWidget:Tick', call=updateMinimap}, -- never fires, need to set up widget
-        ]]
-
         -- supraland
-        { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" },                                                                                   -- Supraland
+        { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:Activate" }, -- Supraland
         { hook = "/Game/Blueprints/Levelobjects/SecretFound.SecretFound_C:BndEvt__Box_K2Node_ComponentBoundEvent_0_ComponentBeginOverlapSignature__DelegateSignature" }, -- SIU
-
         { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:Timeline_0__FinishedFunc" },
         { hook = "/Game/Blueprints/Levelobjects/Coin.Coin_C:DestroyAllComponents" },
         { hook = "/Game/Blueprints/Levelobjects/CoinBig.CoinBig_C:Timeline_0__FinishedFunc" },
         { hook = "/Game/Blueprints/Levelobjects/CoinRed.CoinRed_C:Timeline_0__FinishedFunc" },
         { hook = "/Game/Blueprints/Levelobjects/PhysicalCoin.PhysicalCoin_C:DestroyAllComponents" },
-
         { hook = "/Game/Blueprints/Levelobjects/Chest.chest_C:Timeline_0__FinishedFunc" }, -- Supraland
         { hook = "/Game/Blueprints/Levelobjects/Chest.Chest_C:Timeline_0__FinishedFunc" }, -- SIU
         { hook = "/Game/Blueprints/Levelobjects/Bones.Bones_C:Timeline_0__FinishedFunc" }, -- Crash DLC
-
         { hook = "/Game/Blueprints/Levelobjects/DestroyablePots.DestroyablePots_C:ReceiveAnyDamage" },
+
         { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick', call = updateMinimap }, -- works in supraland and/or siu pretty reliably (not in supraworld)
     }
 
