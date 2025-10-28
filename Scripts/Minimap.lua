@@ -227,8 +227,7 @@ local function createMinimap()
     local widget = StaticConstructObject(StaticFindObject("/Script/UMG.UserWidget"), gi, FName("MinimapWidget"))
     widget.WidgetTree = StaticConstructObject(StaticFindObject("/Script/UMG.WidgetTree"), widget, FName("MinimapTree"))
 
-    local outerCanvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree,
-        FName("MinimapOuterCanvas"))
+    local outerCanvas = StaticConstructObject(StaticFindObject("/Script/UMG.CanvasPanel"), widget.WidgetTree, FName("MinimapOuterCanvas"))
     widget.WidgetTree.RootWidget = outerCanvas
 
     local bg = StaticConstructObject(StaticFindObject("/Script/UMG.Border"), outerCanvas, FName("MinimapBG"))
