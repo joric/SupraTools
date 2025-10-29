@@ -107,6 +107,6 @@ require("GrabObject")
 require("FindAsset")
 require("GameSettings")
 require("PlayerProperties")
-require("Minimap")
-require("Inventory" .. dev)
+require("Minimap" .. dev)
+require("Inventory")
 
