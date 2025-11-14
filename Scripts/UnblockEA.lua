@@ -2,8 +2,7 @@ local function unblockEA()
     for _, obj in ipairs(FindAllOf("SupraEABlockingVolume_C") or {}) do
         if obj:IsValid() then
             -- obj:SetActorEnableCollision(false) -- this teleports player to 0,0,0 since 9016 (Timer_StopScriptsTurningOffCollision)
-            obj.K2_GetRootComponent():SetMobility(2)
-            obj:K2_TeleportTo({X=-100000,Y=-100000,Z=-100000}, {})
+            obj:K2_DestroyActor()
         end
     end
 end
