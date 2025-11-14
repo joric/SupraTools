@@ -10,5 +10,3 @@ end
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     unblockEA()
 end)
-
--- RegisterKeyBind(Key.C, {ModifierKey.ALT}, unblockEA)
