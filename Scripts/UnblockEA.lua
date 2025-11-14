@@ -25,11 +25,12 @@ local function unblockEA()
         end
     end
 
+    -- LoopAsync(500, unblockEA)
+    -- ExecuteWithDelay(500, unblockEA)
 end
 
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     cacheEA()
-    unblockEA()
 
     pcall(function()
         RegisterHook("/SupraCore/Systems/Volumes/SupraEABlockingVolume.SupraEABlockingVolume_C:StartTimer_StopScriptsTurningOffCollision", function(self)
@@ -47,7 +48,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
 
 end)
 
-LoopAsync(500, unblockEA)
+-- if you get teleported to 0,0,0 before pressing C it means it's not the UnblockEA collision state-based "protection" but something else
 
 RegisterKeyBind(Key.C, unblockEA)
 
