@@ -20,10 +20,13 @@ end
 -- dev version returns true/false https://docs.ue4ss.com/dev/lua-api/global-functions/notifyonnewobject.html
 -- Fixed in 599, see https://github.com/UE4SS-RE/RE-UE4SS/pull/1065
 
+--[[
+-- disable this, maybe it still breaks something? teleporting to 0,0,0 ?
 NotifyOnNewObject("/Script/Engine.PlayerController", function(PlayerController)
     cheatable(PlayerController)
     return false
 end)
+]]
 
 local function toggleDebugCamera()
     if not inDebugCamera then

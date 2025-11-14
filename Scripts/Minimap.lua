@@ -172,7 +172,7 @@ local function loadImages(bgContainer)
     local templates = {
         "/Game/Blueprints/PlayerMap/Textures/T_Downscale%d.T_Downscale%d",
         "/Game/Blueprints/PlayerMap/Textures/T_SIUMapV7Q%d.T_SIUMapV7Q%d",
-        "/PlayerMap/Textures/T_SupraworldMapV4Q%d.T_SupraworldMapV4Q%d",
+        "/PlayerMap/Textures/T_SupraworldMapV5Q%d.T_SupraworldMapV5Q%d",
     }
 
     local dmi = nil

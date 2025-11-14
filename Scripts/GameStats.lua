@@ -270,7 +270,4 @@ LoopAsync(1000, updateWidget) -- this also re-adds widget to viewport (it's remo
 RegisterKeyBind(Key.O, {ModifierKey.ALT}, toggleStats ) -- Onscreen Objectives, thus "O"
 RegisterKeyBind(Key.H, {ModifierKey.ALT}, toggleHelp)
 
-RegisterKeyBind(Key.W, hideWidget)
-RegisterKeyBind(Key.A, hideWidget)
-RegisterKeyBind(Key.S, hideWidget)
-RegisterKeyBind(Key.D, hideWidget)
+ExecuteWithDelay(25000, hideWidget)
