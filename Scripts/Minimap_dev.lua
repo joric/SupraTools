@@ -61,8 +61,9 @@ local function setFound(hook, name, found)
         point.found = found
         if found then
             -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
-            local image = FindObject("Image", name .. ".Dot")
-            if image:IsValid() then
+            --local image = FindObject("Image", name .. ".Dot")
+            image = point.image
+            if image and image:IsValid() then
                 -- print("removing point", image:GetFullName())
                 -- maybe do not remove completely just set color but it's faster
                 image:RemoveFromParent()

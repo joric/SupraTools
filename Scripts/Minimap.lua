@@ -60,8 +60,9 @@ local function setFound(hook, name, found)
         point.found = found
         if found then
             -- print("setFound", found, name:match(".*%.(.*)$"), "via", hook:match(".*%.(.*)$"))
-            local image = FindObject("Image", name .. ".Dot")
-            if image:IsValid() then
+            -- local image = FindObject("Image", name .. ".Dot")
+            local image = point.image
+            if image and image:IsValid() then
                 -- print("removing point", image:GetFullName())
                 -- maybe do not remove completely just set color but it's faster
                 image:RemoveFromParent()
@@ -388,6 +389,7 @@ local hookInfo = {}
 
 local function registerHooks()
     local hooks = {
+
         -- supraworld
         { hook = "/SupraCore/Systems/Volumes/SecretVolume.SecretVolume_C:SetSecretFound",                     call = setFound },
         { hook = "/Supraworld/Levelobjects/PickupBase.PickupBase_C:SetPickedUp",                              call = setFound },
@@ -413,6 +415,7 @@ local function registerHooks()
         { hook = "/Game/Blueprints/Levelobjects/DestroyablePots.DestroyablePots_C:ReceiveAnyDamage" },
 
         { hook = '/Game/FirstPersonBP/Blueprints/HintText.HintText_C:Tick', call = updateMinimap }, -- works in supraland and/or siu pretty reliably (not in supraworld)
+
     }
 
     for _, hook in ipairs(hooks) do

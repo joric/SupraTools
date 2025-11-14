@@ -107,5 +107,5 @@ require("GrabObject")
 require("FindAsset")
 require("GameSettings")
 require("PlayerProperties")
-require("Minimap" .. dev) -- this is problematic, doesn't load sw save
+require("Minimap" .. dev)
 require("Inventory")
