@@ -75,5 +75,6 @@ local function teleportPlayer()
     end)
 end
 
-RegisterKeyBind(Key.MIDDLE_MOUSE_BUTTON, toggleDebugCamera)
+-- RegisterKeyBind(Key.MIDDLE_MOUSE_BUTTON, toggleDebugCamera)
+RegisterKeyBind(Key.C, toggleDebugCamera) -- since 9016 introduces "binoculars" on middle click
 RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, teleportPlayer)
