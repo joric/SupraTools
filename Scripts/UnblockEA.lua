@@ -26,7 +26,7 @@ local function unblockEA()
     end
 
     -- LoopAsync(500, unblockEA)
-    ExecuteWithDelay(500, unblockEA)
+    -- ExecuteWithDelay(500, unblockEA)
 end
 
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
