@@ -48,7 +48,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
 
 end)
 
--- if you get teleported to 0,0,0 before pressing C it means it's not the UnblockEA collision state-based "protection" but something else
+-- if you get teleported to 0,0,0 before pressing Alt+C it means it's not the UnblockEA collision state-based "protection" but something else
 
-RegisterKeyBind(Key.C, unblockEA)
+RegisterKeyBind(Key.C, {ModifierKey.ALT}, unblockEA)
 
