@@ -109,4 +109,3 @@ require("GameSettings")
 require("PlayerProperties")
 require("Minimap" .. dev)
 require("Inventory")
-
