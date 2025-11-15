@@ -16,7 +16,7 @@ end)
 RegisterHook("/Script/Engine.Actor:K2_SetActorLocation", function(self, NewLocation, bSweep, SweepHitResult, bTeleport)
     local vec = NewLocation:get()
     -- print("Actor:", self:get():GetFullName(), "X:", vec.X, "Y:", vec.Y, "Z:", vec.Z)
-    if math.abs(vec.X) < 10 and math.abs(vec.Y) < 10 and math.abs(vec.Z) < 10 then
+    if math.abs(vec.X) < 25 and math.abs(vec.Y) < 25 and math.abs(vec.Z) < 25 then
         -- block teleport to zero
         -- print("BLOCKED TELEPORT TO 0,0,0!!!")
         return false -- this works
