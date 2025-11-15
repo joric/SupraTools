@@ -28,6 +28,7 @@ NotifyOnNewObject("/Script/Engine.PlayerController", function(PlayerController)
 end)
 ]]
 
+
 local function toggleDebugCamera()
     if not inDebugCamera then
         pcall(function() cheatable(getPlayerController()).CheatManager:EnableDebugCamera() end)
