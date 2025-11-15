@@ -20,7 +20,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
 
         if math.abs(vec.X) < 10 and math.abs(vec.Y) < 10 and math.abs(vec.Z) < 10 then
             -- block teleport to zero
-            print("BLOCKED TELEPORT TO 0,0,0!!!")
+            -- print("BLOCKED TELEPORT TO 0,0,0!!!")
             return false
         end
 
