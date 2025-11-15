@@ -12,8 +12,9 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
 end)
 
 -- Looks like the issue that teleports player to 0,0,0 is unrelated to scripting but ue4ss in general
--- I disabled all the scripts (including this one) and it still happens. This helps to block teleport to 0,0,0
+-- I disabled all the scripts (including this one) and it still happens.
 
+-- this works
 RegisterHook("/Script/Engine.Actor:K2_SetActorLocation", function(self, NewLocation, bSweep, SweepHitResult, bTeleport)
     local vec = NewLocation:get()
     -- print("Actor:", self:get():GetFullName(), "X:", vec.X, "Y:", vec.Y, "Z:", vec.Z)
