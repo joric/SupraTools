@@ -61,7 +61,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     end)
     ]]
 
-    RegisterHook("/Script/Engine.Actor:K2_SetActorAndRotation", function(self, NewLocation, NewRotation)
+    RegisterHook("/Script/Engine.Actor:K2_SetActorLocationAndRotation", function(self, NewLocation, NewRotation)
         local vec = NewLocation:get()
         local actor = self:get()
         local d = 10
