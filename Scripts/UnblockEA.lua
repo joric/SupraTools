@@ -1,6 +1,6 @@
 -- Disclaimer: teleporting to 0,0,0 is not related to unblocking EA volumes
--- There's a global sentinel since 9016 that reacts to clear ue4ss with no scripts whatsoever
--- I am just trying to mitigate this anti-ue4ss "protection"
+-- Since 9016 the in-game "protection" triggers on vanilla UE4SS with no scripts whatsoever
+-- I am just trying to mitigate this anti-UE4SS "protection"
 
 local UEHelpers = require("UEHelpers")
 local cachedEABlockers = {}
