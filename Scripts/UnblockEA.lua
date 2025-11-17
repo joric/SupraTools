@@ -42,9 +42,11 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
         local d = 10
         if math.abs(vec.X) < d and math.abs(vec.Y) < d and math.abs(vec.Z) < d then
             local loc = actor:K2_GetActorLocation()
-            print(string.format("--- K2_SetActorLocation %.5f %.5f %.5f (was %.5f %.5f %.5f, %s)", vec.X, vec.Y, vec.Z, loc.X, loc.Y, loc.Z, actor:GetFName():ToString()))
 
             if actor:GetFullName():find('Player_ToyCharacter_C') then
+
+                print(string.format("--- K2_SetActorLocation %.5f %.5f %.5f (was %.5f %.5f %.5f, %s)", vec.X, vec.Y, vec.Z, loc.X, loc.Y, loc.Z, actor:GetFName():ToString()))
+
                 print("----- GOT PLAYER, TRYING TO RESET COORDS -----")
 
                 NewLocation:Set(loc) -- this doesn't work for some reason
