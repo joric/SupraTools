@@ -24,6 +24,8 @@ local function unblockEA()
     end
 end
 
+-- LoopAsync(1000, unblockEA) -- if removing timer doesn't work just call in a loop (no need really)
+
 -- Looks like the issue that teleports player to 0,0,0 is unrelated to scripting but ue4ss in general
 
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
@@ -86,6 +88,15 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
             if actor:GetFullName():find('Player_ToyCharacter_C') then
                 print("----- GOT PLAYER, TRYING TO RESET COORDS -----")
                 NewLocation:Set(loc)
+
+                -- maybe try teleporting back (this works fine)
+                local rot = actor:K2_GetActorRotation()
+                ExecuteWithDelay(500, function()
+                    ExecuteInGameThread(function()
+                        actor:K2_TeleportTo(loc, rot)
+                    end)
+                end)
+
                 return false
             end
         end
@@ -93,7 +104,6 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
 
 end)
 
-
-LoopAsync(1000, unblockEA)
+-- LoopAsync(1000, unblockEA)
 -- ExecuteWithDelay(500, unblockEA)
 
