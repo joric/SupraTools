@@ -18,8 +18,8 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
         local d = 100
         if math.abs(vec.X) < d and math.abs(vec.Y) < d and math.abs(vec.Z) < d then
             -- block teleport to zero
-            print(string.format("BLOCKED TELEPORT TO %.5f %.5f %.5f", vec.X, vec.Y, vec.Z))
-            return false -- this works
+            print(string.format("TELEPORTING TO %.5f %.5f %.5f (%s)", vec.X, vec.Y, vec.Z, self:get():GetFName():ToString()))
+            return false -- this doesn't seem to work
         end
     end)
 
