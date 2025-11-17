@@ -62,8 +62,6 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
                         actor:K2_TeleportTo({X=x,Y=y,Z=z}, rot)
                     end)
                 end)
-
-                return false
             end
         end
     end)
