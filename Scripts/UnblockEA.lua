@@ -17,7 +17,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
         -- print("Actor:", self:get():GetFullName(), "X:", vec.X, "Y:", vec.Y, "Z:", vec.Z)
         if math.abs(vec.X) < 50 and math.abs(vec.Y) < 50 and math.abs(vec.Z) < 50 then
             -- block teleport to zero
-            print("BLOCKED TELEPORT TO", vec.X, vec.Y, vec.Z)
+            print(string.format("BLOCKED TELEPORT TO %.5f %.5f %.5f", vec.X, vec.Y, vec.Z))
             return false -- this works
         end
     end)
