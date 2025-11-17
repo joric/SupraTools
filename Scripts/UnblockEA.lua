@@ -15,7 +15,8 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     RegisterHook("/Script/Engine.Actor:K2_SetActorLocation", function(self, NewLocation, bSweep, SweepHitResult, bTeleport)
         local vec = NewLocation:get()
         -- print("Actor:", self:get():GetFullName(), "X:", vec.X, "Y:", vec.Y, "Z:", vec.Z)
-        if math.abs(vec.X) < 100 and math.abs(vec.Y) < 100 and math.abs(vec.Z) < 100 then
+        local d = 100
+        if math.abs(vec.X) < d and math.abs(vec.Y) < d and math.abs(vec.Z) < d then
             -- block teleport to zero
             print(string.format("BLOCKED TELEPORT TO %.5f %.5f %.5f", vec.X, vec.Y, vec.Z))
             return false -- this works
