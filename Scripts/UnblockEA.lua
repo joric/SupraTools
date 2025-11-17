@@ -50,10 +50,14 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
                 NewLocation:Set(loc) -- this doesn't work for some reason
 
                 -- maybe try teleporting back
-                ExecuteWithDelay(300, function()
+                local x = loc.X
+                local y = loc.Y
+                local z = loc.Z
+                local rot = actor:K2_GetActorRotation()
+                ExecuteWithDelay(500, function()
                     ExecuteInGameThread(function()
                         print("-------- teleporting back ---------")
-                        actor:K2_TeleportTo(loc, actor:K2_GetActorRotation())
+                        actor:K2_TeleportTo({X=x,Y=y,Z=z}, rot)
                     end)
                 end)
 
