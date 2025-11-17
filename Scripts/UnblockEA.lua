@@ -87,7 +87,8 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
             print(string.format("--- K2_SetActorLocation %.5f %.5f %.5f (was %.5f %.5f %.5f, %s)", vec.X, vec.Y, vec.Z, loc.X, loc.Y, loc.Z, actor:GetFName():ToString()))
             if actor:GetFullName():find('Player_ToyCharacter_C') then
                 print("----- GOT PLAYER, TRYING TO RESET COORDS -----")
-                NewLocation:Set(loc)
+
+                NewLocation:Set(loc) -- this doesn't work for some reason
 
                 -- maybe try teleporting back (this works fine)
                 local rot = actor:K2_GetActorRotation()
