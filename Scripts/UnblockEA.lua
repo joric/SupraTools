@@ -31,7 +31,7 @@ end
 local loc = {X=0,Y=0,Z=0}
 
 local function isZero(vec)
-    local d = 250
+    local d = 500
     return math.abs(vec.X) < d and math.abs(vec.Y) < d and math.abs(vec.Z) < d
 end
 
@@ -57,7 +57,7 @@ local function checkPlayer()
 
     else
         loc = vec
-        print(string.format("-- updated player, %.5f %.5f %.5f", vec.X, vec.Y, vec.Z))
+        -- print(string.format("-- updated player, %.5f %.5f %.5f", vec.X, vec.Y, vec.Z))
     end
 
 end
@@ -109,6 +109,6 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
 
 end)
 
--- LoopAsync(1000, unblockEA) -- if removing timer doesn't work just call in a loop (no need really)
+-- LoopAsync(1000, unblockEA) -- not needed if you K2_ClearTimerHandle on Timer_StopScriptsTurningOffCollision
 -- ExecuteWithDelay(500, unblockEA)
 
