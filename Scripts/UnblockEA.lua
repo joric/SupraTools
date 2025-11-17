@@ -92,7 +92,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
 end)
 
 
-LoopAsync(500, unblockEA)
+LoopAsync(1000, unblockEA)
     -- ExecuteWithDelay(500, unblockEA)
 
 
