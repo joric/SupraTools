@@ -71,6 +71,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
             if actor:GetFullName():find('Player_ToyCharacter_C') then
                 print("----- GOT PLAYER, TRYING TO RESET COORDS -----")
                 NewLocation:Set(loc)
+                return false
             end
         end
     end)
@@ -85,6 +86,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
             if actor:GetFullName():find('Player_ToyCharacter_C') then
                 print("----- GOT PLAYER, TRYING TO RESET COORDS -----")
                 NewLocation:Set(loc)
+                return false
             end
         end
     end)

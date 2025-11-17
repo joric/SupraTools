@@ -593,7 +593,7 @@ RegisterHook("/Script/Engine.PlayerController:ServerAcknowledgePossession", func
 end)
 
 
-RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings)
+-- RegisterKeyBind(Key.LEFT_MOUSE_BUTTON, {ModifierKey.CONTROL}, spawnThings) -- interferes with crouch
 
 RegisterKeyBind(Key.C, {ModifierKey.CONTROL}, copyObject)
 RegisterKeyBind(Key.V, {ModifierKey.CONTROL}, pasteObject)
