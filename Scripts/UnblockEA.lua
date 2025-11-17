@@ -14,11 +14,20 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
 
     RegisterHook("/Script/Engine.Actor:K2_SetActorLocation", function(self, NewLocation, bSweep, SweepHitResult, bTeleport)
         local vec = NewLocation:get()
-        -- print("Actor:", self:get():GetFullName(), "X:", vec.X, "Y:", vec.Y, "Z:", vec.Z)
+        local actor = self:get()
+        -- print("Actor:", actor:GetFullName(), "X:", vec.X, "Y:", vec.Y, "Z:", vec.Z)
         local d = 100
         if math.abs(vec.X) < d and math.abs(vec.Y) < d and math.abs(vec.Z) < d then
             -- block teleport to zero
-            print(string.format("TELEPORTING TO %.5f %.5f %.5f (%s)", vec.X, vec.Y, vec.Z, self:get():GetFName():ToString()))
+
+            local loc = actor:K2_GetActorLocation()
+
+            print(string.format("TELEPORTING TO %.5f %.5f %.5f (was %.5f %.5f %.5f, %s)", vec.X, vec.Y, vec.Z, loc.X, loc.Y, loc.Z, actor:GetFName():ToString()))
+
+            ExecuteWithDelay(250, function()
+                actor:K2_SetActorLocation(loc, false, {}, true)
+            end)
+
             return false -- this doesn't seem to work
         end
     end)
