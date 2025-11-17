@@ -24,9 +24,11 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
 
             print(string.format("TELEPORTING TO %.5f %.5f %.5f (was %.5f %.5f %.5f, %s)", vec.X, vec.Y, vec.Z, loc.X, loc.Y, loc.Z, actor:GetFName():ToString()))
 
+            --[[
             ExecuteWithDelay(250, function()
                 actor:K2_SetActorLocation(loc, false, {}, true)
             end)
+            ]]
 
             return false -- this doesn't seem to work
         end
