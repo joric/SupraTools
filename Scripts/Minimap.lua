@@ -11,16 +11,16 @@ local defaultVisibility = HIDDEN
 local function FLinearColor(R, G, B, A) return { R = R, G = G, B = B, A = A } end
 local function FSlateColor(R, G, B, A) return { SpecifiedColor = FLinearColor(R, G, B, A), ColorUseRule = 0 } end
 
-local widgetAlignment = 'bottomright'
+local widgetAlignment = 'center'
 local widgetOpacity = 0.75
 local backgroundColor = FLinearColor(0, 0, 0, 0)
-local widgetSize = { X = 320, Y = 320 }
+local widgetSize = { X = 1024, Y = 1024 }
 local mapSize = { X = 200000, Y = 200000 }
 local scaling = 0.05
 local playerColor = FLinearColor(1, 1, 1, 1)
 local dotSize = 5.0 / scaling
-local showTiles = true
-local useSpherify = false
+local showTiles = false
+local useSpherify = true
 
 local mapWidget = FindObject("UserWidget", "MinimapWidget")
 local playerImage = FindObject("Image", "playerDot")

@@ -7,18 +7,22 @@ local function unblockEA()
     end
 end
 
-RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
-    unblockEA()
-end)
-
 -- Looks like the issue that teleports player to 0,0,0 is unrelated to scripting but ue4ss in general
 
-RegisterHook("/Script/Engine.Actor:K2_SetActorLocation", function(self, NewLocation, bSweep, SweepHitResult, bTeleport)
-    local vec = NewLocation:get()
-    -- print("Actor:", self:get():GetFullName(), "X:", vec.X, "Y:", vec.Y, "Z:", vec.Z)
-    if math.abs(vec.X) < 25 and math.abs(vec.Y) < 25 and math.abs(vec.Z) < 25 then
-        -- block teleport to zero
-        -- print("BLOCKED TELEPORT TO 0,0,0!!!")
-        return false -- this works
-    end
+RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
+    unblockEA()
+
+    RegisterHook("/Script/Engine.Actor:K2_SetActorLocation", function(self, NewLocation, bSweep, SweepHitResult, bTeleport)
+        local vec = NewLocation:get()
+        -- print("Actor:", self:get():GetFullName(), "X:", vec.X, "Y:", vec.Y, "Z:", vec.Z)
+        if math.abs(vec.X) < 50 and math.abs(vec.Y) < 50 and math.abs(vec.Z) < 50 then
+            -- block teleport to zero
+            print("BLOCKED TELEPORT TO", vec.X, vec.Y, vec.Z)
+            return false -- this works
+        end
+    end)
+
 end)
+
+
+
