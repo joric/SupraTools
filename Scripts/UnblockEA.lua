@@ -3,6 +3,7 @@
 -- I am just trying to mitigate this anti-UE4SS "protection"
 
 local UEHelpers = require("UEHelpers")
+local ksl = UEHelpers.GetKismetSystemLibrary()
 local cachedEABlockers = {}
 
 local function cacheEA()
@@ -22,7 +23,7 @@ local function unblockEA()
 
             local handle = obj.Timer_StopScriptsTurningOffCollision
             if handle:IsValid() then
-                UEHelpers.GetKismetSystemLibrary():K2_ClearTimerHandle(obj, {Handle = handle.Handle})
+                ksl:K2_ClearTimerHandle(obj, {Handle = handle.Handle})
             end
         end
     end
