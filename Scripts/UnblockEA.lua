@@ -28,46 +28,87 @@ local function unblockEA()
     end
 end
 
--- LoopAsync(1000, unblockEA) -- if removing timer doesn't work just call in a loop (no need really)
+local loc = {X=0,Y=0,Z=0}
+
+local function isZero(vec)
+    local d = 250
+    return math.abs(vec.X) < d and math.abs(vec.Y) < d and math.abs(vec.Z) < d
+end
+
+local function checkPlayer()
+
+    local pc = UEHelpers.GetPlayerController()
+    local actor = pc.Pawn
+    if not actor:IsValid() then return end
+
+    local vec = actor:K2_GetActorLocation()
+    local rot = actor:K2_GetActorRotation()
+
+    if isZero(vec) then
+
+        if not isZero(loc) then
+            print(string.format("-- teleporting player to %.5f %.5f %.5f", loc.X, loc.Y, loc.Z))
+            ExecuteWithDelay(250, function()
+                ExecuteInGameThread(function()
+                    actor:K2_TeleportTo(loc, rot)
+                end)
+            end)
+        end
+
+    else
+        loc = vec
+        print(string.format("-- updated player, %.5f %.5f %.5f", vec.X, vec.Y, vec.Z))
+    end
+
+end
 
 -- Looks like the issue that teleports player to 0,0,0 is unrelated to scripting but ue4ss in general
 
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     cacheEA()
     unblockEA()
+--[[
+    RegisterHook("/Script/Engine.Actor:K2_TeleportTo", function(self, NewLocation, NewRotation)
+        local vec = NewLocation:get()
+        print(string.format("-- hooked K2_TeleportTo %.5f %.5f %.5f %s", vec.X, vec.Y, vec.Z, self:get():GetFullName() ))
+    end)
+
+    RegisterHook("/Script/Engine.Actor:K2_SetActorLocationAndRotation", function(self, NewLocation, NewRotation)
+        local vec = NewLocation:get()
+        print(string.format("-- hooked K2_TeleportTo %.5f %.5f %.5f %s", vec.X, vec.Y, vec.Z, self:get():GetFullName() ))
+    end)
+
+    local loc,rot = {}, {}
+    local teleport = false
 
     RegisterHook("/Script/Engine.Actor:K2_SetActorLocation", function(self, NewLocation, bSweep, SweepHitResult, bTeleport)
         local vec = NewLocation:get()
         local actor = self:get()
+        teleport = false
         local d = 10
         if math.abs(vec.X) < d and math.abs(vec.Y) < d and math.abs(vec.Z) < d then
-            local loc = actor:K2_GetActorLocation()
-
+            loc = actor:K2_GetActorLocation()
+            rot = actor:K2_GetActorRotation()
             if actor:GetFullName():find('Player_ToyCharacter_C') then
-
                 print(string.format("--- K2_SetActorLocation %.5f %.5f %.5f (was %.5f %.5f %.5f, %s)", vec.X, vec.Y, vec.Z, loc.X, loc.Y, loc.Z, actor:GetFName():ToString()))
-
-                print("----- GOT PLAYER, TRYING TO RESET COORDS -----")
-
                 NewLocation:Set(loc) -- this doesn't work for some reason
-
-                -- maybe try teleporting back
-                local x = loc.X
-                local y = loc.Y
-                local z = loc.Z
-                local rot = actor:K2_GetActorRotation()
-                ExecuteWithDelay(500, function()
-                    ExecuteInGameThread(function()
-                        print("-------- teleporting back ---------")
-                        actor:K2_TeleportTo({X=x,Y=y,Z=z}, rot)
-                    end)
-                end)
+                teleport = true
             end
         end
-    end)
+    end,
+        function(self, NewLocation, bSweep, SweepHitResult, bTeleport)
+            if teleport then
+                print(string.format("-- teleporting back to %.5f %.5f %.5f --", loc.X, loc.Y, loc.Z))
+                self:get():K2_TeleportTo(loc, rot)
+            end
+        end
+    )
+]]
+
+    LoopAsync(1000, checkPlayer)
 
 end)
 
--- LoopAsync(1000, unblockEA)
+-- LoopAsync(1000, unblockEA) -- if removing timer doesn't work just call in a loop (no need really)
 -- ExecuteWithDelay(500, unblockEA)
 
