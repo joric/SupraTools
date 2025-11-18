@@ -58,9 +58,6 @@ local function teleportPlayer()
     local pc = getPlayerController()
     local cc = getCameraController()
 
-    pc:ClientFlushLevelStreaming()
-    pc:ClientForceGarbageCollection()
-
     cc:ClientFlushLevelStreaming()
     cc:ClientForceGarbageCollection()
 
