@@ -40,7 +40,6 @@ local function fastTravel()
         local loc = {X = worldX, Y = worldY, Z = floorHeight + 100}
 
         -- pc.Pawn:K2_TeleportTo(loc, pc.Pawn:K2_GetActorRotation())
-
         pc.Pawn.RootComponent:K2_SetWorldLocation(loc, false, {}, true) -- safer, doesn't need delay
 
         local comp = FindFirstOf("PlayerMapComponent_C")

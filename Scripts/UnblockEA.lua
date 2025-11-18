@@ -46,7 +46,7 @@ local function checkPlayer()
     if isZero(vec) then
 
         if not isZero(loc) then
-            print(string.format("-- teleporting player to %.5f %.5f %.5f", loc.X, loc.Y, loc.Z))
+            print(string.format("-- teleporting player from 0,0,0 to %.5f %.5f %.5f", loc.X, loc.Y, loc.Z))
             ExecuteInGameThread(function()
                 actor.RootComponent:K2_SetWorldLocation(loc, false, {}, true)
             end)
