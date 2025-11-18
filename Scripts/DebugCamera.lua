@@ -61,6 +61,9 @@ local function teleportPlayer()
     cc:ClientFlushLevelStreaming()
     cc:ClientForceGarbageCollection()
 
+    pc:ClientFlushLevelStreaming()
+    pc:ClientForceGarbageCollection()
+
     ExecuteWithDelay(250, function()
         ExecuteInGameThread(function()
             -- pc.Pawn:K2_TeleportTo(cam:GetCameraLocation(), cam:GetCameraRotation()) -- teleport to debug camera position
