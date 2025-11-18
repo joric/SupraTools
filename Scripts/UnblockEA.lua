@@ -37,8 +37,7 @@ local function isZero(vec)
 end
 
 local function checkPlayer()
-
-    local pc = UEHelpers.GetPlayerController()
+    local pc = getPlayerController()
     local actor = pc.Pawn
     if not actor:IsValid() then return end
 
