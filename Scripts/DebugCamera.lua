@@ -48,8 +48,9 @@ local function teleportToTrace(PlayerPawn)
         print("INVALID PAWN, CAN'T TELEPORT!!!")
         return
     end
-    --PlayerPawn:K2_SetActorLocation(loc, false, {}, true)
-    PlayerPawn:K2_TeleportTo(loc, { Pitch = 0, Yaw = rot.Yaw, Roll = 0 }) -- also updates physics
+
+    PlayerPawn:K2_SetActorLocation(loc, false, {}, true) -- safer maybe?
+    --PlayerPawn:K2_TeleportTo(loc, { Pitch = 0, Yaw = rot.Yaw, Roll = 0 }) -- also updates physics
 end
 
 local lastTime = 0
