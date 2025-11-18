@@ -49,36 +49,19 @@ local function teleportToTrace(PlayerPawn)
         return
     end
 
-    --PlayerPawn:K2_SetActorLocation(loc, false, {}, true)  -- safer maybe?
+    --PlayerPawn:K2_SetActorLocation(loc, false, {}, true)  -- crashes a lot
     --PlayerPawn:K2_TeleportTo(loc, { Pitch = 0, Yaw = rot.Yaw, Roll = 0 }) -- also updates physics
-
-    PlayerPawn.RootComponent:K2_SetWorldLocation(loc, false, {}, true)
+    PlayerPawn.RootComponent:K2_SetWorldLocation(loc, false, {}, true) -- safer
 end
 
 local lastTime = 0
 
 local function teleportPlayer()
     if not inDebugCamera then return end
-
-    local pc = getPlayerController()
-    local cc = getDebugCameraController()
-    local cam = cc.PlayerCameraManager
-
-    cc:ClientFlushLevelStreaming()
-    cc:ClientForceGarbageCollection()
-
-    pc:ClientFlushLevelStreaming()
-    pc:ClientForceGarbageCollection()
-
-    local throttleMs = 300
-    ExecuteWithDelay(throttleMs, function()
-        ExecuteInGameThread(function()
-            if (os.clock() - (lastTime or 0)) * 1000 < throttleMs then return end
-            lastTime = os.clock()
-            -- pc.Pawn:K2_TeleportTo(cam:GetCameraLocation(), cam:GetCameraRotation()) -- teleport to debug camera position
-            -- getCameraController().CheatManager:Teleport() -- built-in teleport console command, but it needs line of sight / navmesh
-            teleportToTrace(pc.Pawn) -- teleport to impact point, may hit hidden volumes
-        end)
+    ExecuteInGameThread(function()
+        -- pc.Pawn:K2_TeleportTo(cam:GetCameraLocation(), cam:GetCameraRotation()) -- teleport to debug camera position
+        -- getCameraController().CheatManager:Teleport() -- built-in teleport console command, but it needs line of sight / navmesh
+        teleportToTrace(getPlayerController().Pawn) -- teleport to impact point, may hit hidden volumes
     end)
 end
 

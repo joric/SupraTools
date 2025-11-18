@@ -50,7 +50,8 @@ local function checkPlayer()
             ExecuteWithDelay(250, function()
                 ExecuteInGameThread(function()
                     -- actor:K2_TeleportTo(loc, rot)
-                    actor:K2_SetActorLocation(loc, false, {}, true) -- safer maybe?
+                    -- actor:K2_SetActorLocation(loc, false, {}, true)
+                    actor.RootComponent:K2_SetWorldLocation(loc, false, {}, true) -- safer
                 end)
             end)
         end
