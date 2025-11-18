@@ -60,14 +60,20 @@ local function teleportPlayer()
     if not inDebugCamera then return end
 
     local pc = getPlayerController()
+    local cc = getCameraController()
 
     pc:ClientFlushLevelStreaming()
     pc:ClientForceGarbageCollection()
 
-    ExecuteInGameThread(function()
-        -- pc.Pawn:K2_TeleportTo(cam:GetCameraLocation(), cam:GetCameraRotation()) -- teleport to debug camera position
-        -- getCameraController().CheatManager:Teleport() -- built-in teleport console command, but it needs line of sight / navmesh
-        teleportToTrace(pc.Pawn) -- teleport to impact point, may hit hidden volumes
+    cc:ClientFlushLevelStreaming()
+    cc:ClientForceGarbageCollection()
+
+    ExecuteWithDelay(250, function()
+        ExecuteInGameThread(function()
+            -- pc.Pawn:K2_TeleportTo(cam:GetCameraLocation(), cam:GetCameraRotation()) -- teleport to debug camera position
+            -- getCameraController().CheatManager:Teleport() -- built-in teleport console command, but it needs line of sight / navmesh
+            teleportToTrace(pc.Pawn) -- teleport to impact point, may hit hidden volumes
+        end)
     end)
 end
 
