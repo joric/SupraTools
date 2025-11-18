@@ -56,13 +56,12 @@ local function teleportPlayer()
     if not inDebugCamera then return end
 
     local pc = getPlayerController()
-    local cc = getCameraController()
-
-    cc:ClientFlushLevelStreaming()
-    cc:ClientForceGarbageCollection()
-
     pc:ClientFlushLevelStreaming()
     pc:ClientForceGarbageCollection()
+
+    local cc = getCameraController()
+    cc:ClientFlushLevelStreaming()
+    cc:ClientForceGarbageCollection()
 
     ExecuteWithDelay(250, function()
         ExecuteInGameThread(function()
