@@ -50,6 +50,7 @@ local function teleportToTrace(PlayerPawn)
     end
 
     PlayerPawn:K2_SetActorLocation(loc, false, {}, true) -- safer maybe?
+
     --PlayerPawn:K2_TeleportTo(loc, { Pitch = 0, Yaw = rot.Yaw, Roll = 0 }) -- also updates physics
 end
 
@@ -68,7 +69,7 @@ local function teleportPlayer()
     pc:ClientFlushLevelStreaming()
     pc:ClientForceGarbageCollection()
 
-    local throttleMs = 300
+    local throttleMs = 500
     ExecuteWithDelay(throttleMs, function()
         ExecuteInGameThread(function()
             if (os.clock() - (lastTime or 0)) * 1000 < throttleMs then return end
