@@ -43,7 +43,6 @@ local function checkPlayer()
     if not actor:IsValid() then return end
 
     local vec = actor:K2_GetActorLocation()
-    local rot = actor:K2_GetActorRotation()
 
     if isZero(vec) then
 
@@ -51,7 +50,8 @@ local function checkPlayer()
             print(string.format("-- teleporting player to %.5f %.5f %.5f", loc.X, loc.Y, loc.Z))
             ExecuteWithDelay(250, function()
                 ExecuteInGameThread(function()
-                    actor:K2_TeleportTo(loc, rot)
+                    -- actor:K2_TeleportTo(loc, rot)
+                    actor:K2_SetActorLocation(loc, false, {}, true) -- safer maybe?
                 end)
             end)
         end
