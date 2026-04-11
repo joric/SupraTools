@@ -6,6 +6,14 @@ local UEHelpers = require("UEHelpers")
 local ksl = UEHelpers.GetKismetSystemLibrary()
 local cachedEABlockers = {}
 
+local function deleteEA()
+    for _, obj in ipairs(FindAllOf("SupraEABlockingVolume_C") or {}) do
+        if obj:IsValid() then
+            obj:K2_DestroyActor() -- 10596 seems to check this now
+        end
+    end
+end
+
 local function cacheEA()
     cachedEABlockers = {}
     for _, obj in ipairs(FindAllOf("SupraEABlockingVolume_C") or {}) do
@@ -63,6 +71,7 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     cacheEA()
     unblockEA()
     LoopAsync(1000, checkPlayer)
+    LoopAsync(1000, unblockEA) -- still needed for 10596
 end)
 
 -- LoopAsync(1000, unblockEA) -- not needed if you K2_ClearTimerHandle on Timer_StopScriptsTurningOffCollision
