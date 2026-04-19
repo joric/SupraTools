@@ -33,6 +33,13 @@ local function unblockEA()
             if handle:IsValid() then
                 ksl:K2_ClearTimerHandle(obj, {Handle = handle.Handle})
             end
+
+            local handle = obj.Timer_CollisionFallbackHandler -- added in 10596
+            if handle and handle:IsValid() then
+                ksl:K2_ClearTimerHandle(obj, {Handle = handle.Handle})
+            end
+
+            obj:SetActorScale3D({X=0, Y=0, Z=0}) -- ok this is nuclear option for 10596, since destroy stopped working
         end
     end
 end
