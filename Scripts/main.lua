@@ -94,7 +94,7 @@ end
 
 local dev = os.getenv("dev") and "_dev" or ""
 
-require("UnblockEA")
+require("UnblockEA" .. dev)
 require("DebugCamera")
 require("SuitRefill")
 require("FastTravel")

@@ -5,6 +5,7 @@
 local UEHelpers = require("UEHelpers")
 local ksl = UEHelpers.GetKismetSystemLibrary()
 local cachedEABlockers = {}
+local unblock = false
 
 local function deleteEA()
     for _, obj in ipairs(FindAllOf("SupraEABlockingVolume_C") or {}) do
@@ -24,6 +25,8 @@ local function cacheEA()
 end
 
 local function unblockEA()
+    if not unblock then return end
+
     for _, obj in ipairs(cachedEABlockers) do
         if obj:IsValid() then
             obj:SetActorEnableCollision(false)
@@ -52,6 +55,7 @@ local function isZero(vec)
 end
 
 local function checkPlayer()
+    if not unblock then return end
     local pc = UEHelpers.GetPlayerController()
     local actor = pc.Pawn
     if not actor:IsValid() then return end
@@ -73,6 +77,18 @@ local function checkPlayer()
     end
 
 end
+
+local function toggleUnblockEA()
+    if not unblock then
+        unblock = true
+        print('EA Unblocked')
+    else
+        unblock = false
+        print('EA Blocked')
+    end
+end
+
+RegisterKeyBind(Key.U, {ModifierKey.ALT}, toggleUnblockEA)
 
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(self)
     cacheEA()
